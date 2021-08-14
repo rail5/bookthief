@@ -34,9 +34,11 @@ Be sure to tell your printer to print double-sided by flipping along the *short 
 
 
 ## Build Requirements
-- wxWidgets, as in these packages:
- - wx3.0-headers
- - libwxgtk3.0-gtk3-dev
+wxWidgets, as in these packages:
+
+- wx3.0-headers
+
+- libwxgtk3.0-gtk3-dev
 
 ## Building
 ```
@@ -44,7 +46,7 @@ make
 sudo make install
 ```
 
-Note that BookThief **will** build without Liesel, but it will not **run** without Liesel.
+Note that BookThief **will build** without Liesel, but it will not **run** without Liesel.
 
 If you install BookThief via the PPA, Liesel comes with it in the same PPA. Otherwise, the source for Liesel can be obtained here: https://gitlab.com/rail5-bookthief/liesel
 ## License
