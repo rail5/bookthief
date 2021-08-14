@@ -1,0 +1,11 @@
+bookthief (2.0) focal; urgency=low
+
+  * Replaced parse_output function with more sane exec function
+
+ -- rail5 <andrew@rail5.org>  Sat, 14 Aug 2021 15:33:26 -0400
+
+bookthief (1.0) focal; urgency=low
+
+  * Initial release
+
+ -- rail5 <andrew@rail5.org>  Wed, 4 Aug 2021 18:20:02 -0400
