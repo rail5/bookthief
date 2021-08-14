@@ -1,0 +1,7 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_install:
+	install -D -m 0755 bookthief $$(pwd)/debian/bookthief/usr/bin/bookthief
+	install -D -m 0755 BookThief.desktop $$(pwd)/debian/bookthief/usr/share/applications
