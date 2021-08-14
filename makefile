@@ -5,4 +5,4 @@ all:
 
 install:
 	install -m 0755 bookthief /usr/bin
-	install -m 0755 BookThief.desktop /usr/share/applications
+	install -m 0755 BookThief.desktop /usr/share/applications/BookThief.desktop
