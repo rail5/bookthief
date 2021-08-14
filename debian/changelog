@@ -1,3 +1,9 @@
+bookthief (2.1) focal; urgency=low
+
+  * Patched a silly bug to do with the placement of the .desktop file
+
+ -- rail5 <andrew@rail5.org>  Sat, 14 Aug 2021 19:44:17 -0400
+
 bookthief (2.0) focal; urgency=low
 
   * Replaced parse_output function with more sane exec function
