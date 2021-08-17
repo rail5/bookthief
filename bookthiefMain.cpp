@@ -229,8 +229,6 @@ std::string bookthiefFrame::exec(const char* cmd) {
 			if (firstinput == true) {
 				compensate = progcounter;
 				progcounter = progcounter + compensate;
-			} else if (progcounter == 10 && firstinput == false) {
-				progcounter = 100;
 			} else {
 				progcounter = progcounter + compensate;
 			}
