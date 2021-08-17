@@ -7,6 +7,8 @@ bookthief (3.0) focal; urgency=low
   No longer compatible with Liesel < 3.0, though
   older versions of BookThief are still compatible with Liesel >= 3.0
 
+ -- rail5 <andrew@rail5.org>  Sat, 17 Aug 2021 15:11:17 -0400
+
 bookthief (2.1) focal; urgency=low
 
   * Patched a silly bug to do with the placement of the .desktop file
