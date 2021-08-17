@@ -21,6 +21,7 @@ bool bookthiefApp::OnInit()
     //(*AppInitialize
     bool wxsOK = true;
     wxInitAllImageHandlers();
+    
     if ( wxsOK )
     {
     	bookthiefFrame* Frame = new bookthiefFrame(0);
