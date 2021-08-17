@@ -1,3 +1,12 @@
+bookthief (3.0) focal; urgency=low
+
+  * Replaced dropdown list with checkboxes,
+  handed command of the segment function over to Liesel,
+  made segment function in Liesel compatible with range function,
+  handed command of progress bar over to Liesel as well.
+  No longer compatible with Liesel < 3.0, though
+  older versions of BookThief are still compatible with Liesel >= 3.0
+
 bookthief (2.1) focal; urgency=low
 
   * Patched a silly bug to do with the placement of the .desktop file
