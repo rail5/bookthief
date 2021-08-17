@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=BookThief
+Comment=Convert standard PDFs to pamphlet-ready PDFs
+GenericName=PDF-to-pamphlet converter
+TryExec=bookthief
+Exec=bookthief
+Icon=printer-remote
+Categories=Accessories;FileTools;GTK;
+Keywords=pdf;convert;free;pamphlet;print;book;
+StartupNotify=true
+X-GNOME-UsesNotifications=false
+Name[en_US]=BookThief
