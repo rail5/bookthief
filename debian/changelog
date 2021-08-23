@@ -1,3 +1,13 @@
+bookthief (4.0) focal; urgency=low
+
+  * Added support for opening PDFs with BookThief via context menu
+  Updated file open and save dialogs to select only PDFs
+  About window now calls liesel -q
+  Now requires Liesel 4 or later due to the -q option
+  Replaced save-in-directory with save-as
+
+ -- rail5 <andrew@rail5.org>  Mon, 23 Aug 2021 19:16:28 -0400
+
 bookthief (3.0) focal; urgency=low
 
   * Replaced dropdown list with checkboxes,
@@ -7,7 +17,7 @@ bookthief (3.0) focal; urgency=low
   No longer compatible with Liesel < 3.0, though
   older versions of BookThief are still compatible with Liesel >= 3.0
 
- -- rail5 <andrew@rail5.org>  Sat, 17 Aug 2021 15:11:17 -0400
+ -- rail5 <andrew@rail5.org>  Tue, 17 Aug 2021 15:11:17 -0400
 
 bookthief (2.1) focal; urgency=low
 
