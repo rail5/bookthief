@@ -1,6 +1,6 @@
 /***************************************************************
  * Name:	BookThief
- * Version:	4.0
+ * Version:	4.1
  * Purpose:	GUI Frontend for Liesel
  * Author:	rail5 (andrew@rail5.org)
  * Created:	2021-08-23
@@ -166,6 +166,21 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnButton2Click);
 	Connect(idMenuQuit,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&bookthiefFrame::OnQuit);
 	Connect(idMenuAbout,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&bookthiefFrame::OnAbout);
+	
+	
+	if (wxTheApp->argc > 1) {
+		if (file_exists(wxTheApp->argv[1]) && has_ending(wxTheApp->argv[1], ".pdf")) {
+			infile = wxTheApp->argv[1];
+			StaticBitmap2->Show();
+			wxString infilenm = infile.substr(infile.find_last_of("/\\") + 1);
+			Button2->SetLabel(truncate(infilenm, 40, true));
+			wxSetWorkingDirectory(replaced(infilenm, "", infile));
+		}
+	} else {
+        infile = "";
+	}
+    
+	
 	//*)
 }
 
