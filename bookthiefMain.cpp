@@ -30,6 +30,8 @@
 #include "functions/truncate.h"
 #include "functions/replaceall.h"
 
+#include "pdf-16x16-cc0.xpm"
+
 //(*InternalHeaders(bookthiefFrame)
 #include <wx/artprov.h>
 #include <wx/bitmap.h>
@@ -96,6 +98,8 @@ END_EVENT_TABLE()
 
 wxString infile;
 
+wxBitmap pdflabel = wxBitmap(pdf_16x16_cc0_xpm);
+
 bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 {
 	//(*Initialize(bookthiefFrame)
@@ -142,7 +146,7 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	StaticText6->Hide();
 	Button2 = new wxButton(this, ID_BUTTON2, _("(None)"), wxPoint(8,8), wxSize(384,34), 0, wxDefaultValidator, _T("ID_BUTTON2"));
 	StaticBitmap1 = new wxStaticBitmap(this, ID_STATICBITMAP1, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_FILE_OPEN")),wxART_OTHER), wxPoint(368,16), wxDefaultSize, 0, _T("ID_STATICBITMAP1"));
-	StaticBitmap2 = new wxStaticBitmap(this, ID_STATICBITMAP2, wxBitmap(wxImage(_T("./pdf-16x16-cc0.png"))), wxPoint(8,8), wxDefaultSize, 0, _T("ID_STATICBITMAP2"));
+	StaticBitmap2 = new wxStaticBitmap(this, ID_STATICBITMAP2, pdflabel, wxPoint(8,8), wxDefaultSize, 0, _T("ID_STATICBITMAP2"));
 	StaticBitmap2->Hide();
 	MenuBar1 = new wxMenuBar();
 	Menu1 = new wxMenu();
@@ -156,25 +160,12 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	SetMenuBar(MenuBar1);
 
 	Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnButton1Click1);
-    Connect(ID_HYPERLINKCTRL3,wxEVT_COMMAND_HYPERLINK,(wxObjectEventFunction)&bookthiefFrame::OnHyperlinkCtrl3Click1);
+	Connect(ID_HYPERLINKCTRL3,wxEVT_COMMAND_HYPERLINK,(wxObjectEventFunction)&bookthiefFrame::OnHyperlinkCtrl3Click1);
 	Connect(ID_CHECKBOX2,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnCheckBox2Click);
 	Connect(ID_CHECKBOX3,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnCheckBox3Click);
 	Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnButton2Click);
 	Connect(idMenuQuit,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&bookthiefFrame::OnQuit);
 	Connect(idMenuAbout,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&bookthiefFrame::OnAbout);
-
-	if (wxTheApp->argc > 1) {
-		if (file_exists(wxTheApp->argv[1]) && has_ending(wxTheApp->argv[1], ".pdf")) {
-			infile = wxTheApp->argv[1];
-			StaticBitmap2->Show();
-			wxString infilenm = infile.substr(infile.find_last_of("/\\") + 1);
-			Button2->SetLabel(truncate(infilenm, 40, true));
-			wxSetWorkingDirectory(replaced(infilenm, "", infile));
-		}
-    } else {
-        infile = "";
-    }
-
 	//*)
 }
 

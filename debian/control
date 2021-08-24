@@ -5,7 +5,7 @@ Standards-Version: 3.9.3
 Section: utils
 
 Package: bookthief
-Version: 4.0
+Version: 4.1
 License: GPL-3.0
 Vendor: rail5 <andrew@rail5.org>
 Priority: optional

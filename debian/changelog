@@ -1,3 +1,10 @@
+bookthief (4.1) focal; urgency=low
+
+  * Patched a trivial bug that shouldnt have existed
+  regarding a bitmap image
+
+ -- rail5 <andrew@rail5.org>  Mon, 23 Aug 2021 20:58:34 -0400
+
 bookthief (4.0) focal; urgency=low
 
   * Added support for opening PDFs with BookThief via context menu
