@@ -1,3 +1,10 @@
+bookthief (4.5) focal; urgency=low
+
+  * BookThief now calls liesel -b automatically
+  And for this reason requires at least Liesel v5.0
+
+ -- rail5 <andrew@rail5.org>  Wed, 1 Sep 2021 17:45:20 -0400
+
 bookthief (4.1) focal; urgency=low
 
   * Patched a trivial bug that shouldnt have existed
