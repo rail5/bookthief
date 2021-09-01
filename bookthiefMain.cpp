@@ -302,7 +302,7 @@ void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
 		return;
 	}
 
-	char command[1024] = "liesel -i \"";
+	char command[1024] = "liesel -b -i \"";
 
 	strcat(command, infile);
 	strcat(command, "\"");
