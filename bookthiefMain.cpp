@@ -1,9 +1,9 @@
 /***************************************************************
  * Name:	BookThief
- * Version:	4.1
+ * Version:	4.5.1
  * Purpose:	GUI Frontend for Liesel
  * Author:	rail5 (andrew@rail5.org)
- * Created:	2021-08-23
+ * Created:	2021-09-03
  * Copyright:	rail5 (https://rail5.org)
  * License:	GNU GPL V3
  **************************************************************/
@@ -255,10 +255,10 @@ std::string bookthiefFrame::exec(const char* cmd, bool nonprogress) {
 		if (is_number(buffer)) {
 			progcounter = atoi(buffer);
 			if (firstinput == true) {
-				compensate = progcounter;
-				progcounter = progcounter + compensate;
-			} else {
-				progcounter = progcounter + compensate;
+				compensate = progcounter; // establish the compensate value, as explained above
+			}
+			if ((progcounter + compensate) < 100) {
+				progcounter = progcounter + compensate; // minor bug found where wxWidgets reported an error on being asked to update to 101, 103 etc
 			}
 			ProgressDialog1->Update(progcounter);
 		}
