@@ -1,3 +1,15 @@
+bookthief (4.5.1) focal; urgency=low
+
+  * Patched minor bug in progress dialog
+  Where BT would occasionally try to update
+  the progress bar to a number higher than
+  the maximum, 100
+  This bug did not affect performance,
+  apart from a few annoying error messages,
+  but has now been patched
+
+ -- rail5 <andrew@rail5.org>  Fri, 3 Sep 2021 17:43:55 -0400
+
 bookthief (4.5) focal; urgency=low
 
   * BookThief now calls liesel -b automatically
