@@ -3,97 +3,106 @@
 	<object class="wxFrame" name="bookthiefFrame">
 		<title>BookThief</title>
 		<icon stock_id="wxART_FILE_SAVE" stock_client="wxART_OTHER" />
-		<size>400,350</size>
-		<minsize>400,350</minsize>
-		<maxsize>400,350</maxsize>
+		<size>400,400</size>
+		<minsize>400,400</minsize>
+		<maxsize>400,400</maxsize>
 		<id_arg>0</id_arg>
 		<object class="wxButton" name="ID_BUTTON1" variable="Button1" member="yes">
-			<label>Build</label>
-			<pos>152,200</pos>
+			<label>Save as</label>
+			<pos>152,288</pos>
 			<handler function="OnButton1Click1" entry="EVT_BUTTON" />
 		</object>
 		<object class="wxHyperlinkCtrl" name="ID_HYPERLINKCTRL1" variable="HyperlinkCtrl1" member="yes">
 			<label>Library Genesis</label>
 			<url>http://gen.lib.rus.ec/</url>
-			<pos>96,256</pos>
-		</object>
-		<object class="wxFilePickerCtrl" name="ID_FILEPICKERCTRL1" variable="FilePickerCtrl1" member="yes">
-			<message></message>
-			<wildcard></wildcard>
-			<pos>8,8</pos>
-			<size>384,34</size>
+			<pos>96,336</pos>
 		</object>
 		<object class="wxCheckBox" name="ID_CHECKBOX1" variable="CheckBox1" member="yes">
 			<label>Convert to grayscale</label>
-			<pos>8,96</pos>
-			<handler function="OnCheckBox1Click" entry="EVT_CHECKBOX" />
-		</object>
-		<object class="wxChoice" name="ID_CHOICE1" variable="Choice1" member="yes">
-			<content>
-				<item>Print entire book</item>
-				<item>Print book in segments</item>
-				<item>Print only within range</item>
-			</content>
-			<selection>0</selection>
 			<pos>8,56</pos>
-			<size>208,30</size>
-			<handler function="OnChoice1Select" entry="EVT_CHOICE" />
 		</object>
 		<object class="wxSpinCtrl" name="ID_SPINCTRL1" variable="SpinCtrl1" member="yes">
 			<value>40</value>
-			<pos>248,56</pos>
+			<pos>248,168</pos>
 			<size>136,34</size>
 			<hidden>1</hidden>
 		</object>
 		<object class="wxStaticText" name="ID_STATICTEXT1" variable="StaticText1" member="yes">
 			<label>Pages per segment</label>
-			<pos>248,96</pos>
+			<pos>256,208</pos>
 			<hidden>1</hidden>
 		</object>
 		<object class="wxTextCtrl" name="ID_TEXTCTRL1" variable="TextCtrl1" member="yes">
 			<value>1</value>
-			<pos>248,56</pos>
+			<pos>248,120</pos>
 			<size>56,27</size>
 			<hidden>1</hidden>
-			<handler function="OnTextCtrl1Text" entry="EVT_TEXT" />
 		</object>
 		<object class="wxTextCtrl" name="ID_TEXTCTRL2" variable="TextCtrl2" member="yes">
-			<value>10</value>
-			<pos>336,56</pos>
+			<value>100</value>
+			<pos>336,120</pos>
 			<size>48,27</size>
 			<hidden>1</hidden>
 		</object>
 		<object class="wxStaticText" name="ID_STATICTEXT2" variable="StaticText2" member="yes">
 			<label>to</label>
-			<pos>312,64</pos>
+			<pos>312,128</pos>
 			<hidden>1</hidden>
 		</object>
 		<object class="wxHyperlinkCtrl" name="ID_HYPERLINKCTRL2" variable="HyperlinkCtrl2" member="yes">
 			<label>ZLibrary</label>
 			<url>https://1lib.domains</url>
-			<pos>216,256</pos>
+			<pos>216,336</pos>
 		</object>
 		<object class="wxStaticText" name="ID_STATICTEXT3" variable="StaticText3" member="yes">
 			<label>Looking for books? Try:</label>
-			<pos>128,248</pos>
+			<pos>128,328</pos>
 		</object>
 		<object class="wxStaticText" name="ID_STATICTEXT4" variable="StaticText4" member="yes">
 			<label>or</label>
-			<pos>208,264</pos>
-		</object>
-		<object class="wxDirPickerCtrl" name="ID_DIRPICKERCTRL1" variable="DirPickerCtrl1" member="yes">
-			<message></message>
-			<pos>8,160</pos>
-		</object>
-		<object class="wxStaticText" name="ID_STATICTEXT5" variable="StaticText5" member="yes">
-			<label>Save in folder:</label>
-			<pos>8,144</pos>
+			<pos>208,344</pos>
 		</object>
 		<object class="wxHyperlinkCtrl" name="ID_HYPERLINKCTRL3" variable="HyperlinkCtrl3" member="yes">
 			<label>?</label>
-			<pos>280,104</pos>
+			<pos>288,216</pos>
 			<hidden>1</hidden>
 			<handler function="OnHyperlinkCtrl3Click1" entry="EVT_HYPERLINK" />
+		</object>
+		<object class="wxCheckBox" name="ID_CHECKBOX2" variable="CheckBox2" member="yes">
+			<label>Print only within range</label>
+			<pos>8,120</pos>
+			<handler function="OnCheckBox2Click" entry="EVT_CHECKBOX" />
+		</object>
+		<object class="wxCheckBox" name="ID_CHECKBOX3" variable="CheckBox3" member="yes">
+			<label>Print in segments</label>
+			<pos>8,184</pos>
+			<handler function="OnCheckBox3Click" entry="EVT_CHECKBOX" />
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT6" variable="StaticText6" member="yes">
+			<label>Print only pages:</label>
+			<pos>264,96</pos>
+			<hidden>1</hidden>
+		</object>
+		<object class="wxButton" name="ID_BUTTON2" variable="Button2" member="yes">
+			<label>(None)</label>
+			<pos>8,8</pos>
+			<size>384,34</size>
+			<handler function="OnButton2Click" entry="EVT_BUTTON" />
+		</object>
+		<object class="wxCheckBox" name="ID_CHECKBOX4" variable="CheckBox4" member="yes">
+			<label>Rescale output to paper size</label>
+			<pos>8,248</pos>
+			<handler function="OnCheckBox4Click" entry="EVT_CHECKBOX" />
+		</object>
+		<object class="wxChoice" name="ID_CHOICE1" variable="Choice1" member="yes">
+			<content>
+				<item>us-letter</item>
+				<item>a4</item>
+			</content>
+			<selection>0</selection>
+			<pos>248,248</pos>
+			<size>136,30</size>
+			<hidden>1</hidden>
 		</object>
 		<object class="wxMenuBar" variable="MenuBar1" member="no">
 			<object class="wxMenu" variable="Menu1" member="no">

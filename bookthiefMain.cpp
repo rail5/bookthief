@@ -1,9 +1,9 @@
 /***************************************************************
  * Name:	BookThief
- * Version:	4.5.1
+ * Version:	5.0
  * Purpose:	GUI Frontend for Liesel
  * Author:	rail5 (andrew@rail5.org)
- * Created:	2021-09-03
+ * Created:	2021-09-16
  * Copyright:	rail5 (https://rail5.org)
  * License:	GNU GPL V3
  **************************************************************/
@@ -86,6 +86,8 @@ const long bookthiefFrame::ID_STATICTEXT6 = wxNewId();
 const long bookthiefFrame::ID_BUTTON2 = wxNewId();
 const long bookthiefFrame::ID_STATICBITMAP1 = wxNewId();
 const long bookthiefFrame::ID_STATICBITMAP2 = wxNewId();
+const long bookthiefFrame::ID_CHECKBOX4 = wxNewId();
+const long bookthiefFrame::ID_CHOICE1 = wxNewId();
 const long bookthiefFrame::idMenuQuit = wxNewId();
 const long bookthiefFrame::idMenuAbout = wxNewId();
 const long bookthiefFrame::ID_PROGRESSDIALOG1 = wxNewId();
@@ -110,44 +112,50 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	wxMenuItem* MenuItem2;
 
 	Create(parent, wxID_ANY, _("BookThief"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE, _T("wxID_ANY"));
-	SetClientSize(wxSize(400,350));
-	SetMinSize(wxSize(400,350));
-	SetMaxSize(wxSize(400,350));
+	SetClientSize(wxSize(400,400));
+	SetMinSize(wxSize(400,400));
+	SetMaxSize(wxSize(400,400));
 	{
 		wxIcon FrameIcon;
 		FrameIcon.CopyFromBitmap(wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_FILE_SAVE")),wxART_OTHER));
 		SetIcon(FrameIcon);
 	}
-	Button1 = new wxButton(this, ID_BUTTON1, _("Save as"), wxPoint(152,240), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
-	HyperlinkCtrl1 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL1, _("Library Genesis"), _("http://gen.lib.rus.ec/"), wxPoint(96,288), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL1"));
+	Button1 = new wxButton(this, ID_BUTTON1, _("Save as"), wxPoint(152,288), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
+	HyperlinkCtrl1 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL1, _("Library Genesis"), _("http://gen.lib.rus.ec/"), wxPoint(96,336), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL1"));
 	CheckBox1 = new wxCheckBox(this, ID_CHECKBOX1, _("Convert to grayscale"), wxPoint(8,56), wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
 	CheckBox1->SetValue(false);
-	SpinCtrl1 = new wxSpinCtrl(this, ID_SPINCTRL1, _T("40"), wxPoint(248,144), wxSize(136,34), 0, 0, 100, 40, _T("ID_SPINCTRL1"));
+	SpinCtrl1 = new wxSpinCtrl(this, ID_SPINCTRL1, _T("40"), wxPoint(248,168), wxSize(136,34), 0, 0, 100, 40, _T("ID_SPINCTRL1"));
 	SpinCtrl1->SetValue(_T("40"));
 	SpinCtrl1->Hide();
-	StaticText1 = new wxStaticText(this, ID_STATICTEXT1, _("Pages per segment"), wxPoint(256,184), wxDefaultSize, 0, _T("ID_STATICTEXT1"));
+	StaticText1 = new wxStaticText(this, ID_STATICTEXT1, _("Pages per segment"), wxPoint(256,208), wxDefaultSize, 0, _T("ID_STATICTEXT1"));
 	StaticText1->Hide();
-	TextCtrl1 = new wxTextCtrl(this, ID_TEXTCTRL1, _("1"), wxPoint(248,104), wxSize(56,27), 0, wxDefaultValidator, _T("ID_TEXTCTRL1"));
+	TextCtrl1 = new wxTextCtrl(this, ID_TEXTCTRL1, _("1"), wxPoint(248,120), wxSize(56,27), 0, wxTextValidator(wxFILTER_DIGITS), _T("ID_TEXTCTRL1"));
 	TextCtrl1->Hide();
-	TextCtrl2 = new wxTextCtrl(this, ID_TEXTCTRL2, _("10"), wxPoint(336,104), wxSize(48,27), 0, wxDefaultValidator, _T("ID_TEXTCTRL2"));
+	TextCtrl2 = new wxTextCtrl(this, ID_TEXTCTRL2, _("100"), wxPoint(336,120), wxSize(48,27), 0, wxTextValidator(wxFILTER_DIGITS), _T("ID_TEXTCTRL2"));
 	TextCtrl2->Hide();
-	StaticText2 = new wxStaticText(this, ID_STATICTEXT2, _("to"), wxPoint(312,112), wxDefaultSize, 0, _T("ID_STATICTEXT2"));
+	StaticText2 = new wxStaticText(this, ID_STATICTEXT2, _("to"), wxPoint(312,128), wxDefaultSize, 0, _T("ID_STATICTEXT2"));
 	StaticText2->Hide();
-	HyperlinkCtrl2 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL2, _("ZLibrary"), _("https://1lib.domains"), wxPoint(216,288), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL2"));
-	StaticText3 = new wxStaticText(this, ID_STATICTEXT3, _("Looking for books\? Try:"), wxPoint(128,280), wxDefaultSize, 0, _T("ID_STATICTEXT3"));
-	StaticText4 = new wxStaticText(this, ID_STATICTEXT4, _("or"), wxPoint(208,296), wxDefaultSize, 0, _T("ID_STATICTEXT4"));
-	HyperlinkCtrl3 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL3, _("\?"), wxEmptyString, wxPoint(288,192), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL3"));
+	HyperlinkCtrl2 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL2, _("ZLibrary"), _("https://1lib.domains"), wxPoint(216,336), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL2"));
+	StaticText3 = new wxStaticText(this, ID_STATICTEXT3, _("Looking for books\? Try:"), wxPoint(128,328), wxDefaultSize, 0, _T("ID_STATICTEXT3"));
+	StaticText4 = new wxStaticText(this, ID_STATICTEXT4, _("or"), wxPoint(208,344), wxDefaultSize, 0, _T("ID_STATICTEXT4"));
+	HyperlinkCtrl3 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL3, _("\?"), wxEmptyString, wxPoint(288,216), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL3"));
 	HyperlinkCtrl3->Hide();
-	CheckBox2 = new wxCheckBox(this, ID_CHECKBOX2, _("Print only within range"), wxPoint(8,104), wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX2"));
+	CheckBox2 = new wxCheckBox(this, ID_CHECKBOX2, _("Print only within range"), wxPoint(8,120), wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX2"));
 	CheckBox2->SetValue(false);
-	CheckBox3 = new wxCheckBox(this, ID_CHECKBOX3, _("Print in segments"), wxPoint(8,152), wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX3"));
+	CheckBox3 = new wxCheckBox(this, ID_CHECKBOX3, _("Print in segments"), wxPoint(8,184), wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX3"));
 	CheckBox3->SetValue(false);
-	StaticText6 = new wxStaticText(this, ID_STATICTEXT6, _("Print only pages:"), wxPoint(264,88), wxDefaultSize, 0, _T("ID_STATICTEXT6"));
+	StaticText6 = new wxStaticText(this, ID_STATICTEXT6, _("Print only pages:"), wxPoint(264,96), wxDefaultSize, 0, _T("ID_STATICTEXT6"));
 	StaticText6->Hide();
 	Button2 = new wxButton(this, ID_BUTTON2, _("(None)"), wxPoint(8,8), wxSize(384,34), 0, wxDefaultValidator, _T("ID_BUTTON2"));
 	StaticBitmap1 = new wxStaticBitmap(this, ID_STATICBITMAP1, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_FILE_OPEN")),wxART_OTHER), wxPoint(368,16), wxDefaultSize, 0, _T("ID_STATICBITMAP1"));
 	StaticBitmap2 = new wxStaticBitmap(this, ID_STATICBITMAP2, pdflabel, wxPoint(8,8), wxDefaultSize, 0, _T("ID_STATICBITMAP2"));
 	StaticBitmap2->Hide();
+	CheckBox4 = new wxCheckBox(this, ID_CHECKBOX4, _("Rescale output to paper size"), wxPoint(8,248), wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX4"));
+	CheckBox4->SetValue(false);
+	Choice1 = new wxChoice(this, ID_CHOICE1, wxPoint(248,248), wxSize(136,30), 0, 0, 0, wxDefaultValidator, _T("ID_CHOICE1"));
+	Choice1->SetSelection( Choice1->Append(_("us-letter")) );
+	Choice1->Append(_("a4"));
+	Choice1->Hide();
 	MenuBar1 = new wxMenuBar();
 	Menu1 = new wxMenu();
 	MenuItem1 = new wxMenuItem(Menu1, idMenuQuit, _("Quit\tAlt-F4"), _("Quit the application"), wxITEM_NORMAL);
@@ -164,9 +172,9 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	Connect(ID_CHECKBOX2,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnCheckBox2Click);
 	Connect(ID_CHECKBOX3,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnCheckBox3Click);
 	Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnButton2Click);
+	Connect(ID_CHECKBOX4,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnCheckBox4Click);
 	Connect(idMenuQuit,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&bookthiefFrame::OnQuit);
 	Connect(idMenuAbout,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&bookthiefFrame::OnAbout);
-	
 	
 	if (wxTheApp->argc > 1) {
 		if (file_exists(wxTheApp->argv[1]) && has_ending(wxTheApp->argv[1], ".pdf")) {
@@ -179,8 +187,6 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	} else {
         infile = "";
 	}
-    
-	
 	//*)
 }
 
@@ -287,6 +293,11 @@ void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
 {
 	replaceAll("\"", "\\\"", infile);
 	replaceAll("\\", "\\\\", infile);
+	
+	if (!has_ending(infile, ".pdf")) {
+		wxMessageBox("Error: Please select a valid input PDF", "BookThief");
+		return;
+	}
 
 	wxFileDialog saveFileDialog(this, ("Save PDF file"), "", "", "PDF files (*.pdf)|*.pdf", wxFD_SAVE);
 	if (saveFileDialog.ShowModal() == wxID_CANCEL) {
@@ -323,6 +334,11 @@ void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
 		itoa(SpinCtrl1->GetValue(), segsize, 10);
 		strcat(command, " -s ");
 		strcat(command, segsize);
+	}
+	
+	if (CheckBox4->GetValue() == true) {
+		strcat(command, " -t ");
+		strcat(command, Choice1->GetStringSelection());
 	}
 
 	strcat(command, " -o \"");
@@ -381,4 +397,13 @@ void bookthiefFrame::OnButton2Click(wxCommandEvent& event)
 	Button2->SetLabel(truncate(openFileDialog.GetFilename(), 40, true));
 	infile = openFileDialog.GetPath();
 	wxSetWorkingDirectory(openFileDialog.GetDirectory());
+}
+
+void bookthiefFrame::OnCheckBox4Click(wxCommandEvent& event)
+{
+    if (CheckBox4->GetValue() == true) {
+        Choice1->Show();
+    } else {
+        Choice1->Hide();
+    }
 }
