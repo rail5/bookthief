@@ -1,3 +1,10 @@
+bookthief (5.0) focal; urgency=low
+
+  * Added interface for Liesel's new -t option
+  Changed validators on range inputs to wxDIGIT
+
+ -- rail5 <andrew@rail5.org>  Thu, 16 Sep 2021 20:45:48 -0400
+
 bookthief (4.5.1) focal; urgency=low
 
   * Patched minor bug in progress dialog
