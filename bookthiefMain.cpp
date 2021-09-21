@@ -312,8 +312,8 @@ void bookthiefFrame::OnAbout(wxCommandEvent& event)
 
 void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
 {
-	replaceAll("\"", "\\\"", infile);
 	replaceAll("\\", "\\\\", infile);
+	replaceAll("\"", "\\\"", infile);
 
 	if (!has_ending(infile, ".pdf")) {
 		wxMessageBox("Error: Please select a valid input PDF", "BookThief");
@@ -326,8 +326,8 @@ void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
 	}
 
 	wxString outfile = saveFileDialog.GetPath();
-	replaceAll("\"", "\\\"", outfile);
 	replaceAll("\\", "\\\\", outfile);
+	replaceAll("\"", "\\\"", outfile);
 
 	if (outfile == "") {
 		wxMessageBox("Error: Please pick a file for the new PDF", "BookThief");
