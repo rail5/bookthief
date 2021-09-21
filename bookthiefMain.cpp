@@ -312,10 +312,11 @@ void bookthiefFrame::OnAbout(wxCommandEvent& event)
 
 void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
 {
-	replaceAll("\\", "\\\\", infile);
-	replaceAll("\"", "\\\"", infile);
+	wxString saneinfile = infile;
+	replaceAll("\\", "\\\\", saneinfile);
+	replaceAll("\"", "\\\"", saneinfile);
 
-	if (!has_ending(infile, ".pdf")) {
+	if (!has_ending(saneinfile, ".pdf")) {
 		wxMessageBox("Error: Please select a valid input PDF", "BookThief");
 		return;
 	}
@@ -334,9 +335,9 @@ void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
 		return;
 	}
 
-	char command[1024] = "liesel -b -i \"";
+	char command[8320] = "liesel -b -i \"";
 
-	strcat(command, infile);
+	strcat(command, saneinfile);
 	strcat(command, "\"");
 
 	if (CheckBox1->GetValue()  == true) {
