@@ -1,3 +1,14 @@
+bookthief (5.1) focal; urgency=low
+
+  * Added interface for Liesel -d quality option
+  Replaced popen with custom version providing PID
+  so as to allow killing the spawned Liesel process
+  in the event that the user presses Cancel
+  Obviously, also added a Cancel button to the
+  ProgressDialog window
+
+ -- rail5 <andrew@rail5.org>  Mon, 20 Sep 2021 20:53:33 -0400
+
 bookthief (5.0) focal; urgency=low
 
   * Added interface for Liesel's new -t option
