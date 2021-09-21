@@ -3,19 +3,19 @@
 	<object class="wxFrame" name="bookthiefFrame">
 		<title>BookThief</title>
 		<icon stock_id="wxART_FILE_SAVE" stock_client="wxART_OTHER" />
-		<size>400,400</size>
-		<minsize>400,400</minsize>
-		<maxsize>400,400</maxsize>
+		<size>400,475</size>
+		<minsize>400,475</minsize>
+		<maxsize>400,475</maxsize>
 		<id_arg>0</id_arg>
 		<object class="wxButton" name="ID_BUTTON1" variable="Button1" member="yes">
 			<label>Save as</label>
-			<pos>152,288</pos>
+			<pos>152,360</pos>
 			<handler function="OnButton1Click1" entry="EVT_BUTTON" />
 		</object>
 		<object class="wxHyperlinkCtrl" name="ID_HYPERLINKCTRL1" variable="HyperlinkCtrl1" member="yes">
 			<label>Library Genesis</label>
 			<url>http://gen.lib.rus.ec/</url>
-			<pos>96,336</pos>
+			<pos>96,408</pos>
 		</object>
 		<object class="wxCheckBox" name="ID_CHECKBOX1" variable="CheckBox1" member="yes">
 			<label>Convert to grayscale</label>
@@ -52,15 +52,15 @@
 		<object class="wxHyperlinkCtrl" name="ID_HYPERLINKCTRL2" variable="HyperlinkCtrl2" member="yes">
 			<label>ZLibrary</label>
 			<url>https://1lib.domains</url>
-			<pos>216,336</pos>
+			<pos>216,408</pos>
 		</object>
 		<object class="wxStaticText" name="ID_STATICTEXT3" variable="StaticText3" member="yes">
 			<label>Looking for books? Try:</label>
-			<pos>128,328</pos>
+			<pos>128,400</pos>
 		</object>
 		<object class="wxStaticText" name="ID_STATICTEXT4" variable="StaticText4" member="yes">
 			<label>or</label>
-			<pos>208,344</pos>
+			<pos>208,416</pos>
 		</object>
 		<object class="wxHyperlinkCtrl" name="ID_HYPERLINKCTRL3" variable="HyperlinkCtrl3" member="yes">
 			<label>?</label>
@@ -103,6 +103,28 @@
 			<pos>248,248</pos>
 			<size>136,30</size>
 			<hidden>1</hidden>
+		</object>
+		<object class="wxSlider" name="ID_SLIDER1" variable="Slider1" member="yes">
+			<value>100</value>
+			<max>200</max>
+			<pos>56,304</pos>
+			<size>272,21</size>
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT5" variable="StaticText5" member="yes">
+			<label>Low</label>
+			<pos>48,320</pos>
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT7" variable="StaticText7" member="yes">
+			<label>Standard</label>
+			<pos>160,320</pos>
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT8" variable="StaticText8" member="yes">
+			<label>High</label>
+			<pos>304,320</pos>
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT9" variable="StaticText9" member="yes">
+			<label>Quality</label>
+			<pos>168,288</pos>
 		</object>
 		<object class="wxMenuBar" variable="MenuBar1" member="no">
 			<object class="wxMenu" variable="Menu1" member="no">

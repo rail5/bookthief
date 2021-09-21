@@ -18,6 +18,7 @@
 #include <wx/hyperlink.h>
 #include <wx/menu.h>
 #include <wx/progdlg.h>
+#include <wx/slider.h>
 #include <wx/spinctrl.h>
 #include <wx/statbmp.h>
 #include <wx/stattext.h>
@@ -71,6 +72,11 @@ class bookthiefFrame: public wxFrame
 		static const long ID_STATICBITMAP2;
 		static const long ID_CHECKBOX4;
 		static const long ID_CHOICE1;
+		static const long ID_SLIDER1;
+		static const long ID_STATICTEXT5;
+		static const long ID_STATICTEXT7;
+		static const long ID_STATICTEXT8;
+		static const long ID_STATICTEXT9;
 		static const long idMenuQuit;
 		static const long idMenuAbout;
 		static const long ID_STATUSBAR1;
@@ -89,6 +95,7 @@ class bookthiefFrame: public wxFrame
 		wxHyperlinkCtrl* HyperlinkCtrl2;
 		wxHyperlinkCtrl* HyperlinkCtrl3;
 		wxProgressDialog* ProgressDialog1;
+		wxSlider* Slider1;
 		wxSpinCtrl* SpinCtrl1;
 		wxStaticBitmap* StaticBitmap1;
 		wxStaticBitmap* StaticBitmap2;
@@ -96,7 +103,11 @@ class bookthiefFrame: public wxFrame
 		wxStaticText* StaticText2;
 		wxStaticText* StaticText3;
 		wxStaticText* StaticText4;
+		wxStaticText* StaticText5;
 		wxStaticText* StaticText6;
+		wxStaticText* StaticText7;
+		wxStaticText* StaticText8;
+		wxStaticText* StaticText9;
 		wxStatusBar* StatusBar1;
 		wxTextCtrl* TextCtrl1;
 		wxTextCtrl* TextCtrl2;
