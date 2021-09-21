@@ -1,3 +1,11 @@
+bookthief (5.1.2) focal; urgency=low
+
+  * Patched newly-found bug, again to do with
+  filenames with quotes (infile string did not reset)
+  Increased buffer size for command string
+
+ -- rail5 <andrew@rail5.org>  Tue, 21 Sep 2021 15:31:56 -0400
+
 bookthief (5.1.1) focal; urgency=low
 
   * Patched minor bug involving filenames with quotes
