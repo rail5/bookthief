@@ -1,9 +1,9 @@
 /***************************************************************
  * Name:	BookThief
- * Version:	5.1
+ * Version:	5.2
  * Purpose:	GUI Frontend for Liesel
  * Author:	rail5 (andrew@rail5.org)
- * Created:	2021-09-20
+ * Created:	2021-10-05
  * Copyright:	rail5 (https://rail5.org)
  * License:	GNU GPL V3
  **************************************************************/
@@ -40,6 +40,7 @@
 #include <wx/image.h>
 #include <wx/intl.h>
 #include <wx/string.h>
+#include <wx/textdlg.h>
 //*)
 
 //helper functions
@@ -96,6 +97,7 @@ const long bookthiefFrame::ID_STATICTEXT8 = wxNewId();
 const long bookthiefFrame::ID_STATICTEXT9 = wxNewId();
 const long bookthiefFrame::idMenuQuit = wxNewId();
 const long bookthiefFrame::idMenuAbout = wxNewId();
+const long bookthiefFrame::idMenuExport = wxNewId();
 const long bookthiefFrame::ID_PROGRESSDIALOG1 = wxNewId();
 //*)
 
@@ -116,6 +118,7 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	wxMenuBar* MenuBar1;
 	wxMenuItem* MenuItem1;
 	wxMenuItem* MenuItem2;
+	wxMenuItem* MenuItem3;
 
 	Create(parent, wxID_ANY, _("BookThief"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE, _T("wxID_ANY"));
 	SetClientSize(wxSize(400,475));
@@ -127,7 +130,7 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 		SetIcon(FrameIcon);
 	}
 	Button1 = new wxButton(this, ID_BUTTON1, _("Save as"), wxPoint(152,360), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
-	HyperlinkCtrl1 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL1, _("Library Genesis"), _("http://gen.lib.rus.ec/"), wxPoint(96,408), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL1"));
+	HyperlinkCtrl1 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL1, _("Library Genesis"), _("http://gen.lib.rus.ec/"), wxPoint(88,408), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL1"));
 	CheckBox1 = new wxCheckBox(this, ID_CHECKBOX1, _("Convert to grayscale"), wxPoint(8,56), wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
 	CheckBox1->SetValue(false);
 	SpinCtrl1 = new wxSpinCtrl(this, ID_SPINCTRL1, _T("40"), wxPoint(248,168), wxSize(136,34), 0, 0, 100, 40, _T("ID_SPINCTRL1"));
@@ -135,15 +138,15 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	SpinCtrl1->Hide();
 	StaticText1 = new wxStaticText(this, ID_STATICTEXT1, _("Pages per segment"), wxPoint(256,208), wxDefaultSize, 0, _T("ID_STATICTEXT1"));
 	StaticText1->Hide();
-	TextCtrl1 = new wxTextCtrl(this, ID_TEXTCTRL1, _("1"), wxPoint(248,120), wxSize(56,27), 0, wxDefaultValidator, _T("ID_TEXTCTRL1"));
+	TextCtrl1 = new wxTextCtrl(this, ID_TEXTCTRL1, _("1"), wxPoint(248,120), wxSize(56,27), 0, wxTextValidator(wxFILTER_DIGITS), _T("ID_TEXTCTRL1"));
 	TextCtrl1->Hide();
-	TextCtrl2 = new wxTextCtrl(this, ID_TEXTCTRL2, _("100"), wxPoint(336,120), wxSize(48,27), 0, wxDefaultValidator, _T("ID_TEXTCTRL2"));
+	TextCtrl2 = new wxTextCtrl(this, ID_TEXTCTRL2, _("100"), wxPoint(336,120), wxSize(48,27), 0, wxTextValidator(wxFILTER_DIGITS), _T("ID_TEXTCTRL2"));
 	TextCtrl2->Hide();
 	StaticText2 = new wxStaticText(this, ID_STATICTEXT2, _("to"), wxPoint(312,128), wxDefaultSize, 0, _T("ID_STATICTEXT2"));
 	StaticText2->Hide();
-	HyperlinkCtrl2 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL2, _("ZLibrary"), _("https://1lib.domains"), wxPoint(216,408), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL2"));
-	StaticText3 = new wxStaticText(this, ID_STATICTEXT3, _("Looking for books\? Try:"), wxPoint(128,400), wxDefaultSize, 0, _T("ID_STATICTEXT3"));
-	StaticText4 = new wxStaticText(this, ID_STATICTEXT4, _("or"), wxPoint(208,416), wxDefaultSize, 0, _T("ID_STATICTEXT4"));
+	HyperlinkCtrl2 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL2, _("ZLibrary"), _("https://1lib.domains"), wxPoint(208,408), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL2"));
+	StaticText3 = new wxStaticText(this, ID_STATICTEXT3, _("Looking for books\? Try:"), wxPoint(120,400), wxDefaultSize, 0, _T("ID_STATICTEXT3"));
+	StaticText4 = new wxStaticText(this, ID_STATICTEXT4, _("or"), wxPoint(200,416), wxDefaultSize, 0, _T("ID_STATICTEXT4"));
 	HyperlinkCtrl3 = new wxHyperlinkCtrl(this, ID_HYPERLINKCTRL3, _("\?"), wxEmptyString, wxPoint(288,216), wxDefaultSize, wxHL_CONTEXTMENU|wxHL_ALIGN_CENTRE, _T("ID_HYPERLINKCTRL3"));
 	HyperlinkCtrl3->Hide();
 	CheckBox2 = new wxCheckBox(this, ID_CHECKBOX2, _("Print only within range"), wxPoint(8,120), wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX2"));
@@ -162,14 +165,16 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	Choice1->SetSelection( Choice1->Append(_("us-letter")) );
 	Choice1->Append(_("a4"));
 	Choice1->Hide();
-	Slider1 = new wxSlider(this, ID_SLIDER1, 100, -50, 250, wxPoint(56,304), wxSize(272,21), 0, wxDefaultValidator, _T("ID_SLIDER1"));
-	StaticText5 = new wxStaticText(this, ID_STATICTEXT5, _("Low"), wxPoint(48,320), wxDefaultSize, 0, _T("ID_STATICTEXT5"));
-	StaticText7 = new wxStaticText(this, ID_STATICTEXT7, _("Standard"), wxPoint(160,320), wxDefaultSize, 0, _T("ID_STATICTEXT7"));
-	StaticText8 = new wxStaticText(this, ID_STATICTEXT8, _("High"), wxPoint(304,320), wxDefaultSize, 0, _T("ID_STATICTEXT8"));
+	Slider1 = new wxSlider(this, ID_SLIDER1, 100, 0, 200, wxPoint(56,304), wxSize(272,30), wxSL_LABELS, wxDefaultValidator, _T("ID_SLIDER1"));
+	StaticText5 = new wxStaticText(this, ID_STATICTEXT5, _("Low"), wxPoint(48,334), wxDefaultSize, 0, _T("ID_STATICTEXT5"));
+	StaticText7 = new wxStaticText(this, ID_STATICTEXT7, _("Standard"), wxPoint(160,334), wxDefaultSize, 0, _T("ID_STATICTEXT7"));
+	StaticText8 = new wxStaticText(this, ID_STATICTEXT8, _("High"), wxPoint(304,334), wxDefaultSize, 0, _T("ID_STATICTEXT8"));
 	StaticText9 = new wxStaticText(this, ID_STATICTEXT9, _("Quality"), wxPoint(168,288), wxDefaultSize, 0, _T("ID_STATICTEXT9"));
 	MenuBar1 = new wxMenuBar();
 	Menu1 = new wxMenu();
+	MenuItem3 = new wxMenuItem(Menu1, idMenuExport, _("Export Command\tF12"), _("Export the generated Liesel command"), wxITEM_NORMAL);
 	MenuItem1 = new wxMenuItem(Menu1, idMenuQuit, _("Quit\tAlt-F4"), _("Quit the application"), wxITEM_NORMAL);
+	Menu1->Append(MenuItem3);
 	Menu1->Append(MenuItem1);
 	MenuBar1->Append(Menu1, _("&File"));
 	Menu2 = new wxMenu();
@@ -186,6 +191,7 @@ bookthiefFrame::bookthiefFrame(wxWindow* parent,wxWindowID id)
 	Connect(ID_CHECKBOX4,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&bookthiefFrame::OnCheckBox4Click);
 	Connect(idMenuQuit,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&bookthiefFrame::OnQuit);
 	Connect(idMenuAbout,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&bookthiefFrame::OnAbout);
+	Connect(idMenuExport,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&bookthiefFrame::OnExport);
 
     if (wxTheApp->argc > 1) {
 		if (file_exists(wxTheApp->argv[1]) && has_ending(wxTheApp->argv[1], ".pdf")) {
@@ -303,27 +309,19 @@ std::string bookthiefFrame::exec(const char* cmd, bool nonprogress) {
 
 }
 
-
-void bookthiefFrame::OnAbout(wxCommandEvent& event)
-{
-	wxString info = exec("liesel -q", true);
-	wxMessageBox(info, "BookThief");
-}
-
-void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
-{
+wxString bookthiefFrame::gencommand() {
 	wxString saneinfile = infile;
 	replaceAll("\\", "\\\\", saneinfile);
 	replaceAll("\"", "\\\"", saneinfile);
 
 	if (!has_ending(saneinfile, ".pdf")) {
 		wxMessageBox("Error: Please select a valid input PDF", "BookThief");
-		return;
+		return "fail";
 	}
 
 	wxFileDialog saveFileDialog(this, ("Save PDF file"), "", "", "PDF files (*.pdf)|*.pdf", wxFD_SAVE);
 	if (saveFileDialog.ShowModal() == wxID_CANCEL) {
-		return;
+		return "fail";
 	}
 
 	wxString outfile = saveFileDialog.GetPath();
@@ -332,7 +330,7 @@ void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
 
 	if (outfile == "") {
 		wxMessageBox("Error: Please pick a file for the new PDF", "BookThief");
-		return;
+		return "fail";
 	}
 
 	char command[8320] = "liesel -b -i \"";
@@ -376,7 +374,36 @@ void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
 	strcat(command, " -o \"");
 	strcat(command, outfile);
 	strcat(command, "\"");
+	
+	return command;
+}
 
+
+void bookthiefFrame::OnAbout(wxCommandEvent& event)
+{
+	wxString info = exec("liesel -q", true);
+	wxMessageBox(info, "BookThief");
+}
+
+void bookthiefFrame::OnExport(wxCommandEvent& event)
+{
+	wxString comd = gencommand();
+	if (comd == "fail") {
+		return;
+	}
+
+	wxTextEntryDialog returncomd(this, ("Your exported command is:"), "BookThief", comd);
+	returncomd.ShowModal();
+}
+
+void bookthiefFrame::OnButton1Click1(wxCommandEvent& event)
+{
+
+	wxString comd = gencommand();
+	if (comd == "fail") {
+		return;
+	}
+	const char* command = (const char*)comd.mb_str();
 	std::cout << "Running:\n" << command << "\n\n";
 	ProgressDialog1 = new wxProgressDialog(_("BookThief"), _("Building..."), 100, this, wxPD_APP_MODAL|wxPD_AUTO_HIDE|wxPD_CAN_ABORT);
 	wxString messageone = exec(command, false);
