@@ -2,7 +2,7 @@
  * Name:	  bookthiefMain.h
  * Purpose:   Defines Application Frame
  * Author:	rail5 (andrew@rail5.org)
- * Created:   2021-09-16
+ * Created:   2021-10-05
  * Copyright: rail5 (https://rail5.org)
  * License:   GNU GPL v3.0
  **************************************************************/
@@ -38,6 +38,7 @@ class bookthiefFrame: public wxFrame
 		//(*Handlers(bookthiefFrame)
 		void OnQuit(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
+		void OnExport(wxCommandEvent& event);
 		void OnButton1Click(wxCommandEvent& event);
 		void OnChoice1Select(wxCommandEvent& event);
 		void OnSpinCtrl1Change(wxSpinEvent& event);
@@ -49,6 +50,7 @@ class bookthiefFrame: public wxFrame
 		std::string exec(const char* cmd, bool nonprogress = false);
 		void OnButton2Click(wxCommandEvent& event);
 		void OnCheckBox4Click(wxCommandEvent& event);
+		wxString gencommand();
 		//*)
 
 		//(*Identifiers(bookthiefFrame)
@@ -79,6 +81,7 @@ class bookthiefFrame: public wxFrame
 		static const long ID_STATICTEXT9;
 		static const long idMenuQuit;
 		static const long idMenuAbout;
+		static const long idMenuExport;
 		static const long ID_STATUSBAR1;
 		static const long ID_PROGRESSDIALOG1;
 		//*)

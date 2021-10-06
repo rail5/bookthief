@@ -1,3 +1,10 @@
+bookthief (5.2) focal; urgency=low
+
+  * Added "Export Command" tool to File menu
+  Quality slider now displays integer value passed to Liesel
+
+ -- rail5 <andrew@rail5.org>  Tue, 5 Oct 2021 23:00:13 -0400
+
 bookthief (5.1.2) focal; urgency=low
 
   * Patched newly-found bug, again to do with
