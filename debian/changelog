@@ -1,3 +1,12 @@
+bookthief (5.3) focal; urgency=low
+
+  * Redid layout with sizers rather than absolute positioning
+  Moved libgen and 1lib links to Help menu
+  Added Export Command feature in File menu
+  Removed unnecessary verbosity from runtime and build deps
+
+ -- rail5 <andrew@rail5.org>  Mon, 11 Oct 2021 17:46:38 -0400
+
 bookthief (5.2) focal; urgency=low
 
   * Added "Export Command" tool to File menu
