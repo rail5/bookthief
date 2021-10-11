@@ -1,6 +1,6 @@
 Source: bookthief
 Maintainer: rail5 <andrew@rail5.org>
-Build-Depends: debhelper (>= 8.0.0), wx3.0-headers (>= 3.0.4+dfsg-15build1), libwxgtk3.0-gtk3-dev (>= 3.0.4+dfsg-15build1)
+Build-Depends: debhelper (>= 8.0.0), wx3.0-headers, libwxgtk3.0-gtk3-dev
 Standards-Version: 3.9.3
 Section: utils
 
