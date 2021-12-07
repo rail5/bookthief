@@ -43,7 +43,7 @@ class bookthiefFrame: public wxFrame
 		void OnButton2Click(wxCommandEvent& event);
 		void OnCheckBox3Click(wxCommandEvent& event);
 		void OnCheckBox4Click(wxCommandEvent& event);
-		std::string exec(const char* cmd, bool nonprogress);
+		std::string exec(std::string cmd, bool nonprogress);
 		wxString gencommand();
 		void OnExport(wxCommandEvent& event);
 		void OnLink1(wxCommandEvent& event);
