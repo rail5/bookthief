@@ -304,12 +304,12 @@ void bookthiefFrame::OnQuit(wxCommandEvent& event)
 
 int lieselproc;
 
-std::string bookthiefFrame::exec(const char* cmd, bool nonprogress) {
+std::string bookthiefFrame::exec(string cmd, bool nonprogress) {
 
 	if (nonprogress == true) {
 		std::array<char, 128> buffer;
 		std::string result;
-		std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+		std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
 		if (!pipe) {
 			throw std::runtime_error("popen() failed!");
 		}
@@ -319,12 +319,10 @@ std::string bookthiefFrame::exec(const char* cmd, bool nonprogress) {
 		return result;
 	}
 
-	char checkcmd[4096] = {""};
-	strcat(checkcmd, cmd);
-	strcat(checkcmd, " -c");
+	string checkcmd = cmd + " -c 2>&1";
 	std::array<char, 128> buffer;
 	std::string result;
-	std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(checkcmd, "r"), pclose);
+	std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(checkcmd.c_str(), "r"), pclose);
 	if (!pipe) {
 		throw std::runtime_error("popen() failed!");
 	}
@@ -353,7 +351,7 @@ std::string bookthiefFrame::exec(const char* cmd, bool nonprogress) {
 
 
 
-	FILE *fp = popen2(cmd, "r", lieselproc);
+	FILE *fp = popen2(cmd.c_str(), "r", lieselproc);
 	std::cout << "Spawned Liesel with PID " << lieselproc+1 << "\n\n";
 	setvbuf(fp, NULL, _IONBF, 0);
 
@@ -417,49 +415,27 @@ wxString bookthiefFrame::gencommand() {
 		return "fail";
 	}
 
-	char command[8320] = "liesel -b -i \"";
-
-	strcat(command, saneinfile);
-	strcat(command, "\"");
+	wxString comd = "liesel -b -i \"" + saneinfile + "\"";
 
 	if (CheckBox1->GetValue()  == true) {
-		strcat(command, " -g");
+		comd = comd + " -g";
 	}
 
 	if (CheckBox2->GetValue() == true) {
-		strcat(command, " -r ");
-		strcat(command, TextCtrl1->GetValue());
-		strcat(command, "-");
-		strcat(command, TextCtrl2->GetValue());
+		comd = comd + " -r " + TextCtrl1->GetValue() + "-" + TextCtrl2->GetValue();
 	}
 
 	if (CheckBox3->GetValue() == true) {
-		char segsize[33];
-		itoa(SpinCtrl1->GetValue(), segsize, 10);
-		strcat(command, " -s ");
-		strcat(command, segsize);
+		comd = comd + " -s " + wxString::Format(wxT("%i"),SpinCtrl1->GetValue());
 	}
 
 	if (CheckBox4->GetValue() == true) {
-		strcat(command, " -t ");
-		strcat(command, Choice1->GetStringSelection());
+		comd = comd + " -t " + Choice1->GetStringSelection();
 	}
-
-	char quality[33];
-	int qualint = Slider1->GetValue();
-	if (qualint < 0) {
-		qualint = 0;
-	}
-	itoa(qualint, quality, 10);
-
-	strcat(command, " -d ");
-	strcat(command, quality);
-
-	strcat(command, " -o \"");
-	strcat(command, outfile);
-	strcat(command, "\"");
 	
-	return command;
+	comd = comd + " -d " + wxString::Format(wxT("%i"),Slider1->GetValue()) + " -o \"" + outfile + "\"";
+	
+	return comd;
 }
 
 
@@ -497,14 +473,13 @@ void bookthiefFrame::OnFilePickerCtrl1FileChanged(wxFileDirPickerEvent& event)
 
 void bookthiefFrame::OnButton2Click(wxCommandEvent& event)
 {
-	wxString comd = gencommand();
+	std::string comd = std::string(gencommand().mb_str());
 	if (comd == "fail") {
 		return;
 	}
-	const char* command = (const char*)comd.mb_str();
-	std::cout << "Running:\n" << command << "\n\n";
+	std::cout << "Running:\n" << comd << "\n\n";
 	ProgressDialog1 = new wxProgressDialog(_("BookThief"), _("Building..."), 100, this, wxPD_APP_MODAL|wxPD_AUTO_HIDE|wxPD_CAN_ABORT);
-	wxString messageone = exec(command, false);
+	wxString messageone = exec(comd, false);
 	wxMessageBox(messageone, "BookThief");
 
 }
