@@ -14,6 +14,12 @@ sudo apt-get update
 sudo apt-get install bookthief
 ```
 
+## Note
+
+If you're looking for the old WxWidgets BookThief, that project has been moved to **bookthief-legacy** and will continue to receive updates.
+
+This version has been completely rebuilt from the ground-up in Pascal
+
 ## What is "pamphlet"-style printing?
 
 When BookThief spits out a new/converted PDF, you simply print it at home, double-sided, and then fold the stack of papers in half. (And staple them, if you want)
@@ -34,11 +40,12 @@ Be sure to tell your printer to print double-sided by flipping along the *short 
 
 
 ## Build Requirements
-wxWidgets, as in these packages:
 
-- wx3.0-headers
-
-- libwxgtk3.0-gtk3-dev
+- FPC (FreePascal Compiler) (>= 3.2.0) (Package: **fpc-3.2.0**)
+- Lazarus (= 2.0.10) (Package: **lazarus**)
+- **lcl-2.0**
+- **lcl-utils-2.0**
+- **fp-units-misc-3.2.0**
 
 ## Building
 ```

@@ -1,3 +1,11 @@
+bookthief (6.0) focal; urgency=low
+
+  * Rewrote BookThief GUI in FreePascal
+  Patched quite a few bugs along the way
+  'Open with BookThief' now works as well
+
+ -- rail5 <andrew@rail5.org>  Wed, 15 Dec 2021 05:46:23 -0500
+
 bookthief (5.3.1) focal; urgency=low
 
   * Patched a number of bugs
