@@ -3,3 +3,4 @@ all:
 	
 install:
 	install -m 0755 bookthief /usr/bin
+

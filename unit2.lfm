@@ -62,3 +62,4 @@ object Form2: TForm2
     Top = 16
   end
 end
+

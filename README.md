@@ -59,3 +59,4 @@ If you install BookThief via the PPA, Liesel comes with it in the same PPA. Othe
 ## License
 
 BookThief & Liesel are **free software**, distributed under the GNU GPL V3.0 License
+
