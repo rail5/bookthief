@@ -1,12 +1,12 @@
 object Form1: TForm1
-  Left = 1416
-  Height = 492
-  Top = 265
-  Width = 433
+  Left = 15
+  Height = 526
+  Top = 40
+  Width = 430
   BorderStyle = bsSingle
   Caption = 'BookThief'
-  ClientHeight = 469
-  ClientWidth = 433
+  ClientHeight = 503
+  ClientWidth = 430
   Menu = MainMenu1
   OnActivate = Form1Activate
   Position = poDefaultPosOnly
@@ -14,7 +14,7 @@ object Form1: TForm1
   object Button1: TButton
     Left = 24
     Height = 32
-    Top = 23
+    Top = 26
     Width = 387
     Anchors = [akLeft]
     Caption = '(None)'
@@ -24,7 +24,7 @@ object Form1: TForm1
   object CheckBox1: TCheckBox
     Left = 24
     Height = 23
-    Top = 88
+    Top = 76
     Width = 150
     Caption = 'Convert to grayscale'
     TabOrder = 1
@@ -32,9 +32,9 @@ object Form1: TForm1
   object CheckBox2: TCheckBox
     Left = 24
     Height = 23
-    Top = 160
-    Width = 163
-    Caption = 'Print only within range'
+    Top = 152
+    Width = 159
+    Caption = 'Print only given range'
     OnChange = CheckBox2Change
     TabOrder = 2
   end
@@ -59,25 +59,25 @@ object Form1: TForm1
   object TrackBar1: TTrackBar
     Left = 24
     Height = 47
-    Top = 360
-    Width = 400
+    Top = 400
+    Width = 384
     Max = 200
     Position = 100
     TabOrder = 5
   end
   object Button2: TButton
-    Left = 176
+    Left = 173
     Height = 40
-    Top = 416
+    Top = 448
     Width = 88
     Caption = 'Save as'
     OnClick = Button2Click
     TabOrder = 6
   end
   object Label1: TLabel
-    Left = 200
+    Left = 195
     Height = 24
-    Top = 336
+    Top = 376
     Width = 42
     AutoSize = False
     Caption = 'Quality'
@@ -86,40 +86,19 @@ object Form1: TForm1
   object Edit1: TEdit
     Left = 264
     Height = 31
-    Top = 152
-    Width = 56
-    NumbersOnly = True
+    Top = 144
+    Width = 144
     OnKeyPress = Edit1KeyPress
     TabOrder = 7
-    Text = '1'
-    Visible = False
-  end
-  object Edit2: TEdit
-    Left = 352
-    Height = 31
-    Top = 152
-    Width = 56
-    NumbersOnly = True
-    OnKeyPress = Edit1KeyPress
-    TabOrder = 8
-    Text = '100'
-    Visible = False
-  end
-  object Label2: TLabel
-    Left = 328
-    Height = 13
-    Top = 160
-    Width = 12
-    Caption = 'to'
-    ParentColor = False
+    TextHint = '1-10,30-45,6,20-1'
     Visible = False
   end
   object SpinEdit1: TSpinEdit
     Left = 264
     Height = 31
-    Top = 224
+    Top = 216
     Width = 144
-    TabOrder = 9
+    TabOrder = 8
     Value = 40
     Visible = False
   end
@@ -133,17 +112,19 @@ object Form1: TForm1
     Items.Strings = (
       'us-letter'
       'a4'
+      'custom'
     )
+    OnChange = ComboBox1Change
     ParentShowHint = False
     Style = csDropDownList
-    TabOrder = 10
+    TabOrder = 9
     Text = 'us-letter'
     Visible = False
   end
   object Label3: TLabel
-    Left = 288
+    Left = 283
     Height = 24
-    Top = 136
+    Top = 128
     Width = 101
     AutoSize = False
     Caption = 'Print only pages:'
@@ -153,12 +134,68 @@ object Form1: TForm1
   object Label4: TLabel
     Left = 280
     Height = 24
-    Top = 256
+    Top = 248
     Width = 116
     AutoSize = False
     Caption = 'Pages per segment'
     ParentColor = False
     Visible = False
+  end
+  object Edit3: TEdit
+    Left = 264
+    Height = 31
+    Top = 328
+    Width = 56
+    OnKeyPress = Edit3KeyPress
+    TabOrder = 10
+    Text = '8.5'
+    Visible = False
+  end
+  object Edit4: TEdit
+    Left = 352
+    Height = 31
+    Top = 328
+    Width = 56
+    OnKeyPress = Edit3KeyPress
+    TabOrder = 11
+    Text = '11'
+    Visible = False
+  end
+  object Label5: TLabel
+    Left = 272
+    Height = 24
+    Top = 360
+    Width = 36
+    AutoSize = False
+    Caption = 'Width'
+    ParentColor = False
+    Visible = False
+  end
+  object Label6: TLabel
+    Left = 360
+    Height = 24
+    Top = 360
+    Width = 40
+    AutoSize = False
+    Caption = 'Height'
+    ParentColor = False
+    Visible = False
+  end
+  object ComboBox2: TComboBox
+    Left = 264
+    Height = 27
+    Top = 72
+    Width = 144
+    ItemHeight = 0
+    ItemIndex = 0
+    Items.Strings = (
+      'short-edge flip'
+      'long-edge flip'
+    )
+    ParentShowHint = False
+    Style = csDropDownList
+    TabOrder = 12
+    Text = 'short-edge flip'
   end
   object OpenDialog1: TOpenDialog
     Title = 'Open PDF'
@@ -166,7 +203,7 @@ object Form1: TForm1
     Filter = 'PDF Files (*.pdf)|*.pdf'
     Options = [ofExtensionDifferent, ofPathMustExist, ofFileMustExist, ofEnableSizing, ofViewDetail]
     Left = 384
-    Top = 416
+    Top = 496
   end
   object MainMenu1: TMainMenu
     Left = 8
@@ -206,16 +243,15 @@ object Form1: TForm1
   end
   object SaveDialog1: TSaveDialog
     Filter = 'PDF files (*.pdf)|*.pdf'
-    Options = [ofPathMustExist, ofEnableSizing, ofDontAddToRecent, ofViewDetail]
-    Left = 45
-    Top = 432
+    Options = [ofOverwritePrompt, ofPathMustExist, ofEnableSizing, ofDontAddToRecent, ofViewDetail]
+    Left = 24
+    Top = 504
   end
   object Timer1: TTimer
     Enabled = False
     Interval = 1
     OnTimer = Timer1Timer
-    Left = 360
-    Top = 72
+    Left = 368
+    Top = 8
   end
 end
-
