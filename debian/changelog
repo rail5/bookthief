@@ -1,3 +1,14 @@
+bookthief (7.0) focal; urgency=low
+
+  * Added support for custom paper sizes (liesel's -t option)
+  Added support for automatic landscape/long-edge flipping (liesel's -l option)
+  Allowing user overwrites with confirmation prompt
+  Updated "print only within range" feature to use Liesel's new -r features
+  Multiple ranges (as in 1-10,20-30,5,7,12) etc
+  Cleaned up the code in general
+
+ -- rail5 <andrew@rail5.org>  Thu, 16 Dec 2021 21:20:36 -0500
+
 bookthief (6.0) focal; urgency=low
 
   * Rewrote BookThief GUI in FreePascal

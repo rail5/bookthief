@@ -20,12 +20,15 @@ type
     CheckBox3: TCheckBox;
     CheckBox4: TCheckBox;
     ComboBox1: TComboBox;
+    ComboBox2: TComboBox;
     Edit1: TEdit;
-    Edit2: TEdit;
+    Edit3: TEdit;
+    Edit4: TEdit;
     Label1: TLabel;
-    Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
     MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
@@ -43,11 +46,12 @@ type
     TrackBar1: TTrackBar;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
-    procedure Button3Click(Sender: TObject);
     procedure CheckBox2Change(Sender: TObject);
     procedure CheckBox3Change(Sender: TObject);
     procedure CheckBox4Change(Sender: TObject);
+    procedure ComboBox1Change(Sender: TObject);
     procedure Edit1KeyPress(Sender: TObject; var Key: char);
+    procedure Edit3KeyPress(Sender: TObject; var Key: char);
     procedure Form1Activate(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
@@ -55,6 +59,8 @@ type
     procedure MenuItem7Click(Sender: TObject);
     procedure MenuItem8Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
+    function GetTransform() : string;
+    function GetFlip() : boolean;
   private
     Form1Activated: Boolean;
   public
@@ -82,7 +88,27 @@ begin
   SanitizeFilename := outresult;
 end;
 
-function GenerateCommand(grayscale, rangeprinting, segprinting, rescaling: boolean; rangestart, rangeend: string; segsize, quality: integer; infile, outfile, rescaler: string): string;
+function TForm1.GetTransform() : string;
+var
+  outresult : string;
+begin
+  if ComboBox1.Text = 'custom' then
+    begin
+      outresult := Edit3.Text + 'x' + Edit4.Text;
+    end
+  else
+    begin
+      outresult := ComboBox1.Text;
+    end;
+    GetTransform := outresult;
+end;
+
+function TForm1.GetFlip : boolean;
+begin
+  GetFlip := (ComboBox2.Text = 'long-edge flip');
+end;
+
+function GenerateCommand(grayscale, rangeprinting, segprinting, rescaling, longedgeflip: boolean; range: string; segsize, quality: integer; infile, outfile, rescaler: string): string;
 var
   comd: string;
 begin
@@ -93,7 +119,7 @@ begin
     end;
   if rangeprinting then
     begin
-      comd := comd + ' -r ' + rangestart + '-' + rangeend;
+      comd := comd + ' -r ' + range;
     end;
   if segprinting then
     begin
@@ -103,7 +129,11 @@ begin
     begin
       comd := comd + ' -t ' + rescaler;
     end;
-  comd := comd + ' -d ' + quality.ToString() + ' -o "' + outfile + '"';
+  if longedgeflip then
+    begin
+      comd := comd + ' -l';
+    end;
+  comd := comd + ' -d ' + quality.ToString() + ' -o "' + outfile + '"' + ' -f';
 
   GenerateCommand := comd;
 end;
@@ -118,35 +148,18 @@ begin
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
-var
-  saneoutfile : string;
-  saneinfile : string;
-  exportedcomd : string;
 begin
   if fileExists(OpenDialog1.Filename) then
     begin
       if SaveDialog1.Execute then
         begin
-          if fileExists(SaveDialog1.Filename) then
-            begin
-              ShowMessage('Error: File already exists!');
-            end
-          else
-            begin
-              currentcomd := GenerateCommand(CheckBox1.Checked, CheckBox2.Checked, CheckBox3.Checked, CheckBox4.Checked, Edit1.Text, Edit2.Text, SpinEdit1.Value, TrackBar1.Position, OpenDialog1.Filename, SaveDialog1.Filename, ComboBox1.Text);
-              Form2.ShowModal();
+          currentcomd := GenerateCommand(CheckBox1.Checked, CheckBox2.Checked, CheckBox3.Checked, CheckBox4.Checked, GetFlip(), Edit1.Text, SpinEdit1.Value, TrackBar1.Position, OpenDialog1.Filename, SaveDialog1.Filename, GetTransform());
+          Form2.ShowModal();
 
-            end;
         end;
     end
   else
     ShowMessage('Error: Please select an input PDF');
-end;
-
-procedure TForm1.Button3Click(Sender: TObject);
-begin
-
-
 end;
 
 procedure TForm1.CheckBox2Change(Sender: TObject);
@@ -155,15 +168,11 @@ begin
     begin
       Label3.Visible:=true;
       Edit1.Visible:=true;
-      Label2.Visible:=true;
-      Edit2.Visible:=true;
       end
   else
     begin
       Label3.Visible:=false;
-      Edit1.Visible:=false;
-      Label2.Visible:=false;
-      Edit2.Visible:=false;
+      Edit1.Visible:=false;;
     end
 end;
 
@@ -186,24 +195,57 @@ begin
   if Checkbox4.Checked then
     begin
       ComboBox1.Visible:=true;
-
+      if ComboBox1.Text = 'custom' then
+        begin
+          Edit3.Visible := true;
+          Edit4.Visible := true;
+          Label5.Visible := true;
+          Label6.Visible := true;
+        end;
     end
   else
     begin
       ComboBox1.Visible:=false;
+      Edit3.Visible := false;
+      Edit4.Visible := false;
+      Label5.Visible := false;
+      Label6.Visible := false;
+    end;
+end;
+
+procedure TForm1.ComboBox1Change(Sender: TObject);
+begin
+  if ComboBox1.Text = 'custom' then
+    begin
+      Edit3.Visible := true;
+      Edit4.Visible := true;
+      Label5.Visible := true;
+      Label6.Visible := true;
+    end
+  else
+    begin
+      Edit3.Visible := false;
+      Edit4.Visible := false;
+      Label5.Visible := false;
+      Label6.Visible := false;
     end;
 end;
 
 procedure TForm1.Edit1KeyPress(Sender: TObject; var Key: Char);
 begin
-  if not (Key in ['0'..'9', Char(VK_BACK), Char(VK_DELETE)]) then Key := #0;
+  if not (Key in ['0'..'9', '-', ',', Char(VK_BACK)]) then Key := #0;
+end;
+
+procedure TForm1.Edit3KeyPress(Sender: TObject; var Key: Char);
+begin
+  if not (Key in ['0'..'9', Char(VK_BACK), Char(VK_DELETE), CHAR(VK_DECIMAL), CHAR(VK_SEPARATOR)]) then Key := #0;
 end;
 
 procedure TForm1.MenuItem3Click(Sender: TObject);
 var
-  exportedcomd : ansistring;
-  saneinfile : ansistring;
-  saneoutfile : ansistring;
+  exportedcomd : string;
+  saneinfile : string;
+  saneoutfile : string;
 begin
   if fileExists(OpenDialog1.Filename) then
     begin
@@ -211,8 +253,8 @@ begin
         begin
           saneinfile := SanitizeFilename(OpenDialog1.Filename);
           saneoutfile := SanitizeFilename(SaveDialog1.Filename); // Only necessary for 'Export Command,' as the TProc call to Liesel doesn't run in an ordinary shell
-          exportedcomd := GenerateCommand(CheckBox1.Checked, CheckBox2.Checked, CheckBox3.Checked, CheckBox4.Checked, Edit1.Text, Edit2.Text, SpinEdit1.Value, TrackBar1.Position, saneinfile, saneoutfile, ComboBox1.Text);
-          ShowMessage('Your exported command is: ' + LineEnding + exportedcomd);
+          exportedcomd := GenerateCommand(CheckBox1.Checked, CheckBox2.Checked, CheckBox3.Checked, CheckBox4.Checked, GetFlip(), Edit1.Text, SpinEdit1.Value, TrackBar1.Position, saneinfile, saneoutfile, GetTransform());
+          ShowMessage('Your exported command is: ' + LineEnding + LineEnding + exportedcomd);
         end;
 
     end

@@ -14,7 +14,6 @@
         <TextName Value="rail5.BookThief"/>
         <TextDesc Value="Prepares PDFs for booklet-style home-printing"/>
       </XPManifest>
-      <Icon Value="0"/>
     </General>
     <VersionInfo>
       <MajorVersionNr Value="6"/>
@@ -160,4 +159,3 @@
     </Exceptions>
   </Debugging>
 </CONFIG>
-

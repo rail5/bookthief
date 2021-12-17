@@ -5,13 +5,12 @@ Standards-Version: 3.9.3
 Section: utils
 
 Package: bookthief
-Version: 6.0
+Version: 7.0
 License: GPL-3.0
 Vendor: rail5 <andrew@rail5.org>
 Priority: optional
 Architecture: any
 Depends: liesel (>= 5.0), libc6, libgtk2.0-0, libx11-6, libglib2.0-0, libpango-1.0-0, libcairo2, libatk1.0-0, libpangocairo-1.0-0, libfontconfig1, libxrender1, libxinerama1, libxi6, libxrandr2, libxcursor1, libxcomposite1, libxdamage1, libxfixes3, libxext6, libxcb1, libpangoft2-1.0-0, libpcre3, libfribidi0, libthai0, libharfbuzz0b, libpixman-1-0, libfreetype6, libpng16-16, libxcb-shm0, libxcb-render0, zlib1g, libmount1, libexpat1, libuuid1, libxau6, libxdmcp6, libdatrie1, libgraphite2-3, libblkid1, libbsd0
-Conflicts: bookthief-legacy
 Description: GUI Front-end for Liesel
  Prepares PDFs to be home-printed
  in "pamphlet" style

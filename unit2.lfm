@@ -1,7 +1,7 @@
 object Form2: TForm2
-  Left = 1444
+  Left = 76
   Height = 135
-  Top = 279
+  Top = 221
   Width = 296
   BorderStyle = bsDialog
   Caption = 'BookThief'
@@ -62,4 +62,3 @@ object Form2: TForm2
     Top = 16
   end
 end
-
