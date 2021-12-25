@@ -5,8 +5,9 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, process, Forms, Controls, Graphics, Dialogs, ComCtrls,
-  StdCtrls, Buttons, ExtCtrls, Menus, Spin, LazFileUtils, LCLType, LCLIntf, Unit2;
+  Classes, SysUtils, Process, Forms, Controls, Graphics, Dialogs, ComCtrls,
+  StdCtrls, Buttons, ExtCtrls, Menus, Spin, LazFileUtils, LCLType, LCLIntf,
+  XMLPropStorage, Unit2, Unit3, Types, StrUtils;
 
 type
 
@@ -19,6 +20,7 @@ type
     CheckBox2: TCheckBox;
     CheckBox3: TCheckBox;
     CheckBox4: TCheckBox;
+    CheckBox5: TCheckBox;
     ComboBox1: TComboBox;
     ComboBox2: TComboBox;
     Edit1: TEdit;
@@ -44,11 +46,14 @@ type
     SpinEdit1: TSpinEdit;
     Timer1: TTimer;
     TrackBar1: TTrackBar;
+    XMLPropStorage1: TXMLPropStorage;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
+    procedure CheckBox1Change(Sender: TObject);
     procedure CheckBox2Change(Sender: TObject);
     procedure CheckBox3Change(Sender: TObject);
     procedure CheckBox4Change(Sender: TObject);
+    procedure CheckBox5Change(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
     procedure Edit1KeyPress(Sender: TObject; var Key: char);
     procedure Edit3KeyPress(Sender: TObject; var Key: char);
@@ -61,11 +66,20 @@ type
     procedure Timer1Timer(Sender: TObject);
     function GetTransform() : string;
     function GetFlip() : boolean;
+    function CreateCommand(preview : boolean) : TStringArray;
+    function GenerateCommand() : string;
+    procedure TrackBar1MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure TrackBar1MouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   private
     Form1Activated: Boolean;
   public
     currentcomd : string;
     openfile: string;
+    currentpagecount: LongInt;
+    currentpdf: string;
+    systmpdir: string;
 
   end;
 
@@ -103,47 +117,193 @@ begin
     GetTransform := outresult;
 end;
 
-function TForm1.GetFlip : boolean;
+function TForm1.GetFlip() : boolean;
 begin
   GetFlip := (ComboBox2.Text = 'long-edge flip');
 end;
 
-function GenerateCommand(grayscale, rangeprinting, segprinting, rescaling, longedgeflip: boolean; range: string; segsize, quality: integer; infile, outfile, rescaler: string): string;
+function TForm1.CreateCommand(preview : boolean) : TStringArray;
+var
+  comd : string;
+  theresult : TStringArray;
+  cropstring : string;
+begin
+  comd := '-b -i "' + OpenDialog1.Filename + '"';
+
+  SetLength(theresult, Length(theresult)+3);
+  theresult[Length(theresult)-3] := '-b';
+  theresult[Length(theresult)-2] := '-i';
+  theresult[Length(theresult)-1] := '' + currentpdf + '';
+
+  if CheckBox1.Checked then
+    begin
+      SetLength(theresult, Length(theresult)+1);
+      theresult[Length(theresult)-1] := '-g';
+    end;
+
+  if (CheckBox2.Checked) and (preview = false) then
+    begin
+      SetLength(theresult, Length(theresult)+2);
+      theresult[Length(theresult)-2] := '-r';
+      theresult[Length(theresult)-1] := Edit1.Text;
+    end;
+
+  if (CheckBox3.Checked) and (preview = false) then
+    begin
+      SetLength(theresult, Length(theresult)+2);
+      theresult[Length(theresult)-2] := '-s';
+      theresult[Length(theresult)-1] := SpinEdit1.Value.ToString();
+    end;
+
+  if CheckBox4.Checked then
+    begin
+      SetLength(theresult, Length(theresult)+2);
+      if ComboBox1.Text = 'custom' then
+        begin
+          theresult[Length(theresult)-2] := '-t';
+          theresult[Length(theresult)-1] := Edit3.Text + 'x' + Edit4.Text;
+        end
+      else
+        begin
+          theresult[Length(theresult)-2] := '-t';
+          theresult[Length(theresult)-1] := ComboBox1.Text;
+        end;
+    end;
+
+  if ComboBox2.Text = 'long-edge flip' then
+    begin
+      SetLength(theresult, Length(theresult)+1);
+      theresult[Length(theresult)-1] := '-l';
+    end;
+
+  if CheckBox5.Checked then
+    begin
+      if Form3.CheckBox1.Checked then
+        begin
+          SetLength(theresult, Length(theresult)+2);
+          theresult[Length(theresult)-2] := '-k';
+          theresult[Length(theresult)-1] := Form3.TrackBar2.Position.ToString();
+        end;
+
+      if Form3.CheckBox2.Checked then
+        begin
+          SetLength(theresult, Length(theresult)+2);
+          theresult[Length(theresult)-2] := '-C';
+          cropstring := Form3.TrackBar1.Position.ToString() + ',';
+          cropstring := cropstring + Form3.TrackBar3.Position.ToString() + ',';
+          cropstring := cropstring + Form3.TrackBar4.Position.ToString() + ',';
+          cropstring := cropstring + Form3.TrackBar5.Position.ToString();
+          theresult[Length(theresult)-1] := cropstring;
+        end;
+
+      if Form3.CheckBox3.Checked then
+        begin
+          SetLength(theresult, Length(theresult)+2);
+          theresult[Length(theresult)-2] := '-w';
+          theresult[Length(theresult)-1] := Form3.TrackBar6.Position.ToString();
+        end;
+
+      if Form3.CheckBox4.Checked then
+        begin
+          SetLength(theresult, Length(theresult)+1);
+          theresult[Length(theresult)-1] := '-D';
+        end;
+
+    end;
+
+  SetLength(theresult, Length(theresult)+2);
+  theresult[Length(theresult)-2] :=  '-d';
+  theresult[Length(theresult)-1] := TrackBar1.Position.ToString();
+
+  if preview then
+    begin
+      SetLength(theresult, Length(theresult)+2);
+      theresult[Length(theresult)-2] := '-e';
+
+      if Form3.CheckBox4.Checked then
+        begin
+          theresult[Length(theresult)-1] := Form3.UpDown1.Position.Tostring() + ',' + Form3.UpDown1.Position.ToString();
+        end
+      else
+        begin
+          theresult[Length(theresult)-1] := Form3.UpDown1.Position.ToString() + ',' + (Form3.UpDown1.Position + 1).ToString();
+        end;
+
+      SetLength(theresult, Length(theresult)+2);
+      theresult[Length(theresult)-2] := '-o';
+      theresult[Length(theresult)-1] := systmpdir + '/bookthief-temp-preview.jpeg';
+    end
+  else
+    begin
+
+      SetLength(theresult, Length(theresult)+2);
+      theresult[Length(theresult)-2] := '-o';
+      theresult[Length(theresult)-1] := '' + SaveDialog1.Filename + '';
+    end;
+
+    SetLength(theresult, Length(theresult)+1);
+    theresult[Length(theresult)-1] := '-f';
+
+    CreateCommand := theresult;
+end;
+
+procedure TForm1.TrackBar1MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if CheckBox5.Checked then
+    Form3.Timer2.Enabled := true;
+end;
+
+procedure TForm1.TrackBar1MouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+  if CheckBox5.Checked then
+    Form3.Timer2.Enabled := true;
+end;
+
+function TForm1.GenerateCommand(): string;
 var
   comd: string;
+  escaped: string;
+  precomd: TStringArray;
+  i: integer;
 begin
-  comd := 'liesel -b -i "' + infile + '"';
-  if grayscale then
-    begin
-      comd := comd + ' -g';
-    end;
-  if rangeprinting then
-    begin
-      comd := comd + ' -r ' + range;
-    end;
-  if segprinting then
-    begin
-      comd := comd + ' -s ' + segsize.ToString();
-    end;
-  if rescaling then
-    begin
-      comd := comd + ' -t ' + rescaler;
-    end;
-  if longedgeflip then
-    begin
-      comd := comd + ' -l';
-    end;
-  comd := comd + ' -d ' + quality.ToString() + ' -o "' + outfile + '"' + ' -f';
+  comd := 'liesel';
+  escaped := '';
+
+  precomd := Form1.CreateCommand(false);
+
+  for i := 0 to (Length(precomd)-1) do
+  begin
+    if AnsiContainsStr(precomd[i], ' ') then
+      begin
+        escaped := '"';
+      end;
+    comd := comd + ' ' + escaped + precomd[i] + escaped;
+    escaped := '';
+  end;
 
   GenerateCommand := comd;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
+var
+  pgstring : string;
 begin
   if OpenDialog1.Execute then
     begin
       if fileExists(OpenDialog1.Filename) then
-        Button1.Caption:=ExtractFileNameOnly(OpenDialog1.Filename) + '.pdf';
+        begin
+          Button1.Caption:=ExtractFileNameOnly(OpenDialog1.Filename) + '.pdf';
+          currentpdf := OpenDialog1.Filename;
+          if RunCommand('liesel', ['-p', OpenDialog1.Filename], pgstring, [], swoHide) then
+            begin
+              currentpagecount := StrToInt(pgstring);
+              Form3.Button2.Caption := pgstring;
+            end;
+          if CheckBox5.Checked then
+            Form3.ExportLiesel(CreateCommand(true));
+        end;
     end;
 end;
 
@@ -153,13 +313,19 @@ begin
     begin
       if SaveDialog1.Execute then
         begin
-          currentcomd := GenerateCommand(CheckBox1.Checked, CheckBox2.Checked, CheckBox3.Checked, CheckBox4.Checked, GetFlip(), Edit1.Text, SpinEdit1.Value, TrackBar1.Position, OpenDialog1.Filename, SaveDialog1.Filename, GetTransform());
+          currentcomd := GenerateCommand();
           Form2.ShowModal();
 
         end;
     end
   else
     ShowMessage('Error: Please select an input PDF');
+end;
+
+procedure TForm1.CheckBox1Change(Sender: TObject);
+begin
+  if CheckBox5.Checked then
+    Form3.Timer2.Enabled := true;
 end;
 
 procedure TForm1.CheckBox2Change(Sender: TObject);
@@ -211,6 +377,21 @@ begin
       Label5.Visible := false;
       Label6.Visible := false;
     end;
+
+    if CheckBox5.Checked then
+      Form3.Timer2.Enabled := true;
+end;
+
+procedure TForm1.CheckBox5Change(Sender: TObject);
+begin
+  if CheckBox5.Checked then
+    begin
+      Form3.Show;
+    end
+  else
+    begin
+      Form3.Hide;
+    end;
 end;
 
 procedure TForm1.ComboBox1Change(Sender: TObject);
@@ -229,6 +410,9 @@ begin
       Label5.Visible := false;
       Label6.Visible := false;
     end;
+
+  if CheckBox5.Checked then
+    Form3.Timer2.Enabled := true;
 end;
 
 procedure TForm1.Edit1KeyPress(Sender: TObject; var Key: Char);
@@ -253,7 +437,7 @@ begin
         begin
           saneinfile := SanitizeFilename(OpenDialog1.Filename);
           saneoutfile := SanitizeFilename(SaveDialog1.Filename); // Only necessary for 'Export Command,' as the TProc call to Liesel doesn't run in an ordinary shell
-          exportedcomd := GenerateCommand(CheckBox1.Checked, CheckBox2.Checked, CheckBox3.Checked, CheckBox4.Checked, GetFlip(), Edit1.Text, SpinEdit1.Value, TrackBar1.Position, saneinfile, saneoutfile, GetTransform());
+          exportedcomd := GenerateCommand();
           ShowMessage('Your exported command is: ' + LineEnding + LineEnding + exportedcomd);
         end;
 
@@ -268,8 +452,9 @@ end;
 procedure TForm1.MenuItem4Click(Sender: TObject);
 var
   ReturnInfo: ansistring;
+  Opts: TStringArray;
 begin
-  if RunCommand('liesel', ['-q'], ReturnInfo) then
+  if RunCommand('liesel', ['-q'], ReturnInfo, [], swoHide) then
     begin
       ShowMessage(ReturnInfo);
     end
@@ -313,6 +498,11 @@ procedure TForm1.Form1Activate(Sender: TObject);
 begin
   if not Form1Activated then begin
     Form1Activated := true;
+    {$IFDEF WINDOWS}
+    XMLPropStorage1.FileName := GetUserDir() + '\bookthief.xml';
+    XMLPropStorage1.Restore;
+    {$ENDIF}
+    systmpdir := GetTempDir(true);
     Timer1.Enabled := true;
   end;
 end;
