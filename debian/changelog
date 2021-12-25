@@ -1,3 +1,12 @@
+bookthief (8.0) focal; urgency=low
+
+  * Added an "advanced" window with a live preview
+  Taking advantage of Liesel 8.0's new features
+  BookThief now also cross-compiles for Windows as well
+  Great stuff
+
+ -- rail5 <andrew@rail5.org>  Sat, 25 Dec 2021 18:43:22 -0500
+
 bookthief (7.0) focal; urgency=low
 
   * Added support for custom paper sizes (liesel's -t option)

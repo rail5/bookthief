@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 15
+  Left = 13
   Height = 526
-  Top = 40
+  Top = 61
   Width = 430
   BorderStyle = bsSingle
   Caption = 'BookThief'
@@ -10,6 +10,7 @@ object Form1: TForm1
   Menu = MainMenu1
   OnActivate = Form1Activate
   Position = poDefaultPosOnly
+  SessionProperties = 'ComboBox2.Text;Height;Left;Top;Width;ComboBox1.Text'
   LCLVersion = '2.0.10.0'
   object Button1: TButton
     Left = 24
@@ -27,6 +28,7 @@ object Form1: TForm1
     Top = 76
     Width = 150
     Caption = 'Convert to grayscale'
+    OnChange = CheckBox1Change
     TabOrder = 1
   end
   object CheckBox2: TCheckBox
@@ -63,6 +65,8 @@ object Form1: TForm1
     Width = 384
     Max = 200
     Position = 100
+    OnMouseUp = TrackBar1MouseUp
+    OnMouseWheel = TrackBar1MouseWheel
     TabOrder = 5
   end
   object Button2: TButton
@@ -189,13 +193,22 @@ object Form1: TForm1
     ItemHeight = 0
     ItemIndex = 0
     Items.Strings = (
-      'short-edge flip'
       'long-edge flip'
+      'short-edge flip'
     )
     ParentShowHint = False
     Style = csDropDownList
     TabOrder = 12
-    Text = 'short-edge flip'
+    Text = 'long-edge flip'
+  end
+  object CheckBox5: TCheckBox
+    Left = 24
+    Height = 23
+    Top = 361
+    Width = 86
+    Caption = 'Advanced'
+    OnChange = CheckBox5Change
+    TabOrder = 13
   end
   object OpenDialog1: TOpenDialog
     Title = 'Open PDF'
@@ -253,5 +266,10 @@ object Form1: TForm1
     OnTimer = Timer1Timer
     Left = 368
     Top = 8
+  end
+  object XMLPropStorage1: TXMLPropStorage
+    StoredValues = <>
+    Left = 24
+    Top = 456
   end
 end
