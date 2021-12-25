@@ -6,7 +6,14 @@ interface
 
 uses
   Classes, SysUtils, process, Forms, Controls, Graphics, Dialogs,
-  ComCtrls, StdCtrls, ExtCtrls, BaseUnix;
+  ComCtrls, StdCtrls,
+  {$IFDEF LINUX}
+  BaseUnix,
+  {$ENDIF}
+  {$IFDEF WINDOWS}
+  Windows,
+  {$ENDIF}
+  ExtCtrls;
 
 type
 
@@ -20,7 +27,7 @@ type
     Timer1: TTimer;
     procedure Button1Click(Sender: TObject);
     procedure FormActivate(Sender: TObject);
-    function SpawnLiesel(comd : string) : boolean;
+    function SpawnLiesel() : boolean;
     procedure Timer1Timer(Sender: TObject);
   private
     FormActivated: Boolean;
@@ -38,6 +45,22 @@ uses Unit1;
 {$R *.lfm}
 
 { TForm2 }
+
+{$IFDEF WINDOWS}
+function ProcKill(ProcessID: Cardinal) : boolean;
+var
+  hProcess : THandle;
+begin
+  Result := False;
+  hProcess := OpenProcess(PROCESS_TERMINATE,False,ProcessID);
+  if hProcess > 0 then
+    try
+      Result := Win32Check(Windows.TerminateProcess(hProcess,0));
+    finally
+      CloseHandle(hProcess);
+    end;
+end;
+{$ENDIF}
 
 function IsNumeric(haystack : string) : boolean;
 var
@@ -62,8 +85,9 @@ begin
   end;
 end;
 
-function TForm2.SpawnLiesel(comd : string) : boolean;
+function TForm2.SpawnLiesel() : boolean;
 var
+  comd : string;
   OutputStream : TStream;
   BytesRead : longint;
   Buffer : array[1..1] of byte;
@@ -75,14 +99,24 @@ var
   ErrBytesRead : longint;
   ErrBuffer : array[1..2048] of byte;
   ErrString : string;
+  finalcomd : TStringArray;
+  i : integer;
 begin
+  comd := Form1.GenerateCommand();
+  finalcomd := Form1.CreateCommand(false);
+
   Process1 := TProcess.Create(nil);
 
-  checkcomd := comd + ' -c';
+  Process1.Executable := 'liesel';
 
-  Process1.CommandLine := checkcomd; // Run the 'check' command to verify everything's good to go
+  Process1.ShowWindow := swoHide;
 
-  WriteLn(checkcomd);
+  for i := 0 to (Length(finalcomd)-1) do
+  begin
+    Process1.Parameters.Add(finalcomd[i]);
+  end;
+
+  Process1.Parameters.Add('-c'); // Run the 'check' command to verify everything's good to go
 
   Process1.Options := [poUsePipes];
 
@@ -101,21 +135,28 @@ begin
   if progstring <> 'OK' then
     begin
       ErrString := StreamToString(ErrStream);
-      WriteLn(ErrString);
+      {$IFDEF LINUX} WriteLn(ErrString); {$ENDIF}
       ShowMessage(ErrString); // If the Liesel -c check command doesn't output "OK" to stdout, read from stderr and pipe to a message box
       Form2.Close();
       FormActivated := false;
       Exit(false);
     end;
 
-  WriteLn('Command verified OK');
+  {$IFDEF LINUX} WriteLn('Command verified OK'); {$ENDIF}
 
-  WriteLn('Running command: ' + comd + LineEnding);
+  {$IFDEF LINUX} WriteLn('Running command: ' + comd + LineEnding); {$ENDIF}
   progaccumulator := '';
 
   Process1 := TProcess.Create(nil);
 
-  Process1.CommandLine := comd;
+  Process1.Executable := 'liesel';
+
+  Process1.ShowWindow := swoHide;
+
+  for i := 0 to (Length(finalcomd)-1) do
+  begin
+    Process1.Parameters.Add(finalcomd[i]);
+  end;
 
   Process1.Options:= [poUsePipes];
 
@@ -132,7 +173,7 @@ begin
       begin
         ProgressBar1.Position := StrToInt(progaccumulator);
         Update();
-        Write(progaccumulator + '%...');
+        {$IFDEF LINUX} Write(progaccumulator + '%...'); {$ENDIF}
         progaccumulator := '';
       end
     else if IsNumeric(progstring) then
@@ -142,7 +183,7 @@ begin
     else if progstring = 'D' then
       begin
         ProgressBar1.Position := 100;
-        Write('Done!' + LineEnding);
+        {$IFDEF LINUX} Write('Done!' + LineEnding); {$ENDIF}
         ShowMessage('Done!');
         Form2.Close;
         FormActivated := false;
@@ -162,13 +203,14 @@ procedure TForm2.Timer1Timer(Sender: TObject);
 begin
   Timer1.Enabled := false;
   Update();
-  SpawnLiesel(Form1.currentcomd);
+  SpawnLiesel();
 end;
 
 procedure TForm2.Button1Click(Sender: TObject);
 begin
-  FpKill(Process1.ProcessID, SIGINT);
-  Write('Cancelled' + LineEnding);
+  {$IFDEF LINUX} FpKill(Process1.ProcessID, SIGINT); {$ENDIF}
+  {$IFDEF WINDOWS} ProcKill(Process1.ProcessID); {$ENDIF}
+  {$IFDEF LINUX} Write('Cancelled' + LineEnding); {$ENDIF}
   ShowMessage('Cancelled');
   ProgressBar1.Position := 0;
   Form2.Close;

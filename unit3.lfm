@@ -1,0 +1,253 @@
+object Form3: TForm3
+  Left = 459
+  Height = 739
+  Top = 58
+  Width = 589
+  Caption = 'BookThief'
+  ClientHeight = 739
+  ClientWidth = 589
+  OnActivate = FormActivate
+  OnClose = FormClose
+  OnHide = FormHide
+  LCLVersion = '2.0.10.0'
+  object Image1: TImage
+    Left = 16
+    Height = 376
+    Top = 16
+    Width = 544
+    Proportional = True
+  end
+  object CheckBox1: TCheckBox
+    Left = 16
+    Height = 23
+    Top = 488
+    Width = 117
+    Caption = 'Color threshold'
+    OnChange = CheckBox1Change
+    TabOrder = 0
+  end
+  object TrackBar2: TTrackBar
+    Left = 232
+    Height = 47
+    Top = 464
+    Width = 328
+    Max = 100
+    Position = 50
+    OnMouseUp = TrackBar2MouseUp
+    OnMouseWheel = TrackBar2MouseWheel
+    TabOrder = 1
+    Visible = False
+  end
+  object Label2: TLabel
+    Left = 16
+    Height = 24
+    Top = 424
+    Width = 103
+    AutoSize = False
+    Caption = 'Previewing page:'
+    ParentColor = False
+  end
+  object Label3: TLabel
+    Left = 128
+    Height = 13
+    Top = 424
+    Width = 8
+    Caption = '1'
+    ParentColor = False
+  end
+  object UpDown1: TUpDown
+    Left = 456
+    Height = 25
+    Top = 399
+    Width = 61
+    Increment = 2
+    Min = 1
+    OnClick = UpDown1Click
+    Orientation = udHorizontal
+    Position = 1
+    TabOrder = 2
+  end
+  object Button1: TButton
+    Left = 416
+    Height = 25
+    Top = 424
+    Width = 48
+    Caption = '1'
+    OnClick = Button1Click
+    TabOrder = 3
+  end
+  object Button2: TButton
+    Left = 512
+    Height = 25
+    Top = 424
+    Width = 48
+    Caption = '...'
+    OnClick = Button2Click
+    TabOrder = 4
+  end
+  object Label1: TLabel
+    Left = 16
+    Height = 24
+    Top = 399
+    Width = 320
+    AutoSize = False
+    Caption = 'Live preview'
+    ParentColor = False
+  end
+  object Shape1: TShape
+    Left = 232
+    Height = 41
+    Top = 168
+    Width = 112
+    Visible = False
+  end
+  object Label4: TLabel
+    Left = 16
+    Height = 48
+    Top = 176
+    Width = 544
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Loading...'
+    Font.Height = -21
+    ParentColor = False
+    ParentFont = False
+    Visible = False
+  end
+  object CheckBox2: TCheckBox
+    Left = 16
+    Height = 23
+    Top = 616
+    Width = 94
+    Caption = 'Crop pages'
+    OnChange = CheckBox2Change
+    TabOrder = 5
+  end
+  object TrackBar1: TTrackBar
+    Left = 232
+    Height = 47
+    Top = 592
+    Width = 160
+    Max = 100
+    Position = 0
+    OnMouseUp = TrackBar2MouseUp
+    TabOrder = 6
+    Visible = False
+  end
+  object TrackBar3: TTrackBar
+    Left = 400
+    Height = 47
+    Top = 592
+    Width = 160
+    Max = 100
+    Position = 0
+    OnMouseUp = TrackBar2MouseUp
+    TabOrder = 7
+    Visible = False
+  end
+  object TrackBar4: TTrackBar
+    Left = 232
+    Height = 47
+    Top = 664
+    Width = 160
+    Max = 100
+    Position = 0
+    OnMouseUp = TrackBar2MouseUp
+    TabOrder = 8
+    Visible = False
+  end
+  object TrackBar5: TTrackBar
+    Left = 400
+    Height = 47
+    Top = 664
+    Width = 160
+    Max = 100
+    Position = 0
+    OnMouseUp = TrackBar2MouseUp
+    TabOrder = 9
+    Visible = False
+  end
+  object CheckBox3: TCheckBox
+    Left = 16
+    Height = 23
+    Top = 552
+    Width = 154
+    Caption = 'Widen center margin'
+    OnChange = CheckBox3Change
+    TabOrder = 10
+  end
+  object TrackBar6: TTrackBar
+    Left = 232
+    Height = 47
+    Top = 528
+    Width = 328
+    Max = 100
+    Position = 0
+    OnMouseUp = TrackBar2MouseUp
+    TabOrder = 11
+    Visible = False
+  end
+  object Label5: TLabel
+    Left = 232
+    Height = 16
+    Top = 640
+    Width = 26
+    AutoSize = False
+    Caption = 'Left'
+    ParentColor = False
+    Visible = False
+  end
+  object Label6: TLabel
+    Left = 400
+    Height = 23
+    Top = 640
+    Width = 36
+    AutoSize = False
+    Caption = 'Right'
+    ParentColor = False
+    Visible = False
+  end
+  object Label7: TLabel
+    Left = 234
+    Height = 23
+    Top = 712
+    Width = 24
+    AutoSize = False
+    Caption = 'Top'
+    ParentColor = False
+    Visible = False
+  end
+  object Label8: TLabel
+    Left = 400
+    Height = 23
+    Top = 712
+    Width = 48
+    AutoSize = False
+    Caption = 'Bottom'
+    ParentColor = False
+    Visible = False
+  end
+  object CheckBox4: TCheckBox
+    Left = 16
+    Height = 23
+    Top = 680
+    Width = 173
+    Caption = 'Split each page into two'
+    OnChange = CheckBox4Change
+    TabOrder = 12
+  end
+  object Timer1: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = Timer1Timer
+    Left = 456
+    Top = 816
+  end
+  object Timer2: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = Timer2Timer
+    Left = 216
+    Top = 816
+  end
+end
