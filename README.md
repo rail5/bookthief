@@ -30,13 +30,35 @@ When BookThief spits out a new/converted PDF, you simply print it at home, doubl
 
 ![Screenshot](./bookthief-screenshot2.png)
 
-Be sure to tell your printer to print double-sided by flipping along the *short edge* (Portrait)
-
 ## Features
 
 - GUI (bookthief) & command-line (liesel)
 
 - Supports "splitting" PDFs into more manageable segments (based on how much paper you can realistically staple together)
+
+- Has an "advanced" window featuring a live-preview of the current settings
+
+## Advanced Window
+
+Suppose you're handling a PDF of a scanned book with yellow pages:
+
+![Example](./bookthief-screenshot3.png)
+
+You can apply the "color threshold" to save ink when printing:
+
+![Example](./bookthief-screenshot4.png)
+
+Suppose instead you're handling a PDF of another scanned book, but the scanner didn't separate the left/right pages
+
+![Example](./doubled-example.png)
+
+Normally, this would mess things up pretty bad
+
+![Example](./bookthief-screenshot5.png)
+
+But we can apply the "Split pages" option to fix it for us
+
+![Example](./bookthief-screenshot6.png)
 
 
 ## Build Requirements
