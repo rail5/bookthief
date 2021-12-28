@@ -1,3 +1,10 @@
+bookthief (8.0.1) focal; urgency=low
+
+  * Patched minor bug in "Open With" functionality
+  (Preview did not load when PDF was loaded on startup)
+
+ -- rail5 <andrew@rail5.org>  Tue, 28 Dec 2021 18:13:53 -0500
+
 bookthief (8.0) focal; urgency=low
 
   * Added an "advanced" window with a live preview
