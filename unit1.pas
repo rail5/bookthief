@@ -480,6 +480,8 @@ begin
 end;
 
 procedure TForm1.Timer1Timer(Sender: TObject);
+var
+  pgstring : string;
 begin
   Timer1.Enabled := false;
   Update();
@@ -490,6 +492,12 @@ begin
       if fileExists(OpenDialog1.Filename) then
         begin
           Button1.Caption := ExtractFileNameOnly(OpenDialog1.Filename) + '.pdf';
+          currentpdf := openfile;
+          if RunCommand('liesel', ['-p', openfile], pgstring, [], swoHide) then
+          begin
+            currentpagecount := StrToInt(pgstring);
+            Form3.Button2.Caption := pgstring;
+          end;
         end;
     end;
 end;
