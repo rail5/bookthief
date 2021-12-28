@@ -14,12 +14,6 @@ sudo apt-get update
 sudo apt-get install bookthief
 ```
 
-## Note
-
-If you're looking for the old WxWidgets BookThief, that project has been moved to **bookthief-legacy** and will continue to receive updates.
-
-This version has been completely rebuilt from the ground-up in Pascal
-
 ## What is "pamphlet"-style printing?
 
 When BookThief spits out a new/converted PDF, you simply print it at home, double-sided, and then fold the stack of papers in half. (And staple them, if you want)
