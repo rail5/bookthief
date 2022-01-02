@@ -1,3 +1,13 @@
+bookthief (9.0) focal; urgency=low
+
+  * v9.0 release
+  Added "Import Command" option
+  loads settings from an imported Liesel command
+  Added interface for Liesel 9's new "auto margins" feature
+  in Advanced window
+
+ -- rail5 <andrew@rail5.org>  Sat, 1 January 2022 22:14:46 -0500
+
 bookthief (8.0.1) focal; urgency=low
 
   * Patched minor bug in "Open With" functionality
