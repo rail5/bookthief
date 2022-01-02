@@ -1,3 +1,9 @@
+bookthief (9.0.1) focal; urgency=low
+
+  * Changed "live preview" to be on by default once again
+
+ -- rail5 <andrew@rail5.org>  Sun, 2 Jan 2022 18:03:22 -0500
+
 bookthief (9.0) focal; urgency=low
 
   * v9.0 release

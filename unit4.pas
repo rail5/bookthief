@@ -128,8 +128,6 @@ begin
 
       Form1.CheckBox1.Checked := (parameters[6] <> '0');
 
-      // patch infile check here as well later
-
       if AnsiEndsStr('.pdf', LowerCase(parameters[7])) then
         begin
           if FileExists(parameters[7]) then
