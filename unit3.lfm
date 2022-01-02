@@ -1,26 +1,26 @@
 object Form3: TForm3
-  Left = 459
-  Height = 739
-  Top = 58
+  Left = 432
+  Height = 761
+  Top = 29
   Width = 589
   Caption = 'BookThief'
-  ClientHeight = 739
+  ClientHeight = 761
   ClientWidth = 589
   OnActivate = FormActivate
   OnClose = FormClose
   OnHide = FormHide
   LCLVersion = '2.0.10.0'
   object Image1: TImage
-    Left = 16
+    Left = 15
     Height = 376
-    Top = 16
+    Top = 8
     Width = 544
     Proportional = True
   end
   object CheckBox1: TCheckBox
-    Left = 16
+    Left = 15
     Height = 23
-    Top = 488
+    Top = 448
     Width = 117
     Caption = 'Color threshold'
     OnChange = CheckBox1Change
@@ -29,7 +29,7 @@ object Form3: TForm3
   object TrackBar2: TTrackBar
     Left = 232
     Height = 47
-    Top = 464
+    Top = 448
     Width = 328
     Max = 100
     Position = 50
@@ -41,7 +41,7 @@ object Form3: TForm3
   object Label2: TLabel
     Left = 16
     Height = 24
-    Top = 424
+    Top = 416
     Width = 103
     AutoSize = False
     Caption = 'Previewing page:'
@@ -50,7 +50,7 @@ object Form3: TForm3
   object Label3: TLabel
     Left = 128
     Height = 13
-    Top = 424
+    Top = 416
     Width = 8
     Caption = '1'
     ParentColor = False
@@ -58,7 +58,7 @@ object Form3: TForm3
   object UpDown1: TUpDown
     Left = 456
     Height = 25
-    Top = 399
+    Top = 390
     Width = 61
     Increment = 2
     Min = 1
@@ -70,41 +70,32 @@ object Form3: TForm3
   object Button1: TButton
     Left = 416
     Height = 25
-    Top = 424
+    Top = 416
     Width = 48
     Caption = '1'
     OnClick = Button1Click
     TabOrder = 3
   end
   object Button2: TButton
-    Left = 512
+    Left = 511
     Height = 25
-    Top = 424
+    Top = 416
     Width = 48
     Caption = '...'
     OnClick = Button2Click
     TabOrder = 4
   end
-  object Label1: TLabel
-    Left = 16
-    Height = 24
-    Top = 399
-    Width = 320
-    AutoSize = False
-    Caption = 'Live preview'
-    ParentColor = False
-  end
   object Shape1: TShape
     Left = 232
     Height = 41
-    Top = 168
+    Top = 144
     Width = 112
     Visible = False
   end
   object Label4: TLabel
     Left = 16
     Height = 48
-    Top = 176
+    Top = 152
     Width = 544
     Alignment = taCenter
     AutoSize = False
@@ -115,7 +106,7 @@ object Form3: TForm3
     Visible = False
   end
   object CheckBox2: TCheckBox
-    Left = 16
+    Left = 14
     Height = 23
     Top = 616
     Width = 94
@@ -126,7 +117,7 @@ object Form3: TForm3
   object TrackBar1: TTrackBar
     Left = 232
     Height = 47
-    Top = 592
+    Top = 616
     Width = 160
     Max = 100
     Position = 0
@@ -135,9 +126,9 @@ object Form3: TForm3
     Visible = False
   end
   object TrackBar3: TTrackBar
-    Left = 400
+    Left = 399
     Height = 47
-    Top = 592
+    Top = 616
     Width = 160
     Max = 100
     Position = 0
@@ -148,7 +139,7 @@ object Form3: TForm3
   object TrackBar4: TTrackBar
     Left = 232
     Height = 47
-    Top = 664
+    Top = 688
     Width = 160
     Max = 100
     Position = 0
@@ -157,9 +148,9 @@ object Form3: TForm3
     Visible = False
   end
   object TrackBar5: TTrackBar
-    Left = 400
+    Left = 399
     Height = 47
-    Top = 664
+    Top = 680
     Width = 160
     Max = 100
     Position = 0
@@ -168,9 +159,9 @@ object Form3: TForm3
     Visible = False
   end
   object CheckBox3: TCheckBox
-    Left = 16
+    Left = 15
     Height = 23
-    Top = 552
+    Top = 504
     Width = 154
     Caption = 'Widen center margin'
     OnChange = CheckBox3Change
@@ -179,7 +170,7 @@ object Form3: TForm3
   object TrackBar6: TTrackBar
     Left = 232
     Height = 47
-    Top = 528
+    Top = 504
     Width = 328
     Max = 100
     Position = 0
@@ -190,7 +181,7 @@ object Form3: TForm3
   object Label5: TLabel
     Left = 232
     Height = 16
-    Top = 640
+    Top = 664
     Width = 26
     AutoSize = False
     Caption = 'Left'
@@ -198,9 +189,9 @@ object Form3: TForm3
     Visible = False
   end
   object Label6: TLabel
-    Left = 400
+    Left = 399
     Height = 23
-    Top = 640
+    Top = 664
     Width = 36
     AutoSize = False
     Caption = 'Right'
@@ -208,9 +199,9 @@ object Form3: TForm3
     Visible = False
   end
   object Label7: TLabel
-    Left = 234
+    Left = 232
     Height = 23
-    Top = 712
+    Top = 736
     Width = 24
     AutoSize = False
     Caption = 'Top'
@@ -218,9 +209,9 @@ object Form3: TForm3
     Visible = False
   end
   object Label8: TLabel
-    Left = 400
+    Left = 399
     Height = 23
-    Top = 712
+    Top = 736
     Width = 48
     AutoSize = False
     Caption = 'Bottom'
@@ -228,13 +219,92 @@ object Form3: TForm3
     Visible = False
   end
   object CheckBox4: TCheckBox
-    Left = 16
+    Left = 14
     Height = 23
-    Top = 680
+    Top = 672
     Width = 173
     Caption = 'Split each page into two'
     OnChange = CheckBox4Change
     TabOrder = 12
+  end
+  object CheckBox5: TCheckBox
+    Left = 16
+    Height = 23
+    Top = 560
+    Width = 184
+    Caption = 'Progressive center margin'
+    OnChange = CheckBox5Change
+    TabOrder = 13
+  end
+  object TrackBar7: TTrackBar
+    Left = 232
+    Height = 47
+    Top = 560
+    Width = 328
+    Max = 100
+    Position = 0
+    TabOrder = 14
+    Visible = False
+  end
+  object Label9: TLabel
+    Cursor = crHandPoint
+    Left = 208
+    Height = 13
+    Top = 565
+    Width = 6
+    Caption = '?'
+    Font.Color = clMenuHighlight
+    Font.Style = [fsUnderline]
+    ParentColor = False
+    ParentFont = False
+    OnClick = Label9Click
+  end
+  object Label10: TLabel
+    Left = 40
+    Height = 13
+    Top = 584
+    Width = 71
+    Caption = '(maximum)'
+    ParentColor = False
+    Visible = False
+  end
+  object Label11: TLabel
+    Left = 40
+    Height = 13
+    Top = 528
+    Width = 68
+    Caption = '(minimum)'
+    ParentColor = False
+    Visible = False
+  end
+  object CheckBox6: TCheckBox
+    Left = 16
+    Height = 23
+    Top = 392
+    Width = 101
+    Caption = 'Live preview'
+    OnChange = CheckBox6Change
+    TabOrder = 15
+  end
+  object Shape2: TShape
+    Left = 16
+    Height = 376
+    Top = 8
+    Width = 545
+    Visible = False
+  end
+  object Label1: TLabel
+    Left = 16
+    Height = 54
+    Top = 152
+    Width = 544
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Preview disabled'
+    Font.Height = -21
+    ParentColor = False
+    ParentFont = False
+    Visible = False
   end
   object Timer1: TTimer
     Enabled = False

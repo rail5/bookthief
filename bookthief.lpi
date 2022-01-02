@@ -106,7 +106,7 @@
         <PackageName Value="LCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="4">
+    <Units Count="5">
       <Unit0>
         <Filename Value="bookthief.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -135,6 +135,14 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit3"/>
       </Unit3>
+      <Unit4>
+        <Filename Value="unit4.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form4"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Unit4"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
