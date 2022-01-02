@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Process, Forms, Controls, Graphics, Dialogs, ComCtrls,
   StdCtrls, Buttons, ExtCtrls, Menus, Spin, LazFileUtils, LCLType, LCLIntf,
-  XMLPropStorage, Unit2, Unit3, Types, StrUtils;
+  XMLPropStorage, Unit2, Unit3, Unit4, Types, StrUtils;
 
 type
 
@@ -33,6 +33,7 @@ type
     Label6: TLabel;
     MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
+    MenuItem10: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
@@ -58,6 +59,7 @@ type
     procedure Edit1KeyPress(Sender: TObject; var Key: char);
     procedure Edit3KeyPress(Sender: TObject; var Key: char);
     procedure Form1Activate(Sender: TObject);
+    procedure MenuItem10Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
     procedure MenuItem6Click(Sender: TObject);
@@ -93,6 +95,7 @@ implementation
 {$R *.lfm}
 
 { TForm1 }
+
 function SanitizeFilename(filenm : string) : string;
 var
   outresult : string;
@@ -201,6 +204,13 @@ begin
           SetLength(theresult, Length(theresult)+2);
           theresult[Length(theresult)-2] := '-w';
           theresult[Length(theresult)-1] := Form3.TrackBar6.Position.ToString();
+        end;
+
+      if Form3.CheckBox5.Checked then
+        begin
+          SetLength(theresult, Length(theresult)+2);
+          theresult[Length(theresult)-2] := '-a';
+          theresult[Length(theresult)-1] := Form3.TrackBar7.Position.ToString();
         end;
 
       if Form3.CheckBox4.Checked then
@@ -438,7 +448,10 @@ begin
           saneinfile := SanitizeFilename(OpenDialog1.Filename);
           saneoutfile := SanitizeFilename(SaveDialog1.Filename); // Only necessary for 'Export Command,' as the TProc call to Liesel doesn't run in an ordinary shell
           exportedcomd := GenerateCommand();
-          ShowMessage('Your exported command is: ' + LineEnding + LineEnding + exportedcomd);
+          Form4.mode := 1;
+          Form4.exportedcomd := exportedcomd;
+          Form4.Timer1.Enabled := true;
+          Form4.ShowModal();
         end;
 
     end
@@ -513,6 +526,14 @@ begin
     systmpdir := GetTempDir(true);
     Timer1.Enabled := true;
   end;
+end;
+
+procedure TForm1.MenuItem10Click(Sender: TObject);
+begin
+  Form4.mode := 0;
+  Form4.exportedcomd := '';
+  Form4.Timer1.Enabled := true;
+  Form4.ShowModal;
 end;
 
 end.
