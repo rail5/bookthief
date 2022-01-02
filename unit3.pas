@@ -289,13 +289,11 @@ end;
 procedure TForm3.Timer1Timer(Sender: TObject);
 begin
   Timer1.Enabled := false;
+  CheckBox6.Checked := true;
   Update();
   if Form1.Button1.Caption <> '(None)' then
     begin
-      if CheckBox6.Checked then
-        begin
-          ExportLiesel(Form1.CreateCommand(true));
-        end;
+      ExportLiesel(Form1.CreateCommand(true));
     end;
 end;
 
