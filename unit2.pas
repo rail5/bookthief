@@ -102,8 +102,8 @@ var
   finalcomd : TStringArray;
   i : integer;
 begin
-  comd := Form1.GenerateCommand();
-  finalcomd := Form1.CreateCommand(false);
+  comd := Form1.GenerateCommand(true);
+  finalcomd := Form1.CreateCommand(false, true);
 
   Process1 := TProcess.Create(nil);
 
