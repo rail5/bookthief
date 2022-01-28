@@ -1,3 +1,11 @@
+bookthief (10.0) focal; urgency=low
+
+  * Added "Save/Restore settings" options to File menu
+  Drastic improvements in the stability of Import/Export Command
+  Now requires Liesel >= 10.1
+
+ -- rail5 <andrew@rail5.org>  Fri, 28 Jan 2022 00:49:13 -0500
+
 bookthief (9.0.1) focal; urgency=low
 
   * Changed "live preview" to be on by default once again
