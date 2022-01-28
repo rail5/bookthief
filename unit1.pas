@@ -27,6 +27,7 @@ type
     Edit3: TEdit;
     Edit4: TEdit;
     Label1: TLabel;
+    Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
     Label5: TLabel;
@@ -34,6 +35,9 @@ type
     MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
     MenuItem10: TMenuItem;
+    MenuItem11: TMenuItem;
+    MenuItem12: TMenuItem;
+    MenuItem13: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
@@ -60,6 +64,8 @@ type
     procedure Edit3KeyPress(Sender: TObject; var Key: char);
     procedure Form1Activate(Sender: TObject);
     procedure MenuItem10Click(Sender: TObject);
+    procedure MenuItem11Click(Sender: TObject);
+    procedure MenuItem13Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
     procedure MenuItem6Click(Sender: TObject);
@@ -68,8 +74,8 @@ type
     procedure Timer1Timer(Sender: TObject);
     function GetTransform() : string;
     function GetFlip() : boolean;
-    function CreateCommand(preview : boolean) : TStringArray;
-    function GenerateCommand() : string;
+    function CreateCommand(preview, outrequired : boolean) : TStringArray;
+    function GenerateCommand(outrequired : boolean) : string;
     procedure TrackBar1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure TrackBar1MouseWheel(Sender: TObject; Shift: TShiftState;
@@ -125,7 +131,7 @@ begin
   GetFlip := (ComboBox2.Text = 'long-edge flip');
 end;
 
-function TForm1.CreateCommand(preview : boolean) : TStringArray;
+function TForm1.CreateCommand(preview, outrequired : boolean) : TStringArray;
 var
   comd : string;
   theresult : TStringArray;
@@ -246,9 +252,18 @@ begin
   else
     begin
 
-      SetLength(theresult, Length(theresult)+2);
-      theresult[Length(theresult)-2] := '-o';
-      theresult[Length(theresult)-1] := '' + SaveDialog1.Filename + '';
+      if outrequired then
+        begin
+          SetLength(theresult, Length(theresult)+2);
+          theresult[Length(theresult)-2] := '-o';
+          theresult[Length(theresult)-1] := '' + SaveDialog1.Filename + '';
+        end
+      else
+        begin
+          SetLength(theresult, Length(theresult)+1);
+          theresult[Length(theresult)-1] := '-O';
+        end;
+
     end;
 
     SetLength(theresult, Length(theresult)+1);
@@ -271,7 +286,7 @@ begin
     Form3.Timer2.Enabled := true;
 end;
 
-function TForm1.GenerateCommand(): string;
+function TForm1.GenerateCommand(outrequired : boolean): string;
 var
   comd: string;
   escaped: string;
@@ -281,7 +296,7 @@ begin
   comd := 'liesel';
   escaped := '';
 
-  precomd := Form1.CreateCommand(false);
+  precomd := Form1.CreateCommand(false, outrequired);
 
   for i := 0 to (Length(precomd)-1) do
   begin
@@ -312,7 +327,7 @@ begin
               Form3.Button2.Caption := pgstring;
             end;
           if CheckBox5.Checked then
-            Form3.ExportLiesel(CreateCommand(true));
+            Form3.ExportLiesel(CreateCommand(true, true));
         end;
     end;
 end;
@@ -323,7 +338,7 @@ begin
     begin
       if SaveDialog1.Execute then
         begin
-          currentcomd := GenerateCommand();
+          currentcomd := GenerateCommand(true);
           Form2.ShowModal();
 
         end;
@@ -443,17 +458,12 @@ var
 begin
   if fileExists(OpenDialog1.Filename) then
     begin
-      if SaveDialog1.Execute then
-        begin
-          saneinfile := SanitizeFilename(OpenDialog1.Filename);
-          saneoutfile := SanitizeFilename(SaveDialog1.Filename); // Only necessary for 'Export Command,' as the TProc call to Liesel doesn't run in an ordinary shell
-          exportedcomd := GenerateCommand();
-          Form4.mode := 1;
-          Form4.exportedcomd := exportedcomd;
-          Form4.Timer1.Enabled := true;
-          Form4.ShowModal();
-        end;
-
+      saneinfile := SanitizeFilename(OpenDialog1.Filename);
+      exportedcomd := GenerateCommand(false);
+      Form4.mode := 1;
+      Form4.exportedcomd := exportedcomd;
+      Form4.Timer1.Enabled := true;
+      Form4.ShowModal();
     end
   else
     begin
@@ -534,6 +544,16 @@ begin
   Form4.exportedcomd := '';
   Form4.Timer1.Enabled := true;
   Form4.ShowModal;
+end;
+
+procedure TForm1.MenuItem11Click(Sender: TObject);
+begin
+  Form4.LoadSettingsFromXML();
+end;
+
+procedure TForm1.MenuItem13Click(Sender: TObject);
+begin
+  Form4.WriteSettingsToXML(GenerateCommand(false));
 end;
 
 end.

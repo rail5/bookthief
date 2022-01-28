@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  StrUtils, Process, LazFileUtils;
+  StrUtils, Process, LazFileUtils, XMLRead, XMLUtils, DOM;
 
 type
 
@@ -17,6 +17,8 @@ type
     Edit1: TEdit;
     Label1: TLabel;
     Timer1: TTimer;
+    procedure LoadSettingsFromXML();
+    function WriteSettingsToXML(comd : string) : boolean;
     procedure Button1Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
   private
@@ -36,23 +38,147 @@ implementation
 
 { TForm4 }
 
-procedure TForm4.Button1Click(Sender: TObject);
+procedure TForm4.LoadSettingsFromXML();
 var
-  comd : string;
-  ReturnInfo : string;
-  parameters : TStringArray;
-  i : integer;
-  cropvalues : TStringArray;
-  transform : TStringArray;
   pgstring : string;
   previewonoff : boolean;
+  XML : TXMLDocument;
+  NodeInfile : TDOMNode;
+  NodeAutomargin : TDOMNode;
+  NodeWiden : TDOMNode;
+  NodeCrop : TDOMNode;
+  cropvalues : TStringArray;
+  NodeDivide : TDOMNode;
+  NodeGrayscale : TDOMNode;
+  NodeThreshold : TDOMNode;
+  NodeRange : TDOMNode;
+  NodeSegment : TDOMNode;
+  NodeTransform : TDOMNode;
+  transformvalues : TStringArray;
+  NodeQuality : TDOMNode;
+  advancedview : boolean;
+  settingsfile : string;
 begin
-  if mode = 1 then
-    begin
-      Form4.Close;
-      Exit();
-    end;
-  comd := Edit1.Text;
+  advancedview := Form1.CheckBox5.Checked;
+
+      settingsfile := Form1.systmpdir + '/bookthief-temp-settings.xml';
+
+      ReadXMLFile(XML, settingsfile);
+
+      NodeInfile := XML.DocumentElement.FindNode('infile');
+      NodeAutomargin := XML.DocumentElement.FindNode('automargin');
+      NodeWiden := XML.DocumentElement.FindNode('widen');
+      NodeCrop := XML.DocumentElement.FindNode('crop');
+      NodeDivide := XML.DocumentElement.FindNode('divide');
+      NodeGrayscale := XML.DocumentElement.FindNode('grayscale');
+      NodeThreshold := XML.DocumentElement.FindNode('threshold');
+      NodeRange := XML.DocumentElement.FindNode('range');
+      NodeSegment := XML.DocumentElement.FindNode('segment');
+      NodeTransform := XML.DocumentElement.FindNode('transform');
+      NodeQuality := XML.DocumentElement.FindNode('quality');
+
+      previewonoff := Form3.CheckBox6.Checked; // Store current "live preview" enabled/disabled
+      Form3.CheckBox6.Checked := false; // Temporarily disable live preview
+      Update();
+
+      // Action goes here
+
+      if (NodeInfile <> nil) then
+        begin
+          if AnsiEndsStr('.pdf', NodeInfile.TextContent) then
+            begin
+              if FileExists(NodeInfile.TextContent) then
+                begin
+                  Form1.OpenDialog1.Filename := NodeInfile.TextContent;
+                  Form1.Button1.Caption := ExtractFileNameOnly(Form1.OpenDialog1.Filename) + '.pdf';
+                  Form1.currentpdf := Form1.OpenDialog1.Filename;
+                  if RunCommand('liesel', ['-p', Form1.OpenDialog1.Filename], pgstring, [], swoHide) then
+                    begin
+                      Form1.currentpagecount := StrToInt(pgstring);
+                      Form3.Button2.Caption := pgstring;
+                    end;
+                  if Form1.CheckBox5.Checked then
+                    Form3.ExportLiesel(Form1.CreateCommand(true, true));  // I think this should go at the end of the whole process, not here
+                end;
+            end;
+        end;
+
+
+      Form3.CheckBox5.Checked := (NodeAutomargin <> nil);
+        if (NodeAutomargin <> nil) then
+          begin
+            Form3.TrackBar7.Position := StrToInt(NodeAutomargin.TextContent);
+            advancedview := true;
+          end;
+
+        Form3.CheckBox3.Checked := (NodeWiden <> nil);
+        if (NodeWiden <> nil) then
+          begin
+            Form3.TrackBar6.Position := StrToInt(NodeWiden.TextContent);
+            advancedview := true;
+          end;
+
+        Form3.CheckBox2.Checked := (NodeCrop <> nil);
+        if (NodeCrop <> nil) then
+          begin
+            advancedview := true;
+            cropvalues := SplitString(NodeCrop.TextContent, ',');
+            Form3.TrackBar1.Position := StrToInt(cropvalues[0]);
+            Form3.TrackBar3.Position := StrToInt(cropvalues[1]);
+            Form3.TrackBar4.Position := StrToInt(cropvalues[2]);
+            Form3.TrackBar5.Position := StrToInt(cropvalues[3]);
+          end;
+
+        Form3.CheckBox1.Checked := (NodeThreshold <> nil);
+        if (NodeThreshold <> nil) then
+          begin
+            Form3.TrackBar2.Position := StrToInt(NodeThreshold.TextContent);
+            advancedview := true;
+          end;
+
+        Form1.CheckBox2.Checked := (NodeRange <> nil);
+        if (NodeRange <> nil) then
+          begin
+            Form1.Edit1.Text := NodeRange.TextContent;
+          end;
+
+        Form1.CheckBox3.Checked := (NodeSegment <> nil);
+        if (NodeSegment <> nil) then
+          begin
+            Form1.SpinEdit1.Value := StrToInt(NodeSegment.TextContent);
+          end;
+
+        Form1.CheckBox4.Checked := (NodeTransform <> nil);
+        if (NodeTransform <> nil) then
+          begin
+            transformvalues := SplitString(NodeTransform.TextContent, 'x');
+            Form1.ComboBox1.Text := 'custom';
+            Form1.ComboBox1Change(TObject.Create);
+            Form1.Edit3.Text := transformvalues[0];
+            Form1.Edit4.Text := transformvalues[1];
+          end;
+
+        Form3.CheckBox4.Checked := (NodeDivide <> nil);
+        Form1.CheckBox1.Checked := (NodeGrayscale <> nil);
+
+        if (NodeQuality <> nil) then
+          begin
+            Form1.TrackBar1.Position := StrToInt(NodeQuality.TextContent);
+          end;
+
+        Form1.CheckBox5.Checked := advancedview;
+
+      Update();
+
+      Form3.CheckBox6.Checked := previewonoff; // Restore previous "live preview" setting
+end;
+
+function TForm4.WriteSettingsToXML(comd : string) : boolean;
+var
+  settingsfile : string;
+  ReturnInfo : string;
+  BullshitThatIHaveToPutUpWith : TextFile;
+begin
   if AnsiStartsStr('liesel ', comd) then
     begin
       comd := StringReplace(comd, 'liesel ', 'liesel -B ', []);
@@ -60,132 +186,42 @@ begin
   else
     begin
       ShowMessage('Error: Invalid Liesel Command');
+      WriteSettingsToXML := false;
+      Exit();
     end;
 
   if RunCommand(comd, ReturnInfo) then
     begin
-      parameters := SplitString(ReturnInfo, LineEnding);
-      for i := 0 to Length(parameters)-1 do
-        begin
-          Delete(parameters[i], 1, 3);
-        end;
+      settingsfile := Form1.systmpdir + '/bookthief-temp-settings.xml';
 
-      // The following should be changed if liesel -B returns more params in the future
-      // At the moment, the structure is:
-      // 1. Automargin value
-      // 2. ProgressCounter y/n (ignored)
-      // 3. Crop values
-      // 4. Quality
-      // 5. Divide pages y/n
-      // 6. Force overwrites y/n (ignored)
-      // 7. Grayscale y/n
-      // 8. Input file path
-      // 9. Color threshold value
-      // 10. Long-edge flip y/n (ignored)
-      // 11. Minimum segment size (ignored)
-      // 12. Output file path (ignored)
-      // 13. Range value
-      // 14. Segment size
-      // 15. Transform/rescale value
-      // 16. Widen margins value
-      //
-      // All options are marked '0' when disabled, apart from:
-      // Crop, which is marked 0,0,0,0
-      // And Transform, which is marked 0x0
-      //
-      // Genuinely, I really don't like it being this specific and inflexible
-      // You know, having this Liesel -B option
-      // It feels flimsy and hacky, like a Windows program
-      // But apart from teaching Pascal to parse GNU GetOpt arguments,
-      // Which would be a project worthy of its own repo altogether,
-      // I'm not sure how else to do this
-
-      previewonoff := Form3.CheckBox6.Checked; // Store current "live preview" enabled/disabled
-      Form3.CheckBox6.Checked := false; // Temporarily disable live preview
-      Update();
-
-      Form3.CheckBox5.Checked := (parameters[0] <> '0');
-      Form3.TrackBar7.Position := StrToInt(parameters[0]);
-      if Form3.CheckBox5.Checked then
-        Form1.CheckBox5.Checked := true;
-
-      Form3.CheckBox2.Checked := (parameters[2] <> '0,0,0,0');
-      if Form3.CheckBox2.Checked then
-        begin
-        Form1.CheckBox5.Checked := true;
-        cropvalues := SplitString(parameters[2], ',');
-        Form3.TrackBar1.Position := StrToInt(cropvalues[0]);
-        Form3.TrackBar3.Position := StrToInt(cropvalues[1]);
-        Form3.TrackBar4.Position := StrToInt(cropvalues[2]);
-        Form3.TrackBar5.Position := StrToInt(cropvalues[3]);
-        end;
-
-      Form1.TrackBar1.Position := StrToInt(parameters[3]);
-
-      Form3.CheckBox4.Checked := (parameters[4] <> '0');
-      if Form3.CheckBox4.Checked then
-        Form1.CheckBox5.Checked := true;
-
-      Form1.CheckBox1.Checked := (parameters[6] <> '0');
-
-      if AnsiEndsStr('.pdf', LowerCase(parameters[7])) then
-        begin
-          if FileExists(parameters[7]) then
-            begin
-              Form1.OpenDialog1.Filename := parameters[7];
-              Form1.Button1.Caption := ExtractFileNameOnly(Form1.OpenDialog1.Filename) + '.pdf';
-              Form1.currentpdf := Form1.OpenDialog1.Filename;
-              if RunCommand('liesel', ['-p', Form1.OpenDialog1.Filename], pgstring, [], swoHide) then
-                begin
-                  Form1.currentpagecount := StrToInt(pgstring);
-                  Form3.Button2.Caption := pgstring;
-                end;
-              if Form1.CheckBox5.Checked then
-                 Form3.ExportLiesel(Form1.CreateCommand(true));
-            end;
-        end;
-
-      Form3.CheckBox1.Checked := (parameters[8] <> '0');
-      if Form3.CheckBox1.Checked then
-        begin
-        Form3.TrackBar2.Position := StrToInt(parameters[8]);
-        Form1.CheckBox5.Checked := true;
-        end;
-
-      Form1.CheckBox2.Checked := (parameters[12] <> '0');
-      if Form1.CheckBox2.Checked then
-        Form1.Edit1.Text := parameters[12];
-
-      Form1.CheckBox3.Checked := (parameters[13] <> '0');
-      if Form1.CheckBox3.Checked then
-        Form1.SpinEdit1.Value := StrToInt(parameters[13]);
-
-      Form1.CheckBox4.Checked := (parameters[14] <> '0x0');
-      if Form1.CheckBox4.Checked then
-        begin
-          transform := SplitString(parameters[14], 'x');
-          Form1.ComboBox1.Text := 'custom';
-          Form1.ComboBox1Change(TObject.Create);
-          Form1.Edit3.Text := transform[0];
-          Form1.Edit4.Text := transform[1];
-        end;
-
-      Form3.CheckBox3.Checked := (parameters[15] <> '0');
-      if Form3.CheckBox3.Checked then
-        begin
-        Form3.TrackBar6.Position := StrToInt(parameters[15]);
-        Form1.CheckBox5.Checked := true;
-        end;
-
-      Update();
-
-      Form3.CheckBox6.Checked := previewonoff; // Restore previous "live preview" setting
-      Form4.Close;
+      AssignFile(BullshitThatIHaveToPutUpWith, settingsfile);
+      Rewrite(BullshitThatIHaveToPutUpWith);
+      WriteLn(BullshitThatIHaveToPutUpWith, ReturnInfo);
+      CloseFile(BullshitThatIHaveToPutUpWith);
+      WriteSettingsToXML := true;
     end
   else
     begin
       ShowMessage('Error: Invalid command');
+      WriteSettingsToXML := false;
     end;
+end;
+
+procedure TForm4.Button1Click(Sender: TObject);
+var
+  comd : string;
+begin
+  if mode = 1 then
+    begin
+      Form4.Close;
+      Exit();
+    end;
+  comd := Edit1.Text;
+  if (WriteSettingsToXML(comd)) then
+    LoadSettingsFromXML();
+
+  Form4.Close;
+  Exit();
 end;
 
 procedure TForm4.Timer1Timer(Sender: TObject);

@@ -110,7 +110,7 @@ begin
     begin
       if CheckBox6.Checked then
         begin
-          ExportLiesel(Form1.CreateCommand(true));
+          ExportLiesel(Form1.CreateCommand(true, true));
         end;
     end;
 end;
@@ -293,7 +293,7 @@ begin
   Update();
   if Form1.Button1.Caption <> '(None)' then
     begin
-      ExportLiesel(Form1.CreateCommand(true));
+      ExportLiesel(Form1.CreateCommand(true, true));
     end;
 end;
 
