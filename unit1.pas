@@ -38,6 +38,9 @@ type
     MenuItem11: TMenuItem;
     MenuItem12: TMenuItem;
     MenuItem13: TMenuItem;
+    MenuItem14: TMenuItem;
+    MenuItem15: TMenuItem;
+    MenuItem16: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
@@ -223,6 +226,12 @@ begin
         begin
           SetLength(theresult, Length(theresult)+1);
           theresult[Length(theresult)-1] := '-D';
+        end;
+
+      if Form3.CheckBox7.Checked then
+        begin
+          SetLength(theresult, Length(theresult)+1);
+          theresult[Length(theresult)-1] := '-N';
         end;
 
     end;
@@ -526,9 +535,26 @@ begin
 end;
 
 procedure TForm1.Form1Activate(Sender: TObject);
+var
+  lieselVersion : string;
+  BTVersion : string;
 begin
   if not Form1Activated then begin
     Form1Activated := true;
+
+    if RunCommand('liesel', ['-V'], lieselVersion, [], swoHide) then
+      begin
+        MenuItem15.Caption := 'Liesel version: ' + lieselVersion;
+      end
+    else
+      begin
+        MenuItem15.Caption := 'ERROR finding Liesel';
+      end;
+
+      BTVersion := '11.0';
+
+      MenuItem16.Caption := 'BookThief version: ' + BTVersion;
+
     {$IFDEF WINDOWS}
     XMLPropStorage1.FileName := GetUserDir() + '\bookthief.xml';
     XMLPropStorage1.Restore;
