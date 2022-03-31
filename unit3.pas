@@ -21,6 +21,7 @@ type
     CheckBox4: TCheckBox;
     CheckBox5: TCheckBox;
     CheckBox6: TCheckBox;
+    CheckBox7: TCheckBox;
     Image1: TImage;
     Label1: TLabel;
     Label10: TLabel;
@@ -53,6 +54,7 @@ type
     procedure CheckBox4Change(Sender: TObject);
     procedure CheckBox5Change(Sender: TObject);
     procedure CheckBox6Change(Sender: TObject);
+    procedure CheckBox7Change(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormHide(Sender: TObject);
@@ -270,6 +272,11 @@ begin
       Label1.Visible := true;
       Update();
     end;
+end;
+
+procedure TForm3.CheckBox7Change(Sender: TObject);
+begin
+  Timer2.Enabled := true;
 end;
 
 procedure TForm3.Button1Click(Sender: TObject);

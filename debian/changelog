@@ -1,3 +1,10 @@
+bookthief (11.0) focal; urgency=low
+
+  * Added option for "-N" linear output Liesel feature in Advanced window
+  Added version numbers to Help menu
+
+ -- rail5 <andrew@rail5.org>  Thu, 31 Mar 2022 17:46:38 -0400
+
 bookthief (10.0) focal; urgency=low
 
   * Added "Save/Restore settings" options to File menu
