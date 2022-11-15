@@ -107,7 +107,7 @@ begin
 
   Process1 := TProcess.Create(nil);
 
-  Process1.Executable := 'liesel';
+  Process1.Executable := Form1.LieselPath;
 
   Process1.ShowWindow := swoHide;
 
@@ -149,7 +149,7 @@ begin
 
   Process1 := TProcess.Create(nil);
 
-  Process1.Executable := 'liesel';
+  Process1.Executable := Form1.LieselPath;
 
   Process1.ShowWindow := swoHide;
 
