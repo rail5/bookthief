@@ -1,6 +1,6 @@
 bookthief (11.1) focal; urgency=low
 
-  * Patched some minor UI bugs
+  * Patched some minor UI bugs and enabled compatibility for building on MacOS
 
  -- rail5 <andrew@rail5.org>  Tue, 15 Nov 2022 16:18:22 -0500
 

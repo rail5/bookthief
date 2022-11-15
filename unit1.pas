@@ -91,6 +91,7 @@ type
     currentpagecount: LongInt;
     currentpdf: string;
     systmpdir: string;
+    LieselPath: string;
 
   end;
 
@@ -330,7 +331,7 @@ begin
         begin
           Button1.Caption:=ExtractFileNameOnly(OpenDialog1.Filename) + '.pdf';
           currentpdf := OpenDialog1.Filename;
-          if RunCommand('liesel', ['-p', OpenDialog1.Filename], pgstring, [], swoHide) then
+          if RunCommand(LieselPath, ['-p', OpenDialog1.Filename], pgstring, [], swoHide) then
             begin
               currentpagecount := StrToInt(pgstring);
               Form3.Button2.Caption := pgstring;
@@ -486,7 +487,7 @@ var
   ReturnInfo: ansistring;
   Opts: TStringArray;
 begin
-  if RunCommand('liesel', ['-q'], ReturnInfo, [], swoHide) then
+  if RunCommand(LieselPath, ['-q'], ReturnInfo, [], swoHide) then
     begin
       ShowMessage(ReturnInfo);
     end
@@ -525,7 +526,7 @@ begin
         begin
           Button1.Caption := ExtractFileNameOnly(OpenDialog1.Filename) + '.pdf';
           currentpdf := openfile;
-          if RunCommand('liesel', ['-p', openfile], pgstring, [], swoHide) then
+          if RunCommand(LieselPath, ['-p', openfile], pgstring, [], swoHide) then
           begin
             currentpagecount := StrToInt(pgstring);
             Form3.Button2.Caption := pgstring;
@@ -541,8 +542,16 @@ var
 begin
   if not Form1Activated then begin
     Form1Activated := true;
+    
+    {$IFDEF DARWIN}
+    LieselPath := ExtractFilePath(Application.ExeName) + '/liesel';
+    {$ENDIF}
+    
+    {$IFNDEF DARWIN}
+    LieselPath := 'liesel';
+    {$ENDIF}
 
-    if RunCommand('liesel', ['-V'], lieselVersion, [], swoHide) then
+    if RunCommand(LieselPath, ['-V'], lieselVersion, [], swoHide) then
       begin
         MenuItem15.Caption := 'Liesel version: ' + lieselVersion;
       end
