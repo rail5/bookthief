@@ -276,6 +276,19 @@ end;
 
 procedure TForm3.CheckBox7Change(Sender: TObject);
 begin
+  if CheckBox7.Checked then
+    begin
+      UpDown1.Increment := 1;
+    end
+  else
+    begin
+      UpDown1.Increment := 2;
+      if ((UpDown1.Position mod 2) = 0) then
+        begin
+          UpDown1.Position := (UpDown1.Position - 1);
+          Label3.Caption := IntToStr(UpDown1.Position);
+        end;
+    end;
   Timer2.Enabled := true;
 end;
 

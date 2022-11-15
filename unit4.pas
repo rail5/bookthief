@@ -56,6 +56,7 @@ var
   NodeTransform : TDOMNode;
   transformvalues : TStringArray;
   NodeQuality : TDOMNode;
+  NodeLinear : TDOMNode;
   advancedview : boolean;
   settingsfile : string;
 begin
@@ -76,6 +77,7 @@ begin
       NodeSegment := XML.DocumentElement.FindNode('segment');
       NodeTransform := XML.DocumentElement.FindNode('transform');
       NodeQuality := XML.DocumentElement.FindNode('quality');
+      NodeLinear := XML.DocumentElement.FindNode('linear');
 
       previewonoff := Form3.CheckBox6.Checked; // Store current "live preview" enabled/disabled
       Form3.CheckBox6.Checked := false; // Temporarily disable live preview
@@ -160,6 +162,8 @@ begin
 
         Form3.CheckBox4.Checked := (NodeDivide <> nil);
         Form1.CheckBox1.Checked := (NodeGrayscale <> nil);
+
+        Form3.CheckBox7.Checked := (NodeLinear <> nil);
 
         if (NodeQuality <> nil) then
           begin

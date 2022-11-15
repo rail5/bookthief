@@ -245,7 +245,7 @@ begin
       SetLength(theresult, Length(theresult)+2);
       theresult[Length(theresult)-2] := '-e';
 
-      if Form3.CheckBox4.Checked then
+      if (Form3.CheckBox4.Checked or Form3.CheckBox7.Checked) then
         begin
           theresult[Length(theresult)-1] := Form3.UpDown1.Position.Tostring() + ',' + Form3.UpDown1.Position.ToString();
         end
