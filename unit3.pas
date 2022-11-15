@@ -94,7 +94,7 @@ begin
   Update();
 
 
-  if RunCommand('liesel', Options, ReturnInfo, [], swoHide) then
+  if RunCommand(Form1.LieselPath, Options, ReturnInfo, [], swoHide) then
   begin
     Form3.Image1.Picture.LoadFromFile(Form1.systmpdir + '/bookthief-temp-preview.jpeg');
     Shape1.Visible := false;

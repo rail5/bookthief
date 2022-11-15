@@ -94,7 +94,7 @@ begin
                   Form1.OpenDialog1.Filename := NodeInfile.TextContent;
                   Form1.Button1.Caption := ExtractFileNameOnly(Form1.OpenDialog1.Filename) + '.pdf';
                   Form1.currentpdf := Form1.OpenDialog1.Filename;
-                  if RunCommand('liesel', ['-p', Form1.OpenDialog1.Filename], pgstring, [], swoHide) then
+                  if RunCommand(Form1.LieselPath, ['-p', Form1.OpenDialog1.Filename], pgstring, [], swoHide) then
                     begin
                       Form1.currentpagecount := StrToInt(pgstring);
                       Form3.Button2.Caption := pgstring;
@@ -185,14 +185,19 @@ var
 begin
   if AnsiStartsStr('liesel ', comd) then
     begin
-      comd := StringReplace(comd, 'liesel ', 'liesel -B ', []);
+      comd := StringReplace(comd, 'liesel ', Form1.LieselPath + ' -B ', []);
     end
   else
-    begin
-      ShowMessage('Error: Invalid Liesel Command');
-      WriteSettingsToXML := false;
-      Exit();
-    end;
+    if AnsiStartsStr(Form1.LieselPath + ' ', comd) then
+      begin
+        comd := StringReplace(comd, Form1.LieselPath + ' ', Form1.LieselPath + ' -B ', []);
+      end
+    else
+      begin
+        ShowMessage('Error: Invalid Liesel Command');
+        WriteSettingsToXML := false;
+        Exit();
+      end;
 
   if RunCommand(comd, ReturnInfo) then
     begin
