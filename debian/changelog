@@ -1,3 +1,9 @@
+bookthief (11.1) focal; urgency=low
+
+  * Patched some minor UI bugs
+
+ -- rail5 <andrew@rail5.org>  Tue, 15 Nov 2022 16:18:22 -0500
+
 bookthief (11.0) focal; urgency=low
 
   * Added option for "-N" linear output Liesel feature in Advanced window
