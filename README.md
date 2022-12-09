@@ -71,7 +71,7 @@ sudo make install
 
 Note that BookThief **will build** without Liesel, but it will not **run** without Liesel.
 
-If you install BookThief via the PPA, Liesel comes with it in the same PPA. Otherwise, the source for Liesel can be obtained here: https://gitlab.com/rail5-bookthief/liesel
+If you install BookThief via the PPA, Liesel comes with it in the same PPA. Otherwise, the source for Liesel can be obtained here: https://github.com/rail5/liesel
 ## License
 
 BookThief & Liesel are **free software**, distributed under the GNU GPL V3.0 License
