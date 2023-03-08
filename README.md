@@ -4,7 +4,23 @@ BookThief prepares PDFs to be home-printed and home-bound in "pamphlet"-style.
 
     For those of us who prefer print over screens
 
+> Rudy said, "You know something, Liesel, I was thinking. You’re not a thief at all. Stealing is what the army does. Taking your father, and mine." He kicked a stone and it clanged against a gate. He walked faster. "All those rich Nazis up there, on Grande Strasse, Gelb Strasse, Heide Strasse. How does it feel anyway?"
+>
+> "How does what feel?"
+>
+> "When you take one of those books?"
+>
+> At that moment, she chose to keep still. If he wanted an answer, he'd have to come back, and he did.
+>
+> "Well?" he asked, but again, it was Rudy who answered, before Liesel could even open her mouth.
+>
+> "It feels good, doesn't it? To steal something back."
+
+– Markus Zusak's "The Book Thief"
+
 ## Installation
+
+64-bit .deb packages & Windows installer files are provided in the **releases** section
 
 On Ubuntu-based distros, BookThief can be easily installed via the BookThief PPA:
 
@@ -13,6 +29,12 @@ sudo add-apt-repository ppa:rail5/bookthief
 sudo apt-get update
 sudo apt-get install bookthief
 ```
+
+## About
+
+BookThief is a graphical front-end for [Liesel](https://github.com/rail5/liesel)
+
+This is **free software** (GNU GPL 3), and you are welcome to redistribute it under certain conditions.
 
 ## What is "pamphlet"-style printing?
 
