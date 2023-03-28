@@ -78,6 +78,7 @@ type
     function GetFlip() : boolean;
     function CreateCommand(preview, outrequired : boolean) : TStringArray;
     function GenerateCommand(outrequired : boolean) : string;
+    function FindLiesel() : string;
     procedure TrackBar1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure TrackBar1MouseWheel(Sender: TObject; Shift: TShiftState;
@@ -534,6 +535,23 @@ begin
     end;
 end;
 
+function TForm1.FindLiesel() : string;
+var
+  FoundPath : string;
+  response : string;
+begin
+  FoundPath := 'liesel';
+  if RunCommand(FoundPath, ['-q'], response, [], swoHide) then
+    begin
+      // Continue
+    end
+  else
+    begin
+      FoundPath := ExtractFilePath(Application.ExeName) + '/liesel';
+    end;
+    FindLiesel := FoundPath;
+end;
+
 procedure TForm1.Form1Activate(Sender: TObject);
 var
   lieselVersion : string;
@@ -547,9 +565,9 @@ begin
     {$ENDIF}
     
     {$IFNDEF DARWIN}
-    LieselPath := 'liesel';
+    LieselPath := FindLiesel();
     {$ENDIF}
-
+    
     if RunCommand(LieselPath, ['-V'], lieselVersion, [], swoHide) then
       begin
         MenuItem15.Caption := 'Liesel version: ' + lieselVersion;
