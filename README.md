@@ -22,12 +22,21 @@ BookThief prepares PDFs to be home-printed and home-bound in "pamphlet"-style.
 
 64-bit .deb packages & Windows installer files are provided in the **releases** section
 
-On Ubuntu-based distros, BookThief can be easily installed via the BookThief PPA:
+On **Ubuntu-based** distros, BookThief can be easily installed via the BookThief PPA:
 
 ```
 sudo add-apt-repository ppa:rail5/bookthief
 sudo apt-get update
 sudo apt-get install bookthief
+```
+
+On **Debian GNU/Linux**, BookThief can be easily installed via the [deb.rail5.org](https://deb.rail5.org) repository:
+
+```
+sudo curl -s -o /etc/apt/trusted.gpg.d/rail5.gpg "https://deb.rail5.org/rail5.gpg"
+sudo curl -s -o /etc/apt/sources.list.d/rail5.list "https://deb.rail5.org/debian/rail5.list"
+sudo apt update
+sudo apt install bookthief
 ```
 
 ## About
