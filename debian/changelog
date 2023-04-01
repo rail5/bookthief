@@ -1,3 +1,11 @@
+bookthief (11.2.2) bullseye; urgency=medium
+
+  * Adding i386 builds to deb.rail5.org.
+  Also removed useless dependencies (libatk, libcairo)
+  As BookThief used none of their symbols
+
+ -- rail5 <andrew@rail5.org>  Fri, 31 Mar 2023 21:39:55 -0400
+
 bookthief (11.2.1) bullseye; urgency=medium
 
   * Patched BookThief's ability to find Liesel
