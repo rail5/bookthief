@@ -1,3 +1,9 @@
+bookthief (11.2.3) bullseye; urgency=medium
+
+  * Adding arm64 builds and i386 builds
+
+ -- rail5 <andrew@rail5.org>  Sun, 02 Apr 2023 22:15:31 -0400
+
 bookthief (11.2.2) bullseye; urgency=medium
 
   * Adding i386 builds to deb.rail5.org.
