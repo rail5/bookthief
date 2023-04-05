@@ -1,4 +1,5 @@
 Source: bookthief
+Priority: optional
 Maintainer: rail5 <andrew@rail5.org>
 Build-Depends: debhelper (>= 8.0.0), lazarus, lazarus-2.0, lcl-2.0, lcl-utils-2.0, fp-units-misc-3.2.0
 Standards-Version: 3.9.3
