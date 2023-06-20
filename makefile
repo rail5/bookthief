@@ -1,7 +1,7 @@
 CURRENT_PLATFORM=$(shell uname)
 
 # Directory of your Lazarus installation (below is correct for default Debian installs)
-LAZDIR=/usr/lib/lazarus/2.0.10
+LAZDIR=/usr/lib/lazarus/default
 
 # Default directory for Lazarus on MacOS
 MACLAZDIR=/Applications/Lazarus
