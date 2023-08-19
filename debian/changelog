@@ -1,3 +1,9 @@
+bookthief (11.2.5) bookworm; urgency=medium
+
+  * Moving everything to Debian 12
+
+ -- rail5 <andrew@rail5.org>  Fri, 18 Aug 2023 23:12:58 -0400
+
 bookthief (11.2.4) bullseye; urgency=medium
 
   * Changed hardlinked Lazarus version in makefile
