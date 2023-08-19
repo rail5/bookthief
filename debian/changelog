@@ -1,4 +1,4 @@
-bookthief (11.2.5) bookworm; urgency=medium
+bookthief (11.2.5) stable; urgency=medium
 
   * Moving everything to Debian 12
 
