@@ -1,43 +1,43 @@
 object Form4: TForm4
-  Left = 54
-  Height = 130
-  Top = 113
-  Width = 320
-  Caption = 'BookThief'
-  ClientHeight = 130
-  ClientWidth = 320
-  LCLVersion = '2.0.10.0'
-  object Button1: TButton
-    Left = 96
-    Height = 40
-    Top = 72
-    Width = 120
-    Caption = 'Import Settings'
-    OnClick = Button1Click
-    TabOrder = 0
-  end
-  object Edit1: TEdit
-    Left = 16
-    Height = 26
-    Top = 32
-    Width = 288
-    TabOrder = 1
-  end
-  object Label1: TLabel
-    Left = 16
-    Height = 24
-    Top = 8
-    Width = 288
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Import Liesel Command'
-    ParentColor = False
-  end
-  object Timer1: TTimer
-    Enabled = False
-    Interval = 1
-    OnTimer = Timer1Timer
-    Left = 264
-    Top = 80
-  end
+	Left = 54
+	Height = 130
+	Top = 113
+	Width = 320
+	Caption = 'BookThief'
+	ClientHeight = 130
+	ClientWidth = 320
+	LCLVersion = '2.0.10.0'
+	object Button1: TButton
+		Left = 96
+		Height = 40
+		Top = 72
+		Width = 120
+		Caption = 'Import Settings'
+		OnClick = Button1Click
+		TabOrder = 0
+	end
+	object Edit1: TEdit
+		Left = 16
+		Height = 26
+		Top = 32
+		Width = 288
+		TabOrder = 1
+	end
+	object Label1: TLabel
+		Left = 16
+		Height = 24
+		Top = 8
+		Width = 288
+		Alignment = taCenter
+		AutoSize = False
+		Caption = 'Import Liesel Command'
+		ParentColor = False
+	end
+	object Timer1: TTimer
+		Enabled = False
+		Interval = 1
+		OnTimer = Timer1Timer
+		Left = 264
+		Top = 80
+	end
 end
