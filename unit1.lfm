@@ -224,7 +224,7 @@ object Form1: TForm1
     object MenuItem1: TMenuItem
       Caption = 'File'
       object MenuItem10: TMenuItem
-        Caption = 'Import Command'
+        Caption = 'Import Command...'
         OnClick = MenuItem10Click
       end
       object MenuItem3: TMenuItem
