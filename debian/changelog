@@ -1,3 +1,9 @@
+bookthief (11.2.6) stable; urgency=medium
+
+  * File menu titles edited for CUA standard compliance
+
+ -- rail5 <andrew@rail5.org>  Sun, 03 Sep 2023 19:43:57 +0800
+
 bookthief (11.2.5) stable; urgency=medium
 
   * Moving everything to Debian 12
