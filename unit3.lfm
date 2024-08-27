@@ -248,9 +248,9 @@ object Form3: TForm3
 	end
 	object Label9: TLabel
 		Cursor = crHandPoint
-		Left = 208
+		Left = 200
 		Height = 19
-		Top = 565
+		Top = 584
 		Width = 6
 		Caption = '?'
 		Font.Color = clMenuHighlight
