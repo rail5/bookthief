@@ -559,6 +559,8 @@ var
 begin
 	if not Form1Activated then begin
 		Form1Activated := true;
+		// Set UTF-8 encoding
+		SetMultiByteConversionCodePage(CP_UTF8);
 		
 		{$IFDEF DARWIN}
 		LieselPath := ExtractFilePath(Application.ExeName) + '/liesel';

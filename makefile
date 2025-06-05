@@ -17,7 +17,12 @@ endif
 	$(LAZDIR)/lazbuild --lazarusdir=$(LAZDIR) $(MACEXTRA) --build-mode=Release bookthief.lpr
 
 windows:
-	lazbuild --lazarusdir=/usr/lib/lazarus/2.0.10 --build-mode=Release --operating-system=win64 bookthief.lpr
+	lazbuild --lazarusdir=$(LAZDIR) \
+	--build-mode=Release \
+	--widgetset=win64 \
+	--operating-system=win64 \
+	--cpu=x86_64 \
+	bookthief.lpr
 
 macpkg:
 	rm -rf ./bookthief.app/
