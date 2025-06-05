@@ -1,3 +1,15 @@
+bookthief (11.3.0) stable; urgency=medium
+
+  * M$ Window$ support
+    Set UTF-8 encoding on form activation
+    This pairs with a similar update in Liesel
+    (https://github.com/rail5/liesel)  I
+    I will never port my software to Window$ again.
+    Relevant to #1
+  * Updated version number
+
+ -- rail5 <andrew@rail5.org>  Thu, 05 Jun 2025 23:06:26 +0800
+
 bookthief (11.2.6) stable; urgency=medium
 
   * File menu titles edited for CUA standard compliance
