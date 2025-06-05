@@ -579,7 +579,7 @@ begin
 	MenuItem15.Caption := 'ERROR finding Liesel';
 			end;
 
-			BTVersion := '11.2';
+			BTVersion := '11.3.0';
 
 			MenuItem16.Caption := 'BookThief version: ' + BTVersion;
 
