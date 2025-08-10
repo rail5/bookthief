@@ -1,3 +1,9 @@
+bookthief (11.3.1) stable; urgency=medium
+
+  * Updated packaging to support Debian 13
+
+ -- rail5 <andrew@rail5.org>  Sun, 10 Aug 2025 15:08:13 +0800
+
 bookthief (11.3.0) stable; urgency=medium
 
   * M$ Window$ support
