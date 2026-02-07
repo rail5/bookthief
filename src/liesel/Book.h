@@ -11,8 +11,6 @@
 #include <filesystem>
 #include <vector>
 
-#include <xgetopt.h>
-
 #include <Magick++.h>
 #include <poppler/cpp/poppler-global.h>
 #include <poppler/cpp/poppler-document.h>
@@ -91,8 +89,6 @@ class Book {
 		std::optional<PageDimensionPair> rescale_size() const { return m_rescale_size; }
 		std::optional<PageRangeList> page_ranges() const { return m_page_ranges; }
 		CropPercentages crop_percentages() const { return m_crop_percentages; }
-
-		void configure_from_CLI_options(const XGetOpt::OptionSequence& options);
 
 		void load_pdf();
 };
