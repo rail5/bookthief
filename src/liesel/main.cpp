@@ -11,6 +11,7 @@
 #include "../common/version.h"
 
 #include "Book.h"
+#include "CLIConfig.h"
 
 inline void show_error(const std::string_view& message) {
 	std::cerr << "Liesel: " << message << std::endl
@@ -77,7 +78,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	try {
-		book.configure_from_CLI_options(options);
+		Liesel::ConfigureBookFromCLIOptions(&book, options);
 		book.load_pdf();
 	} catch (const std::exception& e) {
 		show_error(e.what());

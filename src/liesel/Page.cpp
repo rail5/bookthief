@@ -107,3 +107,10 @@ void Liesel::Page::crop(const CropPercentages& crop_percentages) {
 		0, 0);
 	this->image->crop(bottom_crop_geom);
 }
+
+void Liesel::Page::blank(uint32_t width, uint32_t height) {
+	Magick::Geometry geom(width, height);
+	Magick::Color bg_color("white");
+
+	this->image = std::make_unique<Magick::Image>(geom, bg_color);
+}
