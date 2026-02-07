@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <optional>
 #include <filesystem>
+#include <vector>
 
 #include <xgetopt.h>
 
@@ -23,14 +24,17 @@
 #include "PageDimensions.h"
 #include "PageRangeList.h"
 #include "CropPercentages.h"
+#include "Page.h"
 
 namespace Liesel {
 
 class Book {
 	private:
 		std::filesystem::path input_pdf_path;
-		std::vector<std::filesystem::path> output_pdf_paths; // Possibly multiple if segmented
+		std::filesystem::path output_pdf_path;
 		std::unique_ptr<poppler::document> pdf_document;
+		std::vector<std::unique_ptr<Page>> pages;
+		std::vector<std::unique_ptr<Page>> processed_pages;
 
 		bool f_verbose = false;
 		bool f_greyscale = false;
@@ -39,18 +43,22 @@ class Book {
 		
 		uint32_t m_dpi_density = 100;
 		std::optional<uint8_t> m_threshold_level = std::nullopt;
-		std::optional<uint32_t> m_segment_size = std::nullopt;
+		uint32_t m_segment_size = UINT32_MAX; // Default to no segmentation
 
-		std::optional<uint32_t> m_widen_margins_amount = std::nullopt;
+		uint32_t m_widen_margins_amount = 0; // Default to no widening
 		/// m_autowiden_max == 0 means no maximum. == nullopt means disabled.
 		std::optional<uint32_t> m_autowiden_max = std::nullopt;
 
 		std::optional<PageDimensionPair> m_rescale_size = std::nullopt;
 		std::optional<PageRangeList> m_page_ranges = std::nullopt;
+		std::vector<uint32_t> m_effective_page_indices;
 		CropPercentages m_crop_percentages;
 
+		void verbose_output(const std::string_view& message) const;
+		void calculate_effective_page_indices();
+		void print_segment(uint32_t segment_number);
 	public:
-		Book() = default;
+		Book();
 
 		void set_input_pdf_path(const std::string_view& path);
 		void set_output_pdf_path(const std::string_view& path);
@@ -61,7 +69,10 @@ class Book {
 		void set_landscape(bool landscape) { f_landscape = landscape; }
 		void set_dpi_density(uint32_t dpi) { m_dpi_density = dpi; }
 		void set_threshold_level(uint8_t level) { m_threshold_level = level; }
-		void set_segment_size(uint32_t size) { m_segment_size = size; }
+		void set_segment_size(uint32_t size) {
+			if (size == 0) throw std::invalid_argument("Segment size cannot be zero.");
+			m_segment_size = size;
+		}
 		void set_widen_margins_amount(uint32_t amount) { m_widen_margins_amount = amount; }
 		void set_autowiden_max(std::optional<uint32_t> max) { m_autowiden_max = max; }
 		void set_rescale_size(const PageDimensionPair& size) { m_rescale_size = size; }
@@ -74,14 +85,16 @@ class Book {
 		bool landscape() const { return f_landscape; }
 		uint32_t dpi_density() const { return m_dpi_density; }
 		std::optional<uint8_t> threshold_level() const { return m_threshold_level; }
-		std::optional<uint32_t> segment_size() const { return m_segment_size; }
-		std::optional<uint32_t> widen_margins_amount() const { return m_widen_margins_amount; }
+		uint32_t segment_size() const { return m_segment_size; }
+		uint32_t widen_margins_amount() const { return m_widen_margins_amount; }
 		std::optional<uint32_t> autowiden_max() const { return m_autowiden_max; }
 		std::optional<PageDimensionPair> rescale_size() const { return m_rescale_size; }
 		std::optional<PageRangeList> page_ranges() const { return m_page_ranges; }
 		CropPercentages crop_percentages() const { return m_crop_percentages; }
 
 		void configure_from_CLI_options(const XGetOpt::OptionSequence& options);
+
+		void load_pdf();
 };
 
 } // namespace Liesel

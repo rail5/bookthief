@@ -71,7 +71,6 @@ int main(int argc, char* argv[]) {
 		std::cout << help_intro << parser.getHelpString() << std::flush;
 		return 0;
 	}
-
 	if (options.hasOption('v')) {
 		std::cout << copyright_string << std::flush;
 		return 0;
@@ -79,8 +78,10 @@ int main(int argc, char* argv[]) {
 
 	try {
 		book.configure_from_CLI_options(options);
+		book.load_pdf();
 	} catch (const std::exception& e) {
 		show_error(e.what());
 		return 1;
 	}
+	return 0;
 }
