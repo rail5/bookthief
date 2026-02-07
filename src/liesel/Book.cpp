@@ -6,6 +6,117 @@
 #include "Book.h"
 
 #include <algorithm>
+#include <iostream>
+
+Liesel::Book::Book() {
+	Magick::InitializeMagick(nullptr);
+}
+
+void Liesel::Book::verbose_output(const std::string_view& message) const {
+	if (f_verbose) std::cout << "Liesel: " << message << std::endl;
+}
+
+void Liesel::Book::calculate_effective_page_indices() {
+	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
+
+	int poppler_pages = pdf_document->pages();
+	if (poppler_pages <= 0) throw std::runtime_error("PDF document has no pages.");
+	uint32_t number_of_pages = static_cast<uint32_t>(poppler_pages);
+
+	m_effective_page_indices.clear();
+	if (!m_page_ranges.has_value()) {
+		// All pages
+		for (uint32_t i = 0; i < number_of_pages; i++) m_effective_page_indices.push_back(i);
+		return;
+	}
+
+	// Specific page ranges
+	for (const auto& range : m_page_ranges->ranges()) {
+		uint32_t start = range.start_page().has_value() ? range.start_page().value() - 1 : 0;
+		uint32_t end = range.end_page().has_value() ? range.end_page().value() - 1 : number_of_pages - 1;
+
+		if (start >= number_of_pages) throw std::out_of_range("Page " + std::to_string(start + 1)
+			+ " is out of range. Document has " + std::to_string(number_of_pages) + " pages.");
+
+		if (end >= number_of_pages) end = number_of_pages - 1; // Clamp to last page
+
+		for (uint32_t i = start; i <= end; i++) m_effective_page_indices.push_back(i);
+
+	}
+}
+
+void Liesel::Book::print_segment(uint32_t segment_number) {
+	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
+	if (output_pdf_path.empty()) throw std::runtime_error("No output PDF path specified.");
+	if (m_effective_page_indices.empty()) throw std::runtime_error("No pages to print.");
+
+	std::filesystem::path segment_output_path = output_pdf_path;
+	if (m_segment_size < UINT32_MAX) {
+		// One of multiple segments (a single, unsegmented PDF has m_segment_size == UINT32_MAX)
+		// Calculate this segment's output path:
+		// Replace the ".pdf" extension with "-NNN.pdf" where NNN is the segment number, zero-padded to 3 digits
+		auto ext = segment_output_path.extension();
+		std::string segment_suffix = std::to_string(segment_number + 1);
+		while (segment_suffix.length() < 3) {
+			segment_suffix = "0" + segment_suffix;
+		}
+		segment_output_path.replace_extension("-" + segment_suffix + ext.string());
+	}
+
+	verbose_output("Printing segment " + std::to_string(segment_number + 1)
+		+ " to output PDF: " + segment_output_path.string());
+
+	// Use Poppler to render each page to an image and store in 'pages'
+	uint32_t start_index = segment_number * m_segment_size;
+	uint32_t end_index;
+	if (m_segment_size == UINT32_MAX) {
+		end_index = static_cast<uint32_t>(m_effective_page_indices.size());
+	} else {
+		end_index = std::min(start_index + m_segment_size, static_cast<uint32_t>(m_effective_page_indices.size()));
+	}
+
+	for (uint32_t i = start_index; i < end_index; i++) {
+		uint32_t page_index = m_effective_page_indices[i];
+		verbose_output("Rendering page " + std::to_string(page_index + 1) + "...");
+
+		std::unique_ptr<Liesel::Page> page = std::make_unique<Liesel::Page>();
+		page->load(pdf_document.get(), page_index, m_dpi_density);
+
+		if (f_greyscale) page->set_greyscale();
+		if (m_threshold_level.has_value()) page->set_threshold(static_cast<double>(m_threshold_level.value()));
+
+		if (f_divide) {
+			auto left_page = page->divide();
+			pages.push_back(std::move(left_page));
+		}
+
+		pages.push_back(std::move(page));
+
+		// Crops should happen **after** dividing the page if applicable
+		// because the crop percentages are relative to each half-page now
+		pages.back()->crop(m_crop_percentages);
+		if (f_divide) pages[pages.size() - 2]->crop(m_crop_percentages);
+
+		verbose_output("Page " + std::to_string(page_index + 1) + " rendered and processed.");
+	}
+
+	// The total number of pages per segment must ALWAYS be a multiple of 4
+	// to ensure proper duplex printing alignment
+	// We'll append blanks if necessary
+	uint32_t pageWidth = pages[0]->columns();
+	uint32_t pageHeight = pages[0]->rows();
+	Liesel::Page extra_page;
+	extra_page.blank(pageWidth, pageHeight);
+
+	uint32_t pages_in_segment = end_index - start_index;
+	while (pages_in_segment % 4 != 0) {
+		auto extra_blank = std::make_unique<Liesel::Page>(extra_page);
+		pages.push_back(std::move(extra_blank));
+		pages_in_segment++;
+	}
+
+	verbose_output("All pages for segment " + std::to_string(segment_number + 1) + " rendered.");
+}
 
 void Liesel::Book::set_input_pdf_path(const std::string_view& path) {
 	// Verify that the path is valid, the file exists, and is a PDF
@@ -25,9 +136,35 @@ void Liesel::Book::set_input_pdf_path(const std::string_view& path) {
 
 void Liesel::Book::set_output_pdf_path(const std::string_view& path) {
 	// Verify either:
+	// 0. If we're outputting multiple segmented PDFs, we need to verify write permissions on the directory
+	// Otherwise:
 	// 1. The file does not exist (will be created) AND we have write permissions in the directory
 	// Or 2. The file exists AND we have write permissions to the file
 	std::filesystem::path p(path);
+
+	if (m_segment_size < UINT32_MAX) {
+		// Segmented output, check directory write permissions
+		auto dir = p;
+		if (dir.has_filename()) {
+			dir = dir.parent_path();
+		}
+		if (dir.empty()) {
+			dir = std::filesystem::current_path();
+		}
+		std::error_code ec;
+		auto perms = std::filesystem::status(dir, ec).permissions();
+		unsigned write_perms = static_cast<unsigned>(std::filesystem::perms::owner_write) |
+			static_cast<unsigned>(std::filesystem::perms::group_write) |
+			static_cast<unsigned>(std::filesystem::perms::others_write);
+		if (ec || !(static_cast<unsigned>(perms) & write_perms)) {
+			throw std::invalid_argument("No write permission in output PDF directory: " + dir.string());
+		}
+		// Even in the case of segmented output, we still store the base output path
+		// The segmented files will be created later with suffixes appended to this
+		output_pdf_path = p;
+		return;
+	}
+
 	if (std::filesystem::exists(p)) {
 		// File exists, check write permissions
 		std::error_code ec;
@@ -54,6 +191,7 @@ void Liesel::Book::set_output_pdf_path(const std::string_view& path) {
 			throw std::invalid_argument("No write permission in output PDF directory: " + dir.string());
 		}
 	}
+	output_pdf_path = p;
 }
 
 void Liesel::Book::configure_from_CLI_options(const XGetOpt::OptionSequence& options) {
@@ -191,4 +329,15 @@ void Liesel::Book::configure_from_CLI_options(const XGetOpt::OptionSequence& opt
 	} catch (const std::exception& e) {
 		throw std::runtime_error(e.what());
 	}
+}
+
+void Liesel::Book::load_pdf() {
+	verbose_output("Loading PDF document from: " + input_pdf_path.string());
+	pdf_document.reset(poppler::document::load_from_file(input_pdf_path.string()));
+	if (!pdf_document) {
+		throw std::runtime_error("Failed to load PDF document: " + input_pdf_path.string());
+	}
+	verbose_output("PDF document loaded successfully. Number of pages: " + std::to_string(pdf_document->pages()));
+
+	calculate_effective_page_indices();
 }

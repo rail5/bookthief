@@ -56,6 +56,10 @@ class CropPercentages {
 			m_bottom = value;
 		}
 
+		bool is_empty() const {
+			return m_left == 0 && m_right == 0 && m_top == 0 && m_bottom == 0;
+		}
+
 		/// @brief Set crop percentages from a string "L,R,T,B"
 		void set_from_string(const std::string_view& str) {
 			size_t first_comma = str.find(',');
