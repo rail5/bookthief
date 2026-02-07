@@ -30,11 +30,11 @@ $(LIESEL): $(OBJS_LIESEL)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 	@echo "Built Liesel version $(VERSION)"
 
-$(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp update-version-information
+$(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/common/version.h
 	@mkdir -p $(BINDIR)/liesel-objs
 	$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) -c $< -o $@
 
-update-version-information: debian/changelog
+$(SRCDIR)/common/version.h: debian/changelog
 	@echo "#define VERSION \"$(VERSION)\"" > $(SRCDIR)/common/version.h
 	@echo "#define COPYRIGHT_YEAR \"$(YEAR)\"" >> $(SRCDIR)/common/version.h
 	@echo "Updated version information to $(VERSION) ($(YEAR))"
@@ -44,4 +44,4 @@ clean:
 
 -include $(BINDIR)/*.d
 
-.PHONY: all clean update-version-information
+.PHONY: all clean
