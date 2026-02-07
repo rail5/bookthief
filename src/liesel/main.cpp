@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
 		"You should have received a copy of the GNU General Public License\n"
 		"along with this program. If not, see http://www.gnu.org/licenses/.\n";
 	
+	Liesel::Book book;
 	XGetOpt::OptionSequence options;
 	try {
 		options = parser.parse(argc, argv);
@@ -66,161 +67,18 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	Liesel::Book book;
-
-	for (const auto& opt : options) {
-		switch (opt.getShortOpt()) {
-			// -v, -h (early-exit options)
-			case 'v': {
-				std::cout << copyright_string;
-				return 0;
-			}
-			case 'h': {
-				std::cout << help_intro << parser.getHelpString();
-				return 0;
-			}
-
-			// -V (sets verbose)
-			case 'V': {
-				book.set_verbose(true);
-				break;
-			}
-
-			// Basic flags: -g, -d, -l, -p
-			case 'g': {
-				book.set_greyscale(true);
-				break;
-			}
-			case 'd': {
-				book.set_divide(true);
-				break;
-			}
-			case 'l': {
-				book.set_landscape(true);
-				break;
-			}
-			case 'p': {
-				book.set_landscape(false);
-				break;
-			}
-
-			// Other options with arguments
-			case 'r': {
-				try {
-					Liesel::PageRangeList range_list(opt.getArgument());
-					book.set_page_ranges(range_list);
-				} catch (const std::exception&) {
-					show_error("Invalid page range: " + std::string(opt.getArgument()));
-					return 1;
-				}
-				break;
-			}
-			case 's': {
-				try {
-					uint32_t segment_size = static_cast<uint32_t>(std::stoul(std::string(opt.getArgument())));
-					book.set_segment_size(segment_size);
-				} catch (const std::exception&) {
-					show_error("Invalid segment size: " + std::string(opt.getArgument()));
-					return 1;
-				}
-				break;
-			}
-			case 't': {
-				try {
-					Liesel::PageDimensionPair size(opt.getArgument());
-					book.set_rescale_size(size);
-				} catch (const std::exception&) {
-					show_error("Invalid rescale size: " + std::string(opt.getArgument()));
-					return 1;
-				}
-				break;
-			}
-			case 'D': {
-				try {
-					uint32_t dpi = static_cast<uint32_t>(std::stoul(std::string(opt.getArgument())));
-					book.set_dpi_density(dpi);
-				} catch (const std::exception&) {
-					show_error("Invalid DPI density: " + std::string(opt.getArgument()));
-					return 1;
-				}
-				break;
-			}
-			case 'k': {
-				try {
-					uint8_t level = static_cast<uint8_t>(std::stoul(std::string(opt.getArgument())));
-					if (level > 100) {
-						throw std::out_of_range("Threshold level must be between 0 and 100");
-					}
-					book.set_threshold_level(level);
-				} catch (const std::exception&) {
-					show_error("Invalid threshold level: " + std::string(opt.getArgument()));
-					return 1;
-				}
-				break;
-			}
-			case 'c': {
-				try {
-					Liesel::CropPercentages crop;
-					crop.set_from_string(opt.getArgument());
-					book.set_crop_percentages(crop);
-				} catch (const std::exception&) {
-					show_error("Invalid crop percentages: " + std::string(opt.getArgument()));
-					return 1;
-				}
-				break;
-			}
-			case 'w': {
-				try {
-					uint32_t amount = static_cast<uint32_t>(std::stoul(std::string(opt.getArgument())));
-					book.set_widen_margins_amount(amount);
-				} catch (const std::exception&) {
-					show_error("Invalid widen margins amount: " + std::string(opt.getArgument()));
-					return 1;
-				}
-				break;
-			}
-			case 'a': {
-				try {
-					if (opt.hasArgument()) {
-						uint32_t max = static_cast<uint32_t>(std::stoul(std::string(opt.getArgument())));
-						book.set_autowiden_max(max);
-					} else {
-						book.set_autowiden_max(0); // No maximum
-					}
-				} catch (const std::exception&) {
-					show_error("Invalid auto-widen max value: " + std::string(opt.getArgument()));
-					return 1;
-				}
-				break;
-			}
-			default:
-				// Ignore unknown options (should not happen)
-				break;
-		}
+	if (options.hasOption('h')) {
+		std::cout << help_intro << parser.getHelpString() << std::flush;
+		return 0;
 	}
 
-	// The first non-option argument is the input PDF
-	// The second non-option argument is the output PDF
-	const auto& non_option_args = options.getNonOptionArguments();
-	if (non_option_args.size() == 0) {
-		std::cerr << "Liesel: Error: No input PDF specified.\n";
-		return 1;
+	if (options.hasOption('v')) {
+		std::cout << copyright_string << std::flush;
+		return 0;
 	}
 
 	try {
-		book.set_input_pdf_path(non_option_args[0]);
-	} catch (const std::exception& e) {
-		show_error(e.what());
-		return 1;
-	}
-
-	if (non_option_args.size() == 1) {
-		std::cerr << "Liesel: Error: No output PDF specified.\n";
-		return 1;
-	}
-	
-	try {
-		book.set_output_pdf_path(non_option_args[1]);
+		book.configure_from_CLI_options(options);
 	} catch (const std::exception& e) {
 		show_error(e.what());
 		return 1;
