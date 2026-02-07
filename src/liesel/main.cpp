@@ -38,7 +38,8 @@ int main(int argc, char* argv[]) {
 
 	constexpr std::string_view help_intro =
 		"Liesel " VERSION "\n"
-		"Usage: liesel [options] <input.pdf> <output.pdf>\n";
+		"Usage: liesel [options] <input.pdf> <output.pdf>\n"
+		"Options:\n";
 	
 	constexpr std::string_view copyright_string =
 		"Liesel " VERSION "\n"
