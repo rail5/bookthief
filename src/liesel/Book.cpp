@@ -165,7 +165,6 @@ void Liesel::Book::configure_from_CLI_options(const XGetOpt::OptionSequence& opt
 				break;
 			}
 			default:
-				// Ignore unknown options (should not happen)
 				break;
 		}
 	}
