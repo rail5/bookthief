@@ -1,38 +1,47 @@
-CURRENT_PLATFORM=$(shell uname)
+CXX = g++
+CXXFLAGS = -Wall -Wextra -std=c++23 -O2 -s -MMD -MP
+INCLUDEFLAGS = $(shell pkg-config --cflags poppler-cpp GraphicsMagick++)
+LDFLAGS = $(shell pkg-config --libs poppler-cpp GraphicsMagick++) -lhpdf
 
-# Directory of your Lazarus installation (below is correct for default Debian installs)
-LAZDIR=/usr/lib/lazarus/default
+# Can we parse d/changelog?
+PARSECHANGELOG := $(shell command -v dpkg-parsechangelog 2> /dev/null)
 
-# Default directory for Lazarus on MacOS
-MACLAZDIR=/Applications/Lazarus
-
-# Intentionally left blank unless we detect we're building on MacOS
-MACEXTRA=
-
-all:
-ifeq ($(CURRENT_PLATFORM),Darwin)
-	$(eval LAZDIR := $(MACLAZDIR))
-	$(eval MACEXTRA := --widgetset=cocoa)
+ifdef PARSECHANGELOG
+	VERSION = $(shell dpkg-parsechangelog -l debian/changelog --show-field version)
+	YEAR = $(shell date +%Y -d@$(shell dpkg-parsechangelog -l debian/changelog --show-field timestamp))
+else
+	VERSION = 12.0.0
+	YEAR = 2026
 endif
-	$(LAZDIR)/lazbuild --lazarusdir=$(LAZDIR) $(MACEXTRA) --build-mode=Release bookthief.lpr
 
-windows:
-	lazbuild --lazarusdir=$(LAZDIR) \
-	--build-mode=Release \
-	--widgetset=win64 \
-	--operating-system=win64 \
-	--cpu=x86_64 \
-	bookthief.lpr
+SRCDIR = src
+BINDIR = bin
 
-macpkg:
-	rm -rf ./bookthief.app/
-	mkdir -p bookthief.app/Contents/MacOS
-	mkdir -p bookthief.app/Contents/Resources
-	echo "APPL????" > bookthief.app/Contents/PkgInfo
-	cp Info.plist bookthief.app/Contents/
-	cp bookthief bookthief.app/Contents/MacOS/
-	cp liesel bookthief.app/Contents/MacOS/
-	
-install:
-	install -m 0755 bookthief /usr/bin
+LIESEL = $(BINDIR)/liesel
+BOOKTHIEF = $(BINDIR)/bookthief
 
+SRCS_LIESEL = $(wildcard $(SRCDIR)/liesel/*.cpp)
+OBJS_LIESEL = $(patsubst $(SRCDIR)/liesel/%.cpp,$(BINDIR)/liesel-objs/%.o,$(SRCS_LIESEL))
+
+all: $(LIESEL)
+
+$(LIESEL): $(OBJS_LIESEL)
+	@mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+	@echo "Built Liesel version $(VERSION)"
+
+$(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp update-version-information
+	@mkdir -p $(BINDIR)/liesel-objs
+	$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) -c $< -o $@
+
+update-version-information: debian/changelog
+	@echo "#define VERSION \"$(VERSION)\"" > $(SRCDIR)/common/version.h
+	@echo "#define COPYRIGHT_YEAR \"$(YEAR)\"" >> $(SRCDIR)/common/version.h
+	@echo "Updated version information to $(VERSION) ($(YEAR))"
+
+clean:
+	rm -rf $(BINDIR)/*
+
+-include $(BINDIR)/*.d
+
+.PHONY: all clean update-version-information
