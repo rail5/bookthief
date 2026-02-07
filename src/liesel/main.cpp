@@ -12,7 +12,7 @@
 
 #include "Book.h"
 
-void show_error(const std::string_view& message) {
+inline void show_error(const std::string_view& message) {
 	std::cerr << "Liesel: " << message << std::endl
 		<< "Use -h or --help for usage information." << std::endl;
 }
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
 				try {
 					Liesel::PageRangeList range_list(opt.getArgument());
 					book.set_page_ranges(range_list);
-				} catch (const std::exception& e) {
+				} catch (const std::exception&) {
 					show_error("Invalid page range: " + std::string(opt.getArgument()));
 					return 1;
 				}
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
 				try {
 					uint32_t segment_size = static_cast<uint32_t>(std::stoul(std::string(opt.getArgument())));
 					book.set_segment_size(segment_size);
-				} catch (const std::exception& e) {
+				} catch (const std::exception&) {
 					show_error("Invalid segment size: " + std::string(opt.getArgument()));
 					return 1;
 				}
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
 				try {
 					Liesel::PageDimensionPair size(opt.getArgument());
 					book.set_rescale_size(size);
-				} catch (const std::exception& e) {
+				} catch (const std::exception&) {
 					show_error("Invalid rescale size: " + std::string(opt.getArgument()));
 					return 1;
 				}
@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
 				try {
 					uint32_t dpi = static_cast<uint32_t>(std::stoul(std::string(opt.getArgument())));
 					book.set_dpi_density(dpi);
-				} catch (const std::exception& e) {
+				} catch (const std::exception&) {
 					show_error("Invalid DPI density: " + std::string(opt.getArgument()));
 					return 1;
 				}
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
 						throw std::out_of_range("Threshold level must be between 0 and 100");
 					}
 					book.set_threshold_level(level);
-				} catch (const std::exception& e) {
+				} catch (const std::exception&) {
 					show_error("Invalid threshold level: " + std::string(opt.getArgument()));
 					return 1;
 				}
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
 					Liesel::CropPercentages crop;
 					crop.set_from_string(opt.getArgument());
 					book.set_crop_percentages(crop);
-				} catch (const std::exception& e) {
+				} catch (const std::exception&) {
 					show_error("Invalid crop percentages: " + std::string(opt.getArgument()));
 					return 1;
 				}
@@ -172,7 +172,7 @@ int main(int argc, char* argv[]) {
 				try {
 					uint32_t amount = static_cast<uint32_t>(std::stoul(std::string(opt.getArgument())));
 					book.set_widen_margins_amount(amount);
-				} catch (const std::exception& e) {
+				} catch (const std::exception&) {
 					show_error("Invalid widen margins amount: " + std::string(opt.getArgument()));
 					return 1;
 				}
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]) {
 					} else {
 						book.set_autowiden_max(0); // No maximum
 					}
-				} catch (const std::exception& e) {
+				} catch (const std::exception&) {
 					show_error("Invalid auto-widen max value: " + std::string(opt.getArgument()));
 					return 1;
 				}
