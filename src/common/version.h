@@ -1,2 +1,0 @@
-#define VERSION "12.0.0"
-#define COPYRIGHT_YEAR "2026"
