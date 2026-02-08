@@ -1,0 +1,58 @@
+object ProgressWindow: TProgressWindow
+	Left = 440
+	Height = 240
+	Top = 31
+	Width = 320
+	AutoSize = True
+	BorderStyle = bsDialog
+	Caption = 'Building PDF'
+	ClientHeight = 240
+	ClientWidth = 320
+	object ProgressLabel: TLabel
+		Left = 0
+		Height = 19
+		Top = 10
+		Width = 320
+		Align = alTop
+		Alignment = taCenter
+		BorderSpacing.Top = 10
+		Caption = 'Building PDF...'
+	end
+	object ProgressBar1: TProgressBar
+		Left = 10
+		Height = 33
+		Top = 34
+		Width = 300
+		Align = alTop
+		BorderSpacing.Left = 10
+		BorderSpacing.Top = 5
+		BorderSpacing.Right = 10
+		Smooth = True
+		TabOrder = 0
+	end
+	object CancelButtonPanel: TPanel
+		Left = 0
+		Height = 68
+		Top = 67
+		Width = 320
+		Align = alTop
+		AutoSize = True
+		BevelOuter = bvNone
+		ClientHeight = 68
+		ClientWidth = 320
+		TabOrder = 1
+		object CancelButton: TButton
+			Left = 0
+			Height = 38
+			Top = 10
+			Width = 120
+			Align = alTop
+			BorderSpacing.Top = 10
+			BorderSpacing.Bottom = 20
+			Caption = 'Cancel'
+			Constraints.MaxWidth = 120
+			TabOrder = 0
+			OnClick = CancelButtonClick
+		end
+	end
+end
