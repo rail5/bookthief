@@ -38,6 +38,8 @@ class Book {
 		bool f_greyscale = false;
 		bool f_divide = false;
 		bool f_landscape = false; // Default to portrait for duplex printing
+
+		bool f_booklet = true; // Default to booklet printing unless -N is specified
 		
 		uint32_t m_dpi_density = 100;
 		std::optional<uint8_t> m_threshold_level = std::nullopt;
@@ -54,6 +56,7 @@ class Book {
 
 		void verbose_output(const std::string_view& message) const;
 		void calculate_effective_page_indices();
+		void _render_segment(uint32_t segment_number);
 		void print_segment(uint32_t segment_number);
 	public:
 		Book();
@@ -64,6 +67,7 @@ class Book {
 		void set_verbose(bool verbose) { f_verbose = verbose; }
 		void set_greyscale(bool greyscale) { f_greyscale = greyscale; }
 		void set_divide(bool divide) { f_divide = divide; }
+		void set_booklet(bool booklet) { f_booklet = booklet; }
 		void set_landscape(bool landscape) { f_landscape = landscape; }
 		void set_dpi_density(uint32_t dpi) { m_dpi_density = dpi; }
 		void set_threshold_level(uint8_t level) { m_threshold_level = level; }
@@ -80,6 +84,7 @@ class Book {
 		bool verbose() const { return f_verbose; }
 		bool greyscale() const { return f_greyscale; }
 		bool divide() const { return f_divide; }
+		bool booklet() const { return f_booklet; }
 		bool landscape() const { return f_landscape; }
 		uint32_t dpi_density() const { return m_dpi_density; }
 		std::optional<uint8_t> threshold_level() const { return m_threshold_level; }
