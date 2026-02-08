@@ -89,19 +89,6 @@ void Liesel::ConfigureBookFromCLIOptions(Liesel::Book* book, const XGetOpt::Opti
 				}
 				break;
 			}
-			case 'a': {
-				try {
-					if (opt.hasArgument()) {
-						uint32_t max = static_cast<uint32_t>(std::stoul(std::string(opt.getArgument())));
-						book->set_autowiden_max(max);
-					} else {
-						book->set_autowiden_max(0); // No maximum
-					}
-				} catch (const std::exception&) {
-					throw std::runtime_error("Invalid auto-widen max value: " + std::string(opt.getArgument()));
-				}
-				break;
-			}
 			default:
 				break;
 		}

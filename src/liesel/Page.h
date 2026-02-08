@@ -35,6 +35,7 @@ class Page {
 		void set_threshold(uint8_t level);
 		std::unique_ptr<Page> divide();
 		void crop(const CropPercentages& crop_percentages);
+		void rotate(double degrees);
 
 		uint32_t columns() const {
 			if (!image) throw std::runtime_error("No image loaded.");
@@ -46,6 +47,8 @@ class Page {
 		}
 
 		void blank(uint32_t width, uint32_t height);
+
+		void pair_with(std::unique_ptr<Page> other, uint32_t margin_size);
 
 		void _set_image_raw(std::unique_ptr<Magick::Image> img) { image = std::move(img); }
 		std::unique_ptr<Magick::Image> _get_image_raw() { return std::move(image); }
