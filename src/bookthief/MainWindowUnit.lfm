@@ -1,0 +1,370 @@
+object MainWindow: TMainWindow
+	Left = 1520
+	Height = 533
+	Top = 31
+	Width = 408
+	Caption = 'BookThief'
+	ClientHeight = 533
+	ClientWidth = 408
+	Menu = MainMenu1
+	LCLVersion = '4.0.0.4'
+	OnConstrainedResize = FormConstrainedResize
+	OnCreate = FormCreate
+	OnShow = FormShow
+	object FileInputButton: TButton
+		Left = 0
+		Height = 35
+		Top = 0
+		Width = 408
+		Align = alTop
+		AutoSize = True
+		Caption = '(None)'
+		TabOrder = 0
+		OnClick = FileInputButtonClick
+	end
+	object BottomPanel: TPanel
+		Left = 0
+		Height = 105
+		Top = 428
+		Width = 408
+		Align = alBottom
+		AutoSize = True
+		BevelOuter = bvNone
+		ClientHeight = 105
+		ClientWidth = 408
+		TabOrder = 1
+		object QualitySliderLabel: TLabel
+			Left = 0
+			Height = 19
+			Top = 0
+			Width = 408
+			Align = alTop
+			Alignment = taCenter
+			Caption = 'Quality'
+		end
+		object QualitySlider: TTrackBar
+			Left = 0
+			Height = 51
+			Top = 19
+			Width = 408
+			Max = 200
+			Min = 1
+			Position = 100
+			Align = alTop
+			TabOrder = 0
+		end
+		object SaveButton: TButton
+			Left = 0
+			Height = 35
+			Top = 70
+			Width = 408
+			Align = alTop
+			AutoSize = True
+			Caption = 'Save as'
+			TabOrder = 1
+			OnClick = SaveButtonClick
+		end
+	end
+	object BasicControlsPanel: TPanel
+		Left = 0
+		Height = 244
+		Top = 35
+		Width = 408
+		Align = alTop
+		AutoSize = True
+		BevelOuter = bvNone
+		ClientHeight = 244
+		ClientWidth = 408
+		TabOrder = 2
+		object AdvancedButtonPanel: TPanel
+			Left = 0
+			Height = 35
+			Top = 209
+			Width = 408
+			Align = alTop
+			AutoSize = True
+			BevelOuter = bvNone
+			ClientHeight = 35
+			ClientWidth = 408
+			TabOrder = 0
+			object AdvancedButton: TToggleBox
+				Left = 0
+				Height = 35
+				Top = 0
+				Width = 79
+				Align = alLeft
+				AutoSize = True
+				Caption = 'Advanced Settings...'
+				TabOrder = 0
+				ShowHint = True
+				Hint = 'Show advanced settings'
+				OnChange = AdvancedButtonChange
+			end
+		end
+		object RangePanel: TPanel
+			Left = 0
+			Height = 55
+			Top = 154
+			Width = 408
+			Align = alTop
+			AutoSize = True
+			BevelOuter = bvNone
+			ClientHeight = 55
+			ClientWidth = 408
+			TabOrder = 1
+			object RangeCheckbox: TCheckBox
+				Left = 0
+				Height = 35
+				Top = 0
+				Width = 167
+				Align = alLeft
+				BorderSpacing.Bottom = 20
+				Caption = 'Print only given range'
+				TabOrder = 0
+				OnChange = RangeCheckboxChange
+			end
+			object RangeInputPanel: TPanel
+				Left = 283
+				Height = 55
+				Top = 0
+				Width = 125
+				Align = alRight
+				BevelOuter = bvNone
+				ClientHeight = 55
+				ClientWidth = 125
+				TabOrder = 1
+				Visible = False
+				object RangeInputLabel: TLabel
+					Left = 0
+					Height = 19
+					Top = 0
+					Width = 125
+					Align = alBottom
+					Alignment = taCenter
+					Caption = 'Print only pages:'
+				end
+				object RangeInputTextbox: TEdit
+					Left = 0
+					Height = 36
+					Top = 19
+					Width = 125
+					Align = alBottom
+					ParentShowHint = False
+					ShowHint = True
+					TabOrder = 0
+					TextHint = '1-10,6,100-'
+					OnKeyPress = RangesTextboxKeyPress
+				end
+			end
+		end
+		object SegmentPanel: TPanel
+			Left = 0
+			Height = 65
+			Top = 89
+			Width = 408
+			Align = alTop
+			AutoSize = True
+			BevelOuter = bvNone
+			ClientHeight = 65
+			ClientWidth = 408
+			TabOrder = 2
+			object SegmentCheckbox: TCheckBox
+				Left = 0
+				Height = 45
+				Top = 0
+				Width = 140
+				Align = alLeft
+				BorderSpacing.Bottom = 20
+				Caption = 'Print in segments'
+				TabOrder = 0
+				OnChange = SegmentCheckboxChange
+			end
+			object SegmentInputPanel: TPanel
+				Left = 283
+				Height = 55
+				Top = 0
+				Width = 125
+				Align = alRight
+				AutoSize = True
+				BorderSpacing.Bottom = 10
+				BevelOuter = bvNone
+				ClientHeight = 55
+				ClientWidth = 125
+				TabOrder = 1
+				Visible = False
+				object SegmentInputLabel: TLabel
+					Left = 0
+					Height = 19
+					Top = 36
+					Width = 125
+					Align = alBottom
+					Alignment = taCenter
+					Caption = 'Pages per segment'
+				end
+				object SegmentInputBox: TSpinEdit
+					Left = 0
+					Height = 36
+					Top = 0
+					Width = 125
+					Align = alBottom
+					Alignment = taCenter
+					MaxValue = 100
+					MinValue = 4
+					TabOrder = 0
+					Value = 40
+				end
+			end
+		end
+		object RescalePanel: TPanel
+			Left = 0
+			Height = 46
+			Top = 43
+			Width = 408
+			Align = alTop
+			AutoSize = True
+			BevelOuter = bvNone
+			ClientHeight = 46
+			ClientWidth = 408
+			TabOrder = 3
+			object RescaleCheckbox: TCheckBox
+				Left = 0
+				Height = 26
+				Top = 0
+				Width = 163
+				Align = alLeft
+				BorderSpacing.Bottom = 20
+				Caption = 'Rescale to paper size'
+				TabOrder = 0
+				OnChange = RescaleCheckboxChange
+			end
+			object RescaleInputPanel: TPanel
+				Left = 285
+				Height = 46
+				Top = 0
+				Width = 123
+				Align = alRight
+				AutoSize = True
+				BevelOuter = bvNone
+				ClientHeight = 46
+				ClientWidth = 123
+				TabOrder = 1
+				Visible = False
+				object RescaleDropdownBox: TComboBox
+					Left = 0
+					Height = 36
+					Top = 0
+					Width = 123
+					AutoSize = False
+					BorderSpacing.Bottom = 10
+					ItemHeight = 0
+					ItemIndex = 0
+					Items.Strings = (
+						'us-letter'
+						'a4'
+						'us-legal'
+						'a3'
+						'a5'
+					)
+					Style = csDropDownList
+					TabOrder = 0
+					Text = 'us-letter'
+				end
+			end
+		end
+		object GreyscalePanel: TPanel
+			Left = 0
+			Height = 43
+			Top = 0
+			Width = 408
+			Align = alTop
+			AutoSize = True
+			BevelOuter = bvNone
+			ClientHeight = 43
+			ClientWidth = 408
+			TabOrder = 4
+			object GreyscaleCheckbox: TCheckBox
+				Left = 0
+				Height = 23
+				Top = 0
+				Width = 159
+				Align = alLeft
+				BorderSpacing.Bottom = 20
+				Caption = 'Convert to greyscale'
+				TabOrder = 0
+				OnChange = GreyscaleCheckboxChange
+			end
+		end
+	end
+	object MainMenu1: TMainMenu
+		Left = 456
+		Top = 8
+		object FileMenu: TMenuItem
+			Caption = 'File'
+			object ImportCommandButton: TMenuItem
+				Caption = 'Import Command'
+				OnClick = ImportCommandButtonClick
+			end
+			object ExportCommandButton: TMenuItem
+				Caption = 'Export Command'
+				OnClick = ExportCommandButtonClick
+			end
+			object Separator1: TMenuItem
+				Caption = '-'
+			end
+			object LoadSettingsButton: TMenuItem
+				Caption = 'Load Latest Settings'
+				OnClick = LoadSettingsButtonClick
+			end
+			object SaveSettingsButton: TMenuItem
+				Caption = 'Save Current Settings'
+				OnClick = SaveSettingsButtonClick
+			end
+			object Separator2: TMenuItem
+				Caption = '-'
+			end
+			object QuitButton: TMenuItem
+				Caption = 'Quit'
+				OnClick = QuitButtonClick
+			end
+		end
+		object HelpMenu: TMenuItem
+			Caption = 'Help'
+			object AboutButton: TMenuItem
+				Caption = 'About'
+				OnClick = AboutButtonClick
+			end
+			object Separator3: TMenuItem
+				Caption = '-'
+			end
+			object LibgenButton: TMenuItem
+				Caption = 'Library Genesis'
+				OnClick = LibgenButtonClick
+			end
+			object Separator4: TMenuItem
+				Caption = '-'
+			end
+		end
+	end
+	object AboutDialog: TTaskDialog
+		Buttons = <>
+		Caption = 'BookThief'
+		CommonButtons = [tcbOk]
+		RadioButtons = <>
+		QueryItemIndex = 0
+		Text = 'Copyright (C) 2021-2026 Andrew S. Rightenburg'#10#10' '#10#10'This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.'#10#10' '#10#10'This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.'#10#10' '#10#10'You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.'
+		Title = 'About BookThief'
+		Left = 448
+		Top = 56
+	end
+	object OpenDialog: TOpenDialog
+		Title = 'Open PDF'
+		DefaultExt = '.pdf'
+		Filter = 'PDF files (*.pdf)|*.pdf'
+		Left = 504
+		Top = 344
+	end
+	object SaveDialog: TSaveDialog
+		Left = 448
+		Top = 336
+	end
+end

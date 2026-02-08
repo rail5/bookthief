@@ -1,0 +1,61 @@
+object ImportExportCommandModal: TImportExportCommandModal
+	Left = 440
+	Height = 240
+	Top = 31
+	Width = 480
+	AutoSize = True
+	BorderStyle = bsDialog
+	Caption = 'Import/Export Liesel Command'
+	ClientHeight = 240
+	ClientWidth = 409
+	OnResize = FormResize
+	OnShow = FormShow
+	OnKeyDown = FormKeyDown
+	object ImportExportLabel: TLabel
+		Left = 20
+		Height = 19
+		Top = 10
+		Width = 369
+		Align = alTop
+		Alignment = taCenter
+		BorderSpacing.Left = 20
+		BorderSpacing.Top = 10
+		BorderSpacing.Right = 20
+		Caption = 'Import Liesel Command'
+	end
+	object LieselCommandInputTextbox: TEdit
+		Left = 20
+		Height = 36
+		Top = 29
+		Width = 369
+		Align = alTop
+		AutoSize = False
+		BorderSpacing.Left = 20
+		BorderSpacing.Right = 20
+		TabOrder = 0
+	end
+	object ImportExportButtonPanel: TPanel
+		Left = 0
+		Height = 35
+		Top = 65
+		Width = 409
+		Align = alTop
+		BevelOuter = bvNone
+		ClientHeight = 35
+		ClientWidth = 409
+		TabOrder = 1
+		object ImportExportButton: TButton
+			Left = 0
+			Height = 35
+			Top = 0
+			Width = 116
+			AutoSize = True
+			BorderSpacing.Left = 20
+			BorderSpacing.Right = 20
+			BorderSpacing.Bottom = 20
+			Caption = 'Import Settings'
+			TabOrder = 0
+			OnClick = ImportExportButtonClick
+		end
+	end
+end

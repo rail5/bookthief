@@ -1,0 +1,389 @@
+object AdvancedWindow: TAdvancedWindow
+	Left = 440
+	Height = 638
+	Top = 31
+	Width = 479
+	Caption = 'BookThief - Advanced Settings'
+	ClientHeight = 638
+	ClientWidth = 479
+	OnConstrainedResize = FormConstrainedResize
+	OnCreate = FormCreate
+	OnKeyDown = FormKeyDown
+	OnResize = FormResize
+	OnShow = FormShow
+	object ImagePreviewPanel: TPanel
+		Left = 0
+		Height = 300
+		Top = 0
+		Width = 479
+		Align = alTop
+		BevelOuter = bvNone
+		ClientHeight = 300
+		ClientWidth = 479
+		TabOrder = 0
+		object ImagePreviewControlsPanel: TPanel
+			Left = 0
+			Height = 89
+			Top = 211
+			Width = 479
+			Align = alBottom
+			BevelOuter = bvNone
+			ClientHeight = 89
+			ClientWidth = 479
+			TabOrder = 0
+			object ControlsOuterPanel: TPanel
+				Left = 305
+				Height = 89
+				Top = 0
+				Width = 174
+				Align = alRight
+				BevelOuter = bvNone
+				ClientHeight = 89
+				ClientWidth = 174
+				TabOrder = 0
+				object LeftRightNavigation: TUpDown
+					Left = 0
+					Height = 31
+					Top = 0
+					Width = 174
+					Align = alTop
+					Min = 0
+					Orientation = udHorizontal
+					Position = 0
+					TabOrder = 0
+					OnClick = LeftRightNavigationClick
+				end
+				object ControlsInnerPanel: TPanel
+					Left = 0
+					Height = 28
+					Top = 61
+					Width = 174
+					Align = alBottom
+					BevelOuter = bvNone
+					ClientHeight = 28
+					ClientWidth = 174
+					TabOrder = 1
+					object FirstPageButton: TButton
+						Left = 0
+						Height = 28
+						Top = 0
+						Width = 49
+						Align = alLeft
+						Caption = '1'
+						TabOrder = 0
+						OnClick = FirstPageButtonClick
+					end
+					object LastPageButton: TButton
+						Left = 122
+						Height = 28
+						Top = 0
+						Width = 52
+						Align = alRight
+						Caption = '9999'
+						TabOrder = 1
+						OnClick = LastPageButtonClick
+					end
+				end
+			end
+			object EnableDisablePanel: TPanel
+				Left = 0
+				Height = 89
+				Top = 0
+				Width = 170
+				Align = alLeft
+				BevelOuter = bvNone
+				ClientHeight = 89
+				ClientWidth = 170
+				TabOrder = 1
+				object EnableDisablePreviewCheckbox: TCheckBox
+					Left = 0
+					Height = 23
+					Top = 0
+					Width = 170
+					Align = alTop
+					Caption = 'Live preview'
+					Checked = True
+					State = cbChecked
+					TabOrder = 0
+					OnChange = EnableDisablePreviewCheckboxChange
+				end
+				object PreviewingPageLabel: TLabel
+					Left = 0
+					Height = 19
+					Top = 33
+					Width = 150
+					Align = alTop
+					BorderSpacing.Top = 10
+					BorderSpacing.Right = 20
+					Caption = 'Previewing page: 1'
+				end
+			end
+		end
+		object ImageAreaPanel: TPanel
+			Left = 0
+			Height = 211
+			Top = 0
+			Width = 479
+			Align = alClient
+			BevelOuter = bvNone
+			ClientHeight = 211
+			ClientWidth = 479
+			TabOrder = 1
+			object PreviewPlaceholder: TPaintBox
+				Left = 0
+				Height = 211
+				Top = 0
+				Width = 479
+				Align = alClient
+				OnPaint = PreviewPlaceholderPaint
+			end
+			object PreviewBox: TPanel
+				Left = 0
+				Height = 200
+				Top = 0
+				Width = 300
+				BevelOuter = bvNone
+				ClientHeight = 200
+				ClientWidth = 300
+				TabOrder = 0
+				object ImagePreview: TImage
+					Left = 0
+					Height = 200
+					Top = 0
+					Width = 300
+					Align = alClient
+					Center = True
+					Proportional = True
+					Stretch = True
+				end
+			end
+		end
+	end
+	object AdvancedControlsPanel: TPanel
+		Left = 0
+		Height = 312
+		Top = 300
+		Width = 479
+		Align = alTop
+		AutoSize = True
+		BevelOuter = bvNone
+		ClientHeight = 312
+		ClientWidth = 479
+		TabOrder = 1
+		object ColorThresholdPanel: TPanel
+			Left = 0
+			Height = 51
+			Top = 0  
+			Width = 479
+			Align = alTop
+			BevelOuter = bvNone
+			ClientHeight = 51
+			ClientWidth = 479
+			TabOrder = 0  
+			object ColorThresholdCheckbox: TCheckBox
+				Left = 0
+				Height = 51
+				Top = 0
+				Width = 126
+				Align = alLeft
+				Caption = 'Color threshold'
+				TabOrder = 0
+				OnChange = ColorThresholdCheckboxChange
+			end
+			object ColorThresholdSlider: TTrackBar
+				Left = 449
+				Height = 51
+				Top = 0
+				Width = 30
+				Max = 100
+				Position = 50
+				OnChange = ColorThresholdSliderChange
+				Align = alRight
+				TabOrder = 1
+				Visible = False
+			end
+		end
+		object CenterMarginPanel: TPanel
+			Left = 0
+			Height = 51
+			Top = 51  
+			Width = 479
+			Align = alTop
+			BevelOuter = bvNone
+			ClientHeight = 51
+			ClientWidth = 479
+			TabOrder = 1  
+			object CenterMarginCheckbox: TCheckBox
+				Left = 0
+				Height = 51
+				Top = 0
+				Width = 163
+				Align = alLeft
+				Caption = 'Widen center margin'
+				TabOrder = 0
+				OnChange = CenterMarginCheckboxChange
+			end
+			object CenterMarginSlider: TTrackBar
+				Left = 449
+				Height = 51
+				Top = 0
+				Width = 30
+				Max = 100
+				Position = 0
+				OnChange = CenterMarginSliderChange
+				Align = alRight
+				TabOrder = 1
+				Visible = False
+			end
+		end
+		object CropPanel: TPanel
+			Left = 0
+			Height = 164
+			Top = 102  
+			Width = 479
+			Align = alTop
+			AutoSize = True
+			BevelOuter = bvNone
+			ClientHeight = 164
+			ClientWidth = 479
+			TabOrder = 2  
+			OnClick = CropPanelClick
+			object CropCheckbox: TCheckBox
+				Left = 0
+				Height = 23
+				Top = 0
+				Width = 479
+				Align = alTop
+				Caption = 'Crop pages'
+				TabOrder = 0
+				OnChange = CropCheckboxChange
+			end
+			object CropSlidersPanel: TPanel
+				Left = 168
+				Height = 141
+				Top = 23
+				Width = 311
+				Align = alRight
+				BevelOuter = bvNone
+				ClientHeight = 141
+				ClientWidth = 311
+				TabOrder = 1
+				Visible = False
+				object LeftRightSlidersPanel: TPanel
+					Left = 0
+					Height = 51
+					Top = 0
+					Width = 311
+					Align = alTop
+					AutoSize = True
+					BorderSpacing.Bottom = 90
+					BevelOuter = bvNone
+					ClientHeight = 51
+					ClientWidth = 311
+					TabOrder = 0
+					object LeftCropSlider: TTrackBar
+						Left = 0
+						Height = 51
+						Top = 0
+						Width = 30
+						Max = 100
+						Position = 0
+						OnChange = LeftCropSliderChange
+						Align = alLeft
+						ParentShowHint = False
+						TabOrder = 0
+					end
+					object RightCropSlider: TTrackBar
+						Left = 281
+						Height = 51
+						Top = 0
+						Width = 30
+						Max = 100
+						Position = 0
+						OnChange = RightCropSliderChange
+						Align = alRight
+						TabOrder = 1
+					end
+				end
+				object TopBottomSlidersPanel: TPanel
+					Left = 0
+					Height = 51
+					Top = 90
+					Width = 311
+					Align = alBottom
+					AutoSize = True
+					BevelOuter = bvNone
+					ClientHeight = 51
+					ClientWidth = 311
+					TabOrder = 1
+					object TopCropSlider: TTrackBar
+						Left = 0
+						Height = 51
+						Top = 0
+						Width = 30
+						Max = 100
+						Position = 0
+						OnChange = TopCropSliderChange
+						Align = alLeft
+						TabOrder = 0
+					end
+					object BottomCropSlider: TTrackBar
+						Left = 281
+						Height = 51
+						Top = 0
+						Width = 30
+						Max = 100
+						Position = 0
+						OnChange = BottomCropSliderChange
+						Align = alRight
+						TabOrder = 1
+					end
+				end
+			end
+		end
+		object SplitPagesPanel: TPanel
+			Left = 0
+			Height = 23
+			Top = 266  
+			Width = 479
+			Align = alTop
+			AutoSize = True
+			BevelOuter = bvNone
+			ClientHeight = 23
+			ClientWidth = 479
+			TabOrder = 3  
+			object SplitPagesCheckbox: TCheckBox
+				Left = 0
+				Height = 23
+				Top = 0
+				Width = 179
+				Align = alLeft
+				Caption = 'Split each page into two'
+				TabOrder = 0
+				OnChange = SplitPagesCheckboxChange
+			end
+		end
+		object NoBookletPanel: TPanel
+			Left = 0
+			Height = 23
+			Top = 289  
+			Width = 479
+			Align = alTop
+			AutoSize = True
+			BevelOuter = bvNone
+			ClientHeight = 23
+			ClientWidth = 479
+			TabOrder = 4  
+			object NoBookletCheckbox: TCheckBox
+				Left = 0
+				Height = 23
+				Top = 0
+				Width = 284
+				Align = alLeft
+				Caption = 'Apply changes without making a booklet'
+				TabOrder = 0
+				OnChange = NoBookletCheckboxChange
+			end
+		end
+	end
+end
