@@ -9,6 +9,7 @@
 #include <string_view>
 #include <string>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace Liesel {
 
@@ -23,6 +24,22 @@ struct PageDimension {
 	uint8_t decimal = 0; // In '8.5', this is '50'
 
 	PageDimension() = default;
+
+	bool operator==(const PageDimension& other) const {
+		return (whole == other.whole) && (decimal == other.decimal);
+	}
+
+	bool operator!=(const PageDimension& other) const {
+		return !(*this == other);
+	}
+
+	std::string to_string() const {
+		return std::to_string(whole) + "." + (decimal < 10 ? "0" : "") + std::to_string(decimal);
+	}
+
+	explicit operator std::string() const {
+		return to_string();
+	}
 
 	/// Conversion to fixed-point uint16_t
 	operator uint16_t() const {
@@ -73,29 +90,21 @@ struct PageDimensionPair {
 	PageDimension width;
 	PageDimension height;
 
+	inline static const std::unordered_map<std::string_view, std::pair<PageDimension, PageDimension>> named_sizes = {
+		{"us-letter", {PageDimension("8.5"), PageDimension("11")}},
+		{"us-legal", {PageDimension("8.5"), PageDimension("14")}},
+		{"a3", {PageDimension("11.69"), PageDimension("16.54")}},
+		{"a4", {PageDimension("8.27"), PageDimension("11.69")}},
+		{"a5", {PageDimension("5.83"), PageDimension("8.27")}}
+	};
+
 	/// Construction from a string representation (e.g., "8.5x11")
 	explicit PageDimensionPair(const std::string_view& str) {
-		// First: A few "named" sizes we support
-		// us-letter, us-legal, a3, a4, a5
-		if (str == "us-letter") {
-			width = PageDimension("8.5");
-			height = PageDimension("11");
-			return;
-		} else if (str == "us-legal") {
-			width = PageDimension("8.5");
-			height = PageDimension("14");
-			return;
-		} else if (str == "a3") {
-			width = PageDimension("11.69");
-			height = PageDimension("16.54");
-			return;
-		} else if (str == "a4") {
-			width = PageDimension("8.27");
-			height = PageDimension("11.69");
-			return;
-		} else if (str == "a5") {
-			width = PageDimension("5.83");
-			height = PageDimension("8.27");
+		// First: Check if the string matches a named size
+		auto it = named_sizes.find(str);
+		if (it != named_sizes.end()) {
+			width = it->second.first;
+			height = it->second.second;
 			return;
 		}
 
@@ -105,6 +114,22 @@ struct PageDimensionPair {
 		}
 		width = PageDimension(str.substr(0, x_pos));
 		height = PageDimension(str.substr(x_pos + 1));
+	}
+
+	std::string to_string() const {
+		// If the size matches a named size, return that name
+		for (const auto& [name, size] : named_sizes) {
+			if (size.first == width && size.second == height) {
+				return std::string(name);
+			}
+		}
+
+		// Otherwise, return the "WxH" format
+		return width.to_string() + "x" + height.to_string();
+	}
+
+	explicit operator std::string() const {
+		return to_string();
 	}
 };
 
