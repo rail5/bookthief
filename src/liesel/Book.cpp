@@ -84,7 +84,7 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 		page->load(pdf_document.get(), page_index, m_dpi_density);
 
 		if (f_greyscale) page->set_greyscale();
-		if (m_threshold_level.has_value()) page->set_threshold(static_cast<double>(m_threshold_level.value()));
+		if (m_threshold_level.has_value()) page->set_threshold(m_threshold_level.value());
 
 		if (f_divide) {
 			auto left_page = page->divide();
