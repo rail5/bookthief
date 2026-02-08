@@ -12,28 +12,14 @@ void Liesel::ConfigureBookFromCLIOptions(Liesel::Book* book, const XGetOpt::Opti
 	for (const auto& opt : options) {
 		switch (opt.getShortOpt()) {
 			// -V (sets verbose)
-			case 'V': {
-				book->set_verbose(true);
-				break;
-			}
+			case 'V': book->set_verbose(true); break;
 
 			// Basic flags: -g, -D, -l, -p
-			case 'g': {
-				book->set_greyscale(true);
-				break;
-			}
-			case 'D': {
-				book->set_divide(true);
-				break;
-			}
-			case 'l': {
-				book->set_landscape(true);
-				break;
-			}
-			case 'p': {
-				book->set_landscape(false);
-				break;
-			}
+			case 'g': book->set_greyscale(true); break;
+			case 'D': book->set_divide(true); break;
+			case 'l': book->set_landscape(true); break;
+			case 'p': book->set_landscape(false); break;
+			case 'N': book->set_booklet(false); break;
 
 			// Other options with arguments
 			case 'r': {

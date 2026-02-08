@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
 		XGETOPT_OPTION('w', "widen-margins", "Widen center margins by specified amount (for binding)", XGetOpt::RequiredArgument, "amount"),
 		XGETOPT_OPTION('a', "auto-widen", "Increasingly widen margins for thicker documents", XGetOpt::OptionalArgument, "max"),
 		XGETOPT_OPTION('D', "divide", "Split the left/right halves of each page into separate pages", XGetOpt::NoArgument),
+		XGETOPT_OPTION('N', "no-booklet", "Apply the changes requested, but do not rearrange pages for booklet printing", XGetOpt::NoArgument),
 		XGETOPT_OPTION('V', "verbose", "Enable verbose output", XGetOpt::NoArgument),
 		XGETOPT_OPTION('v', "version", "Display version information", XGetOpt::NoArgument),
 		XGETOPT_OPTION('h', "help", "Display this help message", XGetOpt::NoArgument)
