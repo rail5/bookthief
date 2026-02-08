@@ -43,8 +43,13 @@ void Liesel::Book::calculate_effective_page_indices() {
 
 		if (end >= number_of_pages) end = number_of_pages - 1; // Clamp to last page
 
-		for (uint32_t i = start; i <= end; i++) m_effective_page_indices.push_back(i);
-
+		if (start <= end) {
+			for (uint32_t i = start; i <= end; i++) m_effective_page_indices.push_back(i);
+		} else {
+			// Backwards range (e.g. 10-1), add the pages in reverse order
+			// Make sure we don't underflow
+			for (uint32_t i = start; i + 1 > end; i--) m_effective_page_indices.push_back(i);
+		}
 	}
 }
 
