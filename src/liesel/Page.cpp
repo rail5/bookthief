@@ -144,7 +144,10 @@ void Liesel::Page::pair_with(std::unique_ptr<Page> other, uint32_t margin_size) 
 
 	// The margin_size is the amount of blank space between the two images
 	// So we need to subtract half of that from each side when calculating the new width for each half-image
-	uint32_t width_per_image = wider_width - (margin_size / 2);
+
+	uint32_t half_margin = margin_size / 2;
+	if (half_margin >= wider_width) half_margin = wider_width - 1; // Prevent underflow, clamp at 1 pixel
+	uint32_t width_per_image = wider_width - half_margin;
 
 	Magick::Geometry per_image_geom(width_per_image, taller_height);
 	per_image_geom.aspect(true);
