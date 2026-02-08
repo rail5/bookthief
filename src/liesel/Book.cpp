@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <unistd.h>
 
 Liesel::Book::Book() {
 	Magick::InitializeMagick(nullptr);
@@ -151,12 +152,7 @@ void Liesel::Book::set_output_pdf_path(const std::string_view& path) {
 		if (dir.empty()) {
 			dir = std::filesystem::current_path();
 		}
-		std::error_code ec;
-		auto perms = std::filesystem::status(dir, ec).permissions();
-		unsigned write_perms = static_cast<unsigned>(std::filesystem::perms::owner_write) |
-			static_cast<unsigned>(std::filesystem::perms::group_write) |
-			static_cast<unsigned>(std::filesystem::perms::others_write);
-		if (ec || !(static_cast<unsigned>(perms) & write_perms)) {
+		if (access(dir.string().c_str(), W_OK) != 0) {
 			throw std::invalid_argument("No write permission in output PDF directory: " + dir.string());
 		}
 		// Even in the case of segmented output, we still store the base output path
@@ -165,15 +161,9 @@ void Liesel::Book::set_output_pdf_path(const std::string_view& path) {
 		return;
 	}
 
-	if (std::filesystem::exists(p)) {
+	if (std::filesystem::exists(p)) {	
 		// File exists, check write permissions
-		std::error_code ec;
-		auto perms = std::filesystem::status(p, ec).permissions();
-		// Check for owner/group/others write permissions
-		unsigned write_perms = static_cast<unsigned>(std::filesystem::perms::owner_write) |
-			static_cast<unsigned>(std::filesystem::perms::group_write) |
-			static_cast<unsigned>(std::filesystem::perms::others_write);
-		if (ec || !(static_cast<unsigned>(perms) & write_perms)) {
+		if (access(p.string().c_str(), W_OK) != 0) {
 			throw std::invalid_argument("No write permission for output PDF file: " + std::string(path));
 		}
 	} else {
@@ -182,12 +172,7 @@ void Liesel::Book::set_output_pdf_path(const std::string_view& path) {
 		if (dir.empty()) {
 			dir = std::filesystem::current_path();
 		}
-		std::error_code ec;
-		auto perms = std::filesystem::status(dir, ec).permissions();
-		unsigned write_perms = static_cast<unsigned>(std::filesystem::perms::owner_write) |
-			static_cast<unsigned>(std::filesystem::perms::group_write) |
-			static_cast<unsigned>(std::filesystem::perms::others_write);
-		if (ec || !(static_cast<unsigned>(perms) & write_perms)) {
+		if (access(dir.string().c_str(), W_OK) != 0) {
 			throw std::invalid_argument("No write permission in output PDF directory: " + dir.string());
 		}
 	}
