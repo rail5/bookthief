@@ -43,5 +43,6 @@ clean:
 	rm -rf $(BINDIR)/*
 
 -include $(BINDIR)/*.d
+-include $(BINDIR)/liesel-objs/*.d
 
 .PHONY: all clean
