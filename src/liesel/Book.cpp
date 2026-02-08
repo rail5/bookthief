@@ -180,15 +180,24 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 		img->write(&blob);
 
 		HPDF_Page pdf_page = HPDF_AddPage(doc);
-		HPDF_Page_SetWidth(pdf_page, width);
-		HPDF_Page_SetHeight(pdf_page, height);
+
+		HPDF_REAL effective_width = static_cast<HPDF_REAL>(m_dpi_density * width) / 72;
+		HPDF_REAL effective_height = static_cast<HPDF_REAL>(m_dpi_density * height) / 72;
+
+		if (m_rescale_size.has_value()) {
+			effective_width = m_rescale_size.value().width.to_float() * 72;
+			effective_height = m_rescale_size.value().height.to_float() * 72;
+		}
+
+		HPDF_Page_SetWidth(pdf_page, effective_width);
+		HPDF_Page_SetHeight(pdf_page, effective_height);
 
 		HPDF_Image pdf_image = HPDF_LoadJpegImageFromMem(
 			doc,
 			static_cast<const HPDF_BYTE*>(blob.data()),
 			static_cast<HPDF_UINT>(blob.length())
 		);
-		HPDF_Page_DrawImage(pdf_page, pdf_image, 0, 0, width, height);
+		HPDF_Page_DrawImage(pdf_page, pdf_image, 0, 0, effective_width, effective_height);
 	}
 
 	HPDF_SaveToFile(doc, segment_output_path.string().c_str());

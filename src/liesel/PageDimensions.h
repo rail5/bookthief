@@ -20,7 +20,7 @@ namespace Liesel {
  */
 struct PageDimension {
 	uint8_t whole = 0; // In '8.5', this is '8'
-	uint8_t decimal = 0; // In '8.5', this is '5'
+	uint8_t decimal = 0; // In '8.5', this is '50'
 
 	PageDimension() = default;
 
@@ -28,6 +28,12 @@ struct PageDimension {
 	operator uint16_t() const {
 		return static_cast<uint16_t>(whole) << 8 | static_cast<uint16_t>(decimal);
 	}
+
+	/// Conversion to 32-bit float
+	float to_float() const {
+		return static_cast<float>(whole) + (static_cast<float>(decimal) / 100.0f);
+	}
+
 
 	/// Conversion from fixed-point uint16_t
 	PageDimension& operator=(const uint16_t& value) {
@@ -50,7 +56,15 @@ struct PageDimension {
 			decimal = 0;
 		} else {
 			whole = static_cast<uint8_t>(std::stoi(std::string(str.substr(0, dot_pos))));
-			decimal = static_cast<uint8_t>(std::stoi(std::string(str.substr(dot_pos + 1))));
+			// '.5' should become '50', '.25' should become '25', '.256' should become '25'
+			// Truncate to two decimal places
+			std::string decimal_str = std::string(str.substr(dot_pos + 1));
+			if (decimal_str.length() == 1) {
+				decimal_str += "0";
+			} else if (decimal_str.length() > 2) {
+				decimal_str = decimal_str.substr(0, 2);
+			}
+			decimal = static_cast<uint8_t>(std::stoi(decimal_str));
 		}
 	}
 };
