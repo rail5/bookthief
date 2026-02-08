@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 	constexpr auto parser = XGETOPT_PARSER(
 		XGETOPT_OPTION('r', "range", "Print only specified page range, e.g. 1-5,8,11-", XGetOpt::RequiredArgument, "range"),
 		XGETOPT_OPTION('s', "segment", "Print multiple PDFs in segments of N pages", XGetOpt::RequiredArgument, "N"),
-		XGETOPT_OPTION('t', "rescale", "Rescale PDF to specific size (e.g. 8.5x11)", XGetOpt::RequiredArgument, "size"),
+		XGETOPT_OPTION('t', "rescale", "Rescale PDF to specific size. Supported sizes: us-letter, us-legal, a3, a4, a5, or custom dimensions like 8.5x11", XGetOpt::RequiredArgument, "size"),
 		XGETOPT_OPTION('d', "density", "Set the DPI density for rendering (default 100)", XGetOpt::RequiredArgument, "DPI"),
 		XGETOPT_OPTION('l', "landscape", "Landscape duplex printing", XGetOpt::NoArgument),
 		XGETOPT_OPTION('p', "portrait", "Portrait duplex printing [default]", XGetOpt::NoArgument),

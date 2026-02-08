@@ -75,6 +75,30 @@ struct PageDimensionPair {
 
 	/// Construction from a string representation (e.g., "8.5x11")
 	explicit PageDimensionPair(const std::string_view& str) {
+		// First: A few "named" sizes we support
+		// us-letter, us-legal, a3, a4, a5
+		if (str == "us-letter") {
+			width = PageDimension("8.5");
+			height = PageDimension("11");
+			return;
+		} else if (str == "us-legal") {
+			width = PageDimension("8.5");
+			height = PageDimension("14");
+			return;
+		} else if (str == "a3") {
+			width = PageDimension("11.69");
+			height = PageDimension("16.54");
+			return;
+		} else if (str == "a4") {
+			width = PageDimension("8.27");
+			height = PageDimension("11.69");
+			return;
+		} else if (str == "a5") {
+			width = PageDimension("5.83");
+			height = PageDimension("8.27");
+			return;
+		}
+
 		auto x_pos = str.find('x');
 		if (x_pos == std::string_view::npos) {
 			throw std::invalid_argument("Invalid PageDimensionPair string: " + std::string(str));
