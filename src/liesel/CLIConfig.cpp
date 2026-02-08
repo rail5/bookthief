@@ -17,7 +17,7 @@ void Liesel::ConfigureBookFromCLIOptions(Liesel::Book* book, const XGetOpt::Opti
 				break;
 			}
 
-			// Basic flags: -g, -d, -l, -p
+			// Basic flags: -g, -D, -l, -p
 			case 'g': {
 				book->set_greyscale(true);
 				break;
