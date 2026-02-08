@@ -46,27 +46,7 @@ void Liesel::Book::calculate_effective_page_indices() {
 	}
 }
 
-void Liesel::Book::print_segment(uint32_t segment_number) {
-	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
-	if (output_pdf_path.empty()) throw std::runtime_error("No output PDF path specified.");
-	if (m_effective_page_indices.empty()) throw std::runtime_error("No pages to print.");
-
-	std::filesystem::path segment_output_path = output_pdf_path;
-	if (m_segment_size < UINT32_MAX) {
-		// One of multiple segments (a single, unsegmented PDF has m_segment_size == UINT32_MAX)
-		// Calculate this segment's output path:
-		// Replace the ".pdf" extension with "-NNN.pdf" where NNN is the segment number, zero-padded to 3 digits
-		auto ext = segment_output_path.extension();
-		std::string segment_suffix = std::to_string(segment_number + 1);
-		while (segment_suffix.length() < 3) {
-			segment_suffix = "0" + segment_suffix;
-		}
-		segment_output_path.replace_extension("-" + segment_suffix + ext.string());
-	}
-
-	verbose_output("Printing segment " + std::to_string(segment_number + 1)
-		+ " to output PDF: " + segment_output_path.string());
-
+void Liesel::Book::_render_segment(uint32_t segment_number) {
 	// Use Poppler to render each page to an image and store in 'pages'
 	uint32_t start_index = segment_number * m_segment_size;
 	uint32_t end_index;
@@ -117,6 +97,30 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 	}
 
 	verbose_output("All pages for segment " + std::to_string(segment_number + 1) + " rendered.");
+}
+
+void Liesel::Book::print_segment(uint32_t segment_number) {
+	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
+	if (output_pdf_path.empty()) throw std::runtime_error("No output PDF path specified.");
+	if (m_effective_page_indices.empty()) throw std::runtime_error("No pages to print.");
+
+	std::filesystem::path segment_output_path = output_pdf_path;
+	if (m_segment_size < UINT32_MAX) {
+		// One of multiple segments (a single, unsegmented PDF has m_segment_size == UINT32_MAX)
+		// Calculate this segment's output path:
+		// Replace the ".pdf" extension with "-NNN.pdf" where NNN is the segment number, zero-padded to 3 digits
+		auto ext = segment_output_path.extension();
+		std::string segment_suffix = std::to_string(segment_number + 1);
+		while (segment_suffix.length() < 3) {
+			segment_suffix = "0" + segment_suffix;
+		}
+		segment_output_path.replace_extension("-" + segment_suffix + ext.string());
+	}
+
+	verbose_output("Printing segment " + std::to_string(segment_number + 1)
+		+ " to output PDF: " + segment_output_path.string());
+
+	_render_segment(segment_number);
 }
 
 void Liesel::Book::set_input_pdf_path(const std::string_view& path) {
