@@ -152,13 +152,13 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 	if (m_segment_size < UINT32_MAX) {
 		// One of multiple segments (a single, unsegmented PDF has m_segment_size == UINT32_MAX)
 		// Calculate this segment's output path:
-		// Replace the ".pdf" extension with "-NNN.pdf" where NNN is the segment number, zero-padded to 3 digits
+		// Replace the ".pdf" extension with ".NNN.pdf" where NNN is the segment number, zero-padded to 3 digits
 		auto ext = segment_output_path.extension();
 		std::string segment_suffix = std::to_string(segment_number + 1);
 		while (segment_suffix.length() < 3) {
 			segment_suffix = "0" + segment_suffix;
 		}
-		segment_output_path.replace_extension("-" + segment_suffix + ext.string());
+		segment_output_path.replace_extension(segment_suffix + ext.string());
 	}
 
 	verbose_output("Printing segment " + std::to_string(segment_number + 1)
