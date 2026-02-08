@@ -30,7 +30,6 @@ int main(int argc, char* argv[]) {
 		XGETOPT_OPTION('k', "threshold", "Enable black/white thresholding at specified level (0-100)", XGetOpt::RequiredArgument, "level"),
 		XGETOPT_OPTION('c', "crop", "Crop given percentage from edges", XGetOpt::RequiredArgument, "L,R,T,B"),
 		XGETOPT_OPTION('w', "widen-margins", "Widen center margins by specified amount (for binding)", XGetOpt::RequiredArgument, "amount"),
-		XGETOPT_OPTION('a', "auto-widen", "Increasingly widen margins for thicker documents", XGetOpt::OptionalArgument, "max"),
 		XGETOPT_OPTION('D', "divide", "Split the left/right halves of each page into separate pages", XGetOpt::NoArgument),
 		XGETOPT_OPTION('N', "no-booklet", "Apply the changes requested, but do not rearrange pages for booklet printing", XGetOpt::NoArgument),
 		XGETOPT_OPTION('V', "verbose", "Enable verbose output", XGetOpt::NoArgument),
@@ -81,6 +80,7 @@ int main(int argc, char* argv[]) {
 	try {
 		Liesel::ConfigureBookFromCLIOptions(&book, options);
 		book.load_pdf();
+		book.print();
 	} catch (const std::exception& e) {
 		show_error(e.what());
 		return 1;

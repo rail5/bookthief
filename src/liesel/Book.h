@@ -17,7 +17,6 @@
 #include <poppler/cpp/poppler-page.h>
 #include <poppler/cpp/poppler-image.h>
 #include <poppler/cpp/poppler-page-renderer.h>
-#include <hpdf.h>
 
 #include "PageDimensions.h"
 #include "PageRangeList.h"
@@ -46,8 +45,6 @@ class Book {
 		uint32_t m_segment_size = UINT32_MAX; // Default to no segmentation
 
 		uint32_t m_widen_margins_amount = 0; // Default to no widening
-		/// m_autowiden_max == 0 means no maximum. == nullopt means disabled.
-		std::optional<uint32_t> m_autowiden_max = std::nullopt;
 
 		std::optional<PageDimensionPair> m_rescale_size = std::nullopt;
 		std::optional<PageRangeList> m_page_ranges = std::nullopt;
@@ -57,6 +54,7 @@ class Book {
 		void verbose_output(const std::string_view& message) const;
 		void calculate_effective_page_indices();
 		void _render_segment(uint32_t segment_number);
+		void _maybe_reorder_pages();
 		void print_segment(uint32_t segment_number);
 	public:
 		Book();
@@ -76,7 +74,6 @@ class Book {
 			m_segment_size = size;
 		}
 		void set_widen_margins_amount(uint32_t amount) { m_widen_margins_amount = amount; }
-		void set_autowiden_max(std::optional<uint32_t> max) { m_autowiden_max = max; }
 		void set_rescale_size(const PageDimensionPair& size) { m_rescale_size = size; }
 		void set_page_ranges(const PageRangeList& ranges) { m_page_ranges = ranges; }
 		void set_crop_percentages(const CropPercentages& crop) { m_crop_percentages = crop; }
@@ -90,12 +87,13 @@ class Book {
 		std::optional<uint8_t> threshold_level() const { return m_threshold_level; }
 		uint32_t segment_size() const { return m_segment_size; }
 		uint32_t widen_margins_amount() const { return m_widen_margins_amount; }
-		std::optional<uint32_t> autowiden_max() const { return m_autowiden_max; }
 		std::optional<PageDimensionPair> rescale_size() const { return m_rescale_size; }
 		std::optional<PageRangeList> page_ranges() const { return m_page_ranges; }
 		CropPercentages crop_percentages() const { return m_crop_percentages; }
 
 		void load_pdf();
+
+		void print();
 };
 
 } // namespace Liesel

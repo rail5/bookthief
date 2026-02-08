@@ -9,6 +9,8 @@
 #include <iostream>
 #include <unistd.h>
 
+#include <hpdf.h>
+
 Liesel::Book::Book() {
 	Magick::InitializeMagick(nullptr);
 }
@@ -99,6 +101,43 @@ void Liesel::Book::_render_segment(uint32_t segment_number) {
 	verbose_output("All pages for segment " + std::to_string(segment_number + 1) + " rendered.");
 }
 
+void Liesel::Book::_maybe_reorder_pages() {
+	// Rearrange 'pages' into booklet order and store in 'processed_pages'
+	if (pages.empty()) throw std::runtime_error("No pages to arrange for booklet.");
+	if (pages.size() % 4 != 0) throw std::runtime_error("Number of pages is not a multiple of 4.");
+
+	if (!f_booklet) { processed_pages = std::move(pages); return; }
+
+	// The pattern:
+	// First: Page N on the left (N=last page), Page 1 on the right
+	// Second: Page 2 on the left, Page N-1 on the right
+	// Third: Page N-2 on the left, Page 3 on the right
+	// Fourth: Page 4 on the left, Page N-3 on the right
+	// Repeat...
+	processed_pages.clear();
+	processed_pages.reserve(pages.size() / 2);
+
+	while (!pages.empty()) {
+		auto left_page = std::move(pages.back());
+		auto right_page = std::move(pages.front());
+		pages.pop_back();
+		pages.erase(pages.begin());
+		left_page->pair_with(std::move(right_page), m_widen_margins_amount);
+		left_page->rotate(90.0);
+		processed_pages.push_back(std::move(left_page));
+
+		if (pages.empty()) break;
+		left_page = std::move(pages.front());
+		right_page = std::move(pages.back());
+		pages.pop_back();
+		pages.erase(pages.begin());
+		left_page->pair_with(std::move(right_page), m_widen_margins_amount);
+		left_page->rotate(f_landscape ? -90.0 : 90.0);
+		processed_pages.push_back(std::move(left_page));
+	}
+	verbose_output("Pages rearranged for booklet printing.");
+}
+
 void Liesel::Book::print_segment(uint32_t segment_number) {
 	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
 	if (output_pdf_path.empty()) throw std::runtime_error("No output PDF path specified.");
@@ -121,6 +160,50 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 		+ " to output PDF: " + segment_output_path.string());
 
 	_render_segment(segment_number);
+	_maybe_reorder_pages();
+
+	auto doc = HPDF_New(nullptr, nullptr);
+	if (!doc) throw std::runtime_error("Failed to create new PDF document.");
+	HPDF_SetCompressionMode(doc, HPDF_COMP_ALL);
+
+	for (const auto& page : processed_pages) {
+		auto img = page->_get_image_raw();
+		auto width = img->columns();
+		auto height = img->rows();
+		Magick::Blob blob;
+		img->magick("JPEG");
+		img->write(&blob);
+
+		HPDF_Page pdf_page = HPDF_AddPage(doc);
+		HPDF_Page_SetWidth(pdf_page, width);
+		HPDF_Page_SetHeight(pdf_page, height);
+
+		HPDF_Image pdf_image = HPDF_LoadJpegImageFromMem(
+			doc,
+			static_cast<const HPDF_BYTE*>(blob.data()),
+			static_cast<HPDF_UINT>(blob.length())
+		);
+		HPDF_Page_DrawImage(pdf_page, pdf_image, 0, 0, width, height);
+	}
+
+	HPDF_SaveToFile(doc, segment_output_path.string().c_str());
+	HPDF_Free(doc);
+	verbose_output("Segment " + std::to_string(segment_number + 1) + " printed successfully.");
+}
+
+void Liesel::Book::print() {
+	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
+	if (output_pdf_path.empty()) throw std::runtime_error("No output PDF path specified.");
+	if (m_effective_page_indices.empty()) throw std::runtime_error("No pages to print.");
+
+	size_t total_segments = (m_effective_page_indices.size() / m_segment_size);
+	if (m_segment_size >= m_effective_page_indices.size()) total_segments = 1;
+
+	for (uint32_t i = 0; i < total_segments; i++) {
+		print_segment(i);
+		pages.clear();
+		processed_pages.clear();
+	}
 }
 
 void Liesel::Book::set_input_pdf_path(const std::string_view& path) {
