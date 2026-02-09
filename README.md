@@ -2,8 +2,6 @@
 
 BookThief prepares PDFs to be home-printed and home-bound in "pamphlet"-style.
 
-    For those of us who prefer print over screens
-
 > Rudy said, "You know something, Liesel, I was thinking. You’re not a thief at all. Stealing is what the army does. Taking your father, and mine." He kicked a stone and it clanged against a gate. He walked faster. "All those rich Nazis up there, on Grande Strasse, Gelb Strasse, Heide Strasse. How does it feel anyway?"
 >
 > "How does what feel?"
@@ -20,8 +18,6 @@ BookThief prepares PDFs to be home-printed and home-bound in "pamphlet"-style.
 
 ## Installation
 
-64-bit .deb packages & Windows installer files are provided in the **releases** section
-
 On **Debian GNU/Linux**, BookThief can be easily installed via the [deb.rail5.org](https://deb.rail5.org) repository:
 
 ```
@@ -31,11 +27,7 @@ sudo apt update
 sudo apt install bookthief
 ```
 
-## About
-
-BookThief is a graphical front-end for [Liesel](https://github.com/rail5/liesel)
-
-This is **free software** (GNU GPL 3), and you are welcome to redistribute it under certain conditions.
+Packages are also provided in the [Github Releases Page](https://github.com/rail5/bookthief/releases) as `.deb` files for manual installation.
 
 ## What is "pamphlet"-style printing?
 
@@ -80,21 +72,15 @@ But we can apply the "Split pages" option to fix it for us
 
 ## Build Requirements
 
-- FPC (FreePascal Compiler) (>= 3.2.0) (Package: **fpc-3.2.0**)
-- Lazarus (= 2.0.10) (Package: **lazarus**)
-- **lcl-2.0**
-- **lcl-utils-2.0**
-- **fp-units-misc-3.2.0**
+- **fpc-3.2.2**
+- **lcl-4.0**
+- **pkgconf**
+- **graphicsmagick-libmagick-dev-compat**
+- **libpoppler-cpp-dev**
+- **libhpdf-dev**
+- [**xgetopt-dev**](https://github.com/rail5/xgetopt)
+- **pandoc** (for building manpages)
 
-## Building
-```
-make
-sudo make install
-```
-
-Note that BookThief **will build** without Liesel, but it will not **run** without Liesel.
-
-If you install BookThief via the PPA, Liesel comes with it in the same PPA. Otherwise, the source for Liesel can be obtained here: https://github.com/rail5/liesel
 ## License
 
 BookThief & Liesel are **free software**, distributed under the GNU GPL V3.0 License
