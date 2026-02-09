@@ -52,6 +52,7 @@ typedef void (*LieselProgressCallback)(
 	LieselProgressEvent event,
 	uint32_t segment_index,
 	uint32_t page_index,
+	uint32_t percent,
 	const char* message_utf8
 );
 
