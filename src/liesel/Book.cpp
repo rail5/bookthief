@@ -13,6 +13,48 @@
 
 #include <hpdf.h>
 
+namespace {
+	struct HaruErrorState {
+		HPDF_STATUS error = HPDF_OK;
+		HPDF_STATUS detail = HPDF_OK;
+	};
+
+	extern "C" void haru_error_handler(HPDF_STATUS error_no, HPDF_STATUS detail_no, void* user_data) noexcept {
+		auto* st = static_cast<HaruErrorState*>(user_data);
+		if (!st) return;
+		st->error = error_no;
+		st->detail = detail_no;
+	}
+
+	static std::string haru_error_string(HPDF_STATUS err, HPDF_STATUS detail) {
+		std::ostringstream os;
+		os << "libharu error=0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<unsigned>(err)
+		   << " detail=0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<unsigned>(detail);
+		return os.str();
+	}
+
+	static void haru_check(HPDF_Doc doc, HaruErrorState& st, HPDF_STATUS rc, const char* what) {
+		if (rc == HPDF_OK) return;
+
+		const HPDF_STATUS err = (st.error != HPDF_OK) ? st.error : (doc ? HPDF_GetError(doc) : rc);
+		const HPDF_STATUS det = (st.detail != HPDF_OK) ? st.detail : (doc ? HPDF_GetErrorDetail(doc) : 0);
+
+		if (doc) HPDF_ResetError(doc);
+		throw std::runtime_error(std::string(what) + " failed: " + haru_error_string(err, det));
+	}
+
+	template <class T>
+	static T haru_require_ptr(HPDF_Doc doc, HaruErrorState& st, T ptr, const char* what) {
+		if (ptr) return ptr;
+
+		const HPDF_STATUS err = (st.error != HPDF_OK) ? st.error : (doc ? HPDF_GetError(doc) : HPDF_INVALID_OBJECT);
+		const HPDF_STATUS det = (st.detail != HPDF_OK) ? st.detail : (doc ? HPDF_GetErrorDetail(doc) : 0);
+
+		if (doc) HPDF_ResetError(doc);
+		throw std::runtime_error(std::string(what) + " failed: " + haru_error_string(err, det));
+	}
+} // namespace
+
 Liesel::Book::Book() {
 	Magick::InitializeMagick(nullptr);
 }
@@ -215,9 +257,11 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 	};
 	using HPDFDocUPtr = std::unique_ptr<std::remove_pointer<HPDF_Doc>::type, HPDFDocDeleter>;
 
+	HaruErrorState haru_error_state{};
+
 	HPDFDocUPtr doc(HPDF_New(nullptr, nullptr));
 	if (!doc) throw std::runtime_error("Failed to create new PDF document.");
-	HPDF_SetCompressionMode(doc.get(), HPDF_COMP_ALL);
+	haru_check(doc.get(), haru_error_state, HPDF_SetCompressionMode(doc.get(), HPDF_COMP_ALL), "HPDF_SetCompressionMode");
 
 	for (const auto& page : processed_pages) {
 		_check_cancelled(); // Throw if something requested cancellation
@@ -228,7 +272,7 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 		img->magick("JPEG");
 		img->write(&blob);
 
-		HPDF_Page pdf_page = HPDF_AddPage(doc.get());
+		HPDF_Page pdf_page = haru_require_ptr(doc.get(), haru_error_state, HPDF_AddPage(doc.get()), "HPDF_AddPage");
 
 		HPDF_REAL effective_width = static_cast<HPDF_REAL>(m_dpi_density * width) / 72;
 		HPDF_REAL effective_height = static_cast<HPDF_REAL>(m_dpi_density * height) / 72;
@@ -238,18 +282,36 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 			effective_height = m_rescale_size.value().height.to_float() * 72;
 		}
 
-		HPDF_Page_SetWidth(pdf_page, effective_width);
-		HPDF_Page_SetHeight(pdf_page, effective_height);
+		// Clamp to a minimum size of 10 by 10 points to avoid libharu issues
+		// This is a totally arbitrary minimum, but should be small enough to not matter
+		if (effective_width < 10.0f) effective_width = 10.0f;
+		if (effective_height < 10.0f) effective_height = 10.0f;
 
-		HPDF_Image pdf_image = HPDF_LoadJpegImageFromMem(
+		haru_check(doc.get(), haru_error_state, HPDF_Page_SetWidth(pdf_page, effective_width), "HPDF_Page_SetWidth");
+		haru_check(doc.get(), haru_error_state, HPDF_Page_SetHeight(pdf_page, effective_height), "HPDF_Page_SetHeight");
+
+		if (blob.length() == 0 || blob.data() == nullptr) throw std::runtime_error("Image blob is empty.");
+		if (blob.length() > static_cast<size_t>(std::numeric_limits<HPDF_UINT>::max())) {
+			throw std::runtime_error("Image blob is too large for libharu.");
+		}
+
+		HPDF_Image pdf_image = haru_require_ptr(
 			doc.get(),
-			static_cast<const HPDF_BYTE*>(blob.data()),
-			static_cast<HPDF_UINT>(blob.length())
+			haru_error_state,
+			HPDF_LoadJpegImageFromMem(
+				doc.get(),
+				static_cast<const HPDF_BYTE*>(blob.data()),
+				static_cast<HPDF_UINT>(blob.length())
+			),
+			"HPDF_LoadJpegImageFromMem"
 		);
-		HPDF_Page_DrawImage(pdf_page, pdf_image, 0, 0, effective_width, effective_height);
+		haru_check(doc.get(), haru_error_state,
+			HPDF_Page_DrawImage(pdf_page, pdf_image, 0, 0, effective_width, effective_height),
+			"HPDF_Page_DrawImage"
+		);
 	}
 
-	HPDF_SaveToFile(doc.get(), segment_output_path.string().c_str());
+	haru_check(doc.get(), haru_error_state, HPDF_SaveToFile(doc.get(), segment_output_path.string().c_str()), "HPDF_SaveToFile");
 	verbose_output("Segment " + std::to_string(segment_number + 1) + " printed successfully.");
 	_emit_progress(ProgressEvent::SegmentDone, segment_number, 0,
 		"Segment " + std::to_string(segment_number + 1) + " printed successfully.");
