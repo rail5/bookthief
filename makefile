@@ -11,9 +11,21 @@ CXXFLAGS     ?= -Wall -Wextra -std=c++23 -O2 -s -MMD -MP
 INCLUDEFLAGS := $(shell pkg-config --cflags poppler-cpp GraphicsMagick++)
 LDFLAGS      := $(shell pkg-config --libs poppler-cpp GraphicsMagick++) -lhpdf
 
-SRCS_LIESEL  := $(wildcard $(SRCDIR)/liesel/*.cpp)
+# Build shared objects with PIC
+CXXFLAGS_PIC := $(CXXFLAGS) -fPIC
+
+SRCS_LIESEL      := $(wildcard $(SRCDIR)/liesel/*.cpp)
+SRCS_LIESEL_CORE := $(filter-out $(SRCDIR)/liesel/main.cpp,$(SRCS_LIESEL))
+SRCS_LIESEL_ABI  := $(wildcard $(SRCDIR)/liesel/abi/*.cpp)
+
+# CLI (includes main.cpp)
 OBJS_LIESEL  := $(patsubst $(SRCDIR)/liesel/%.cpp,$(BINDIR)/liesel-objs/%.o,$(SRCS_LIESEL))
 LIESEL       := $(BINDIR)/liesel
+
+# Shared library (core + ABI, no main.cpp)
+OBJS_LIESEL_CORE := $(patsubst $(SRCDIR)/liesel/%.cpp,$(BINDIR)/liesel-lib-objs/%.o,$(SRCS_LIESEL_CORE))
+OBJS_LIESEL_ABI  := $(patsubst $(SRCDIR)/liesel/abi/%.cpp,$(BINDIR)/liesel-lib-objs/abi/%.o,$(SRCS_LIESEL_ABI))
+LIESEL_SO        := $(BINDIR)/libliesel.so
 
 # --- Pascal (BookThief) ---
 FPCFLAGS     ?= -MObjFPC -Scghi -CX -Cg -O3 -Xs -XX -l -vewnhibq -dLCL -dLCLgtk2
@@ -39,17 +51,31 @@ else
 endif
 
 # --- Targets ---
-all: $(LIESEL) $(BOOKTHIEF)
+all: $(LIESEL) $(LIESEL_SO) $(BOOKTHIEF)
 
-# --- Liesel Build ---
+# --- Liesel CLI Build ---
 $(LIESEL): $(OBJS_LIESEL)
 	@mkdir -p "$(BINDIR)"
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
-	@echo "Built Liesel version $(VERSION)"
+	@echo "Built Liesel (CLI) version $(VERSION)"
 
 $(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/liesel/version.h
 	@mkdir -p "$(BINDIR)/liesel-objs"
 	$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) -c $< -o $@
+
+# --- Liesel Shared Library Build ---
+$(LIESEL_SO): $(OBJS_LIESEL_CORE) $(OBJS_LIESEL_ABI)
+	@mkdir -p "$(BINDIR)"
+	$(CXX) -shared -Wl,-soname,libliesel.so -o $@ $^ $(LDFLAGS)
+	@echo "Built libliesel.so version $(VERSION)"
+
+$(BINDIR)/liesel-lib-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/liesel/version.h
+	@mkdir -p "$(BINDIR)/liesel-lib-objs"
+	$(CXX) $(CXXFLAGS_PIC) $(INCLUDEFLAGS) -c $< -o $@
+
+$(BINDIR)/liesel-lib-objs/abi/%.o: $(SRCDIR)/liesel/abi/%.cpp $(SRCDIR)/liesel/version.h
+	@mkdir -p "$(BINDIR)/liesel-lib-objs/abi"
+	$(CXX) $(CXXFLAGS_PIC) $(INCLUDEFLAGS) -c $< -o $@
 
 # --- Version Header ---
 $(SRCDIR)/liesel/version.h: debian/changelog
@@ -71,5 +97,7 @@ clean:
 # --- Dependencies ---
 -include $(BINDIR)/*.d
 -include $(BINDIR)/liesel-objs/*.d
+-include $(BINDIR)/liesel-lib-objs/*.d
+-include $(BINDIR)/liesel-lib-objs/abi/*.d
 
 .PHONY: all clean

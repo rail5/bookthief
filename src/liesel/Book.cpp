@@ -8,11 +8,41 @@
 #include <algorithm>
 #include <iostream>
 #include <unistd.h>
+#include <type_traits>
+#include <cmath>
 
 #include <hpdf.h>
 
 Liesel::Book::Book() {
 	Magick::InitializeMagick(nullptr);
+}
+
+uint32_t Liesel::Book::_progress_percent() const {
+	if (m_progress_total_units == 0) return 0;
+	uint32_t percent =
+		static_cast<uint32_t>(
+			(static_cast<uint64_t>(m_progress_completed_units) * 100ULL)
+			/ static_cast<uint64_t>(m_progress_total_units)
+		);
+	return (percent > 100) ? 100 : percent; // Clamp to 100%
+}
+
+void Liesel::Book::_emit_progress(ProgressEvent event, uint32_t segment_index, uint32_t page_index, const std::string& message) {
+	if (!m_progress_cb) return;
+
+	ProgressInfo info;
+	info.event = event;
+	info.segment_index = segment_index;
+	info.page_index = page_index;
+	info.percent = _progress_percent();
+	info.message = message;
+	m_progress_cb(info);
+}
+
+void Liesel::Book::_check_cancelled() const {
+	if (m_cancel_cb && m_cancel_cb()) {
+		throw Liesel::Cancelled("Cancelled");
+	}
 }
 
 void Liesel::Book::verbose_output(const std::string_view& message) const {
@@ -64,8 +94,12 @@ void Liesel::Book::_render_segment(uint32_t segment_number) {
 	}
 
 	for (uint32_t i = start_index; i < end_index; i++) {
+		_check_cancelled(); // Throw if something requested cancellation
+
 		uint32_t page_index = m_effective_page_indices[i];
 		verbose_output("Rendering page " + std::to_string(page_index + 1) + "...");
+		_emit_progress(ProgressEvent::RenderPage, segment_number, i - start_index,
+			"Rendering page " + std::to_string(page_index + 1) + "...");
 
 		std::unique_ptr<Liesel::Page> page = std::make_unique<Liesel::Page>();
 		page->load(pdf_document.get(), page_index, m_dpi_density);
@@ -86,6 +120,10 @@ void Liesel::Book::_render_segment(uint32_t segment_number) {
 		if (f_divide) pages[pages.size() - 2]->crop(m_crop_percentages);
 
 		verbose_output("Page " + std::to_string(page_index + 1) + " rendered and processed.");
+
+		if (m_progress_completed_units < m_progress_total_units) m_progress_completed_units++;
+		_emit_progress(ProgressEvent::RenderPage, segment_number, i - start_index,
+			"Rendered page " + std::to_string(page_index + 1) + ".");
 	}
 
 	// The total number of pages per segment must ALWAYS be a multiple of 4
@@ -163,15 +201,26 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 
 	verbose_output("Printing segment " + std::to_string(segment_number + 1)
 		+ " to output PDF: " + segment_output_path.string());
+	_emit_progress(ProgressEvent::Info, segment_number, 0,
+		"Printing segment " + std::to_string(segment_number + 1) + "...");
 
 	_render_segment(segment_number);
 	_maybe_reorder_pages();
 
-	auto doc = HPDF_New(nullptr, nullptr);
+	// This struct ensures that we automatically free the PDF document if an exception occurs
+	struct HPDFDocDeleter {
+		void operator()(HPDF_Doc doc) const noexcept {
+			if (doc) HPDF_Free(doc);
+		}
+	};
+	using HPDFDocUPtr = std::unique_ptr<std::remove_pointer<HPDF_Doc>::type, HPDFDocDeleter>;
+
+	HPDFDocUPtr doc(HPDF_New(nullptr, nullptr));
 	if (!doc) throw std::runtime_error("Failed to create new PDF document.");
-	HPDF_SetCompressionMode(doc, HPDF_COMP_ALL);
+	HPDF_SetCompressionMode(doc.get(), HPDF_COMP_ALL);
 
 	for (const auto& page : processed_pages) {
+		_check_cancelled(); // Throw if something requested cancellation
 		auto img = page->_get_image_raw();
 		auto width = img->columns();
 		auto height = img->rows();
@@ -179,7 +228,7 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 		img->magick("JPEG");
 		img->write(&blob);
 
-		HPDF_Page pdf_page = HPDF_AddPage(doc);
+		HPDF_Page pdf_page = HPDF_AddPage(doc.get());
 
 		HPDF_REAL effective_width = static_cast<HPDF_REAL>(m_dpi_density * width) / 72;
 		HPDF_REAL effective_height = static_cast<HPDF_REAL>(m_dpi_density * height) / 72;
@@ -193,31 +242,43 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 		HPDF_Page_SetHeight(pdf_page, effective_height);
 
 		HPDF_Image pdf_image = HPDF_LoadJpegImageFromMem(
-			doc,
+			doc.get(),
 			static_cast<const HPDF_BYTE*>(blob.data()),
 			static_cast<HPDF_UINT>(blob.length())
 		);
 		HPDF_Page_DrawImage(pdf_page, pdf_image, 0, 0, effective_width, effective_height);
 	}
 
-	HPDF_SaveToFile(doc, segment_output_path.string().c_str());
-	HPDF_Free(doc);
+	HPDF_SaveToFile(doc.get(), segment_output_path.string().c_str());
 	verbose_output("Segment " + std::to_string(segment_number + 1) + " printed successfully.");
+	_emit_progress(ProgressEvent::SegmentDone, segment_number, 0,
+		"Segment " + std::to_string(segment_number + 1) + " printed successfully.");
 }
 
 void Liesel::Book::print() {
 	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
 	if (output_pdf_path.empty()) throw std::runtime_error("No output PDF path specified.");
 	if (m_effective_page_indices.empty()) throw std::runtime_error("No pages to print.");
+	if (m_segment_size == 0) throw std::invalid_argument("Segment size cannot be zero.");
 
-	size_t total_segments = (m_effective_page_indices.size() / m_segment_size);
+	// Progress units: one per effective (source) page rendered
+	m_progress_total_units = static_cast<uint32_t>(m_effective_page_indices.size());
+	m_progress_completed_units = 0;
+
+	_emit_progress(ProgressEvent::Info, 0, 0, "Starting print job...");
+
+	size_t total_segments = static_cast<size_t>(std::ceil(static_cast<double>(m_effective_page_indices.size()) / m_segment_size));
 	if (m_segment_size >= m_effective_page_indices.size()) total_segments = 1;
 
 	for (uint32_t i = 0; i < total_segments; i++) {
+		_check_cancelled(); // Throw if something requested cancellation
 		print_segment(i);
 		pages.clear();
 		processed_pages.clear();
 	}
+
+	m_progress_completed_units = m_progress_total_units;
+	_emit_progress(ProgressEvent::PrintDone, total_segments ? total_segments - 1 : 0, 0, "Done.");
 }
 
 void Liesel::Book::set_input_pdf_path(const std::string_view& path) {

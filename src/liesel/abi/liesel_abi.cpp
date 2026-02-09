@@ -24,6 +24,7 @@ static inline bool is_null_or_empty(const char* s) {
 
 static inline LieselStatus map_exception_to_status(const std::exception& e) {
 	// Keep mapping coarse; callers can fetch text via *_last_error().
+	if (dynamic_cast<const Liesel::Cancelled*>(&e) != nullptr) return LIESEL_E_CANCELLED;
 	if (dynamic_cast<const std::invalid_argument*>(&e) != nullptr) return LIESEL_E_INVALID_ARG;
 	if (dynamic_cast<const std::out_of_range*>(&e) != nullptr) return LIESEL_E_INVALID_ARG;
 	return LIESEL_E_RUNTIME;
@@ -319,9 +320,26 @@ LieselStatus liesel_book_print(
 	b->cancel_cb = cancel_cb;
 	b->cancel_ud = cancel_userdata;
 
-	// Outline only: the current Book implementation doesn't accept callbacks.
-	// Next step is to thread these through Book::print() / _render_segment() and
-	// emit events + consult cancel_cb from inner loops.
+	// Bridge into C++ callbacks for the duration of this call.
+	b->book->set_cancel_callback([b]() ->bool {
+		if (!b->cancel_cb) return false;
+		return b->cancel_cb(b->cancel_ud) != 0;
+	});
+
+	b->book->set_progress_callback([b](const Liesel::Book::ProgressInfo& info) {
+		if (!b->progress_cb) return;
+		// Map ProgressEvent -> ABI enum (same values)
+		const auto ev = static_cast<LieselProgressEvent>(info.event);
+		b->progress_cb(
+			b->progress_ud,
+			ev,
+			info.segment_index,
+			info.page_index,
+			info.percent,
+			info.message.c_str()
+		);
+	});
+	
 	try {
 		b->book->print();
 		return LIESEL_OK;

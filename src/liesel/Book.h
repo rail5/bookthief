@@ -10,6 +10,8 @@
 #include <optional>
 #include <filesystem>
 #include <vector>
+#include <functional>
+#include <string>
 
 #include <Magick++.h>
 #include <poppler/cpp/poppler-global.h>
@@ -24,6 +26,12 @@
 #include "Page.h"
 
 namespace Liesel {
+
+class Cancelled final : public std::runtime_error {
+	public:
+		explicit Cancelled(const std::string& message) : std::runtime_error(message) {}
+		explicit Cancelled(const char* message) : std::runtime_error(message ? message : "Cancelled") {}
+};
 
 class Book {
 	private:
@@ -59,6 +67,35 @@ class Book {
 	public:
 		Book();
 
+		enum class ProgressEvent : uint32_t {
+			Info = 0,
+			RenderPage = 1,
+			SegmentDone = 2,
+			PrintDone = 3
+		}; // Probably to be extended later
+
+		struct ProgressInfo {
+			ProgressEvent event = ProgressEvent::Info;
+			uint32_t segment_index = 0;
+			uint32_t page_index = 0; // 0-indexed within segment
+			uint32_t percent = 0; // 0-100
+			std::string message;
+		};
+
+		using ProgressCallback = std::function<void(const ProgressInfo& info)>;
+		using CancelCallback = std::function<bool(void)>; // return true to cancel
+	private:
+		ProgressCallback m_progress_cb;
+		CancelCallback m_cancel_cb;
+
+		uint32_t m_progress_total_units = 0;
+		uint32_t m_progress_completed_units = 0;
+
+		uint32_t _progress_percent() const;
+		void _emit_progress(ProgressEvent event, uint32_t segment_index, uint32_t page_index, const std::string& message);
+		void _check_cancelled() const;
+	public:
+
 		void set_input_pdf_path(const std::string_view& path);
 		void set_output_pdf_path(const std::string_view& path);
 
@@ -68,14 +105,14 @@ class Book {
 		void set_booklet(bool booklet) { f_booklet = booklet; }
 		void set_landscape(bool landscape) { f_landscape = landscape; }
 		void set_dpi_density(uint32_t dpi) { m_dpi_density = dpi; }
-		void set_threshold_level(uint8_t level) { m_threshold_level = level; }
+		void set_threshold_level(std::optional<uint8_t> level) { m_threshold_level = level; }
 		void set_segment_size(uint32_t size) {
 			if (size == 0) throw std::invalid_argument("Segment size cannot be zero.");
 			m_segment_size = size;
 		}
 		void set_widen_margins_amount(uint32_t amount) { m_widen_margins_amount = amount; }
-		void set_rescale_size(const PageDimensionPair& size) { m_rescale_size = size; }
-		void set_page_ranges(const PageRangeList& ranges) { m_page_ranges = ranges; }
+		void set_rescale_size(std::optional<PageDimensionPair> size) { m_rescale_size = size; }
+		void set_page_ranges(std::optional<PageRangeList> ranges) { m_page_ranges = ranges; }
 		void set_crop_percentages(const CropPercentages& crop) { m_crop_percentages = crop; }
 
 		bool verbose() const { return f_verbose; }
@@ -92,8 +129,10 @@ class Book {
 		CropPercentages crop_percentages() const { return m_crop_percentages; }
 
 		void load_pdf();
-
 		void print();
+
+		void set_progress_callback(ProgressCallback cb) { m_progress_cb = std::move(cb); }
+		void set_cancel_callback(CancelCallback cb) { m_cancel_cb = std::move(cb); }
 };
 
 } // namespace Liesel
