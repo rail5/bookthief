@@ -54,6 +54,25 @@ type
 
 		procedure Cancel;
 
+		procedure ImportSettingsFromCommandString(const OptionsStrUtf8: string);
+		function ExportSettingsAsCommandString: string;
+
+		function GetVerbose: Boolean;
+		function GetGreyscale: Boolean;
+		function GetDivide: Boolean;
+		function GetBooklet: Boolean;
+		function GetLandscape: Boolean;
+		function GetDpiDensity: Cardinal;
+
+		function TryGetThresholdLevel(out Level0To100: Byte): Boolean;
+		function TryGetSegmentSize(out PagesPerSegment: Cardinal): Boolean;
+		function TryGetRescaleSize(out SizeUtf8: string): Boolean;
+		function TryGetPageRanges(out RangesUtf8: string): Boolean;
+		function GetWidenMarginsAmount: Cardinal;
+		function TryGetCropPercentagesLRBT(out L, R, T, B: Byte): Boolean;
+		function TryGetInputPdfPath(out PathUtf8: string): Boolean;
+		function TryGetOutputPdfPath(out PathUtf8: string): Boolean;
+
 		procedure SetInputPdfPath(const PathUtf8: string);
 		procedure SetOutputPdfPath(const PathUtf8: string);
 
@@ -268,6 +287,212 @@ end;
 procedure TLieselBook.Cancel;
 begin
 	FCancelled := True;
+end;
+
+procedure TLieselBook.ImportSettingsFromCommandString(const OptionsStrUtf8: string);
+var
+	s: UTF8String;
+begin
+	s := UTF8String(OptionsStrUtf8);
+	RaiseOnStatus(FContext.Lib.liesel_book_import_settings_from_commandstring(FHandle, PChar(s)), 'import_settings_from_commandstring');
+end;
+
+function TLieselBook.ExportSettingsAsCommandString: string;
+var
+	p: PChar;
+	st: TLieselStatus;
+begin
+	p := nil;
+	st := FContext.Lib.liesel_book_export_settings_as_commandstring(FHandle, @p);
+	RaiseOnStatus(st, 'export_settings_as_commandstring');
+	Result := '';
+	if p <> nil then
+	begin
+		Result := StrPas(p);
+		FContext.Lib.liesel_free(p);
+	end;
+end;
+
+function TLieselBook.GetVerbose: Boolean;
+var
+	enabled: cint;
+begin
+	enabled := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_verbose(FHandle, @enabled), 'get_verbose');
+	Result := enabled <> 0;
+end;
+
+function TLieselBook.GetGreyscale: Boolean;
+var
+	enabled: cint;
+begin
+	enabled := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_greyscale(FHandle, @enabled), 'get_greyscale');
+	Result := enabled <> 0;
+end;
+
+function TLieselBook.GetDivide: Boolean;
+var
+	enabled: cint;
+begin
+	enabled := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_divide(FHandle, @enabled), 'get_divide');
+	Result := enabled <> 0;
+end;
+
+function TLieselBook.GetBooklet: Boolean;
+var
+	enabled: cint;
+begin
+	enabled := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_booklet(FHandle, @enabled), 'get_booklet');
+	Result := enabled <> 0;
+end;
+
+function TLieselBook.GetLandscape: Boolean;
+var
+	enabled: cint;
+begin
+	enabled := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_landscape(FHandle, @enabled), 'get_landscape');
+	Result := enabled <> 0;
+end;
+
+function TLieselBook.GetDpiDensity: Cardinal;
+var
+	dpi: cuint32;
+begin
+	dpi := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_dpi_density(FHandle, @dpi), 'get_dpi_density');
+	Result := Cardinal(dpi);
+end;
+
+function TLieselBook.TryGetThresholdLevel(out Level0To100: Byte): Boolean;
+var
+	isSet: cint;
+	level: cuint8;
+begin
+	Level0To100 := 0;
+	isSet := 0;
+	level := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_threshold_level(FHandle, @isSet, @level), 'get_threshold_level');
+	Result := isSet <> 0;
+	if Result then Level0To100 := Byte(level);
+end;
+
+function TLieselBook.TryGetSegmentSize(out PagesPerSegment: Cardinal): Boolean;
+var
+	isSet: cint;
+	seg: cuint32;
+begin
+	PagesPerSegment := 0;
+	isSet := 0;
+	seg := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_segment_size(FHandle, @isSet, @seg), 'get_segment_size');
+	Result := isSet <> 0;
+	if Result then PagesPerSegment := Cardinal(seg);
+end;
+
+function TLieselBook.GetWidenMarginsAmount: Cardinal;
+var
+	amt: cuint32;
+begin
+	amt := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_widen_margins_amount(FHandle, @amt), 'get_widen_margins_amount');
+	Result := Cardinal(amt);
+end;
+
+function TLieselBook.TryGetRescaleSize(out SizeUtf8: string): Boolean;
+var
+	isSet: cint;
+	p: Pointer;
+begin
+	SizeUtf8 := '';
+	isSet := 0;
+	p := nil;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_rescale_size(FHandle, @isSet, @p), 'get_rescale_size');
+	Result := isSet <> 0;
+	if (p <> nil) then
+	begin
+		SizeUtf8 := StrPas(PChar(p));
+		FContext.Lib.liesel_free(p);
+	end;
+end;
+
+function TLieselBook.TryGetPageRanges(out RangesUtf8: string): Boolean;
+var
+	isSet: cint;
+	p: Pointer;
+begin
+	RangesUtf8 := '';
+	isSet := 0;
+	p := nil;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_page_ranges(FHandle, @isSet, @p), 'get_page_ranges');
+	Result := isSet <> 0;
+	if (p <> nil) then
+	begin
+		RangesUtf8 := StrPas(PChar(p));
+		FContext.Lib.liesel_free(p);
+	end;
+end;
+
+function TLieselBook.TryGetCropPercentagesLRBT(out L, R, T, B: Byte): Boolean;
+var
+	enabled: cint;
+	lv, rv, tv, bv: cuint8;
+begin
+	L := 0;
+	R := 0;
+	T := 0;
+	B := 0;
+	enabled := 0;
+	lv := 0;
+	rv := 0;
+	tv := 0;
+	bv := 0;
+	RaiseOnStatus(
+		FContext.Lib.liesel_book_get_crop_percentages_lrbt(FHandle, @enabled, @lv, @rv, @tv, @bv),
+		'get_crop_percentages_lrbt'
+	);
+	Result := enabled <> 0;
+	L := Byte(lv);
+	R := Byte(rv);
+	T := Byte(tv);
+	B := Byte(bv);
+end;
+
+function TLieselBook.TryGetInputPdfPath(out PathUtf8: string): Boolean;
+var
+	isSet: cint;
+	p: Pointer;
+begin
+	PathUtf8 := '';
+	isSet := 0;
+	p := nil;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_input_pdf_path(FHandle, @isSet, @p), 'get_input_pdf_path');
+	Result := isSet <> 0;
+	if p <> nil then
+	begin
+		PathUtf8 := StrPas(PChar(p));
+		FContext.Lib.liesel_free(p);
+	end;
+end;
+
+function TLieselBook.TryGetOutputPdfPath(out PathUtf8: string): Boolean;
+var
+	isSet: cint;
+	p: Pointer;
+begin
+	PathUtf8 := '';
+	isSet := 0;
+	p := nil;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_output_pdf_path(FHandle, @isSet, @p), 'get_output_pdf_path');
+	Result := isSet <> 0;
+	if p <> nil then
+	begin
+		PathUtf8 := StrPas(PChar(p));
+		FContext.Lib.liesel_free(p);
+	end;
 end;
 
 function TLieselBook.LastErrorUtf8: string;

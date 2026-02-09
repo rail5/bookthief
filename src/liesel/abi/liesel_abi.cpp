@@ -18,6 +18,8 @@
 #include "../PageDimensions.h"
 #include "../PageRangeList.h"
 
+#include "../CLIConfig.h"
+
 namespace {
 
 static inline bool is_null_or_empty(const char* s) {
@@ -60,6 +62,17 @@ static inline void set_error(LieselBookHandle* b, const std::string& message) {
 static inline LieselStatus fail_invalid_arg(LieselBookHandle* b, const char* message) {
 	set_error(b, message ? message : "Invalid argument");
 	return LIESEL_E_INVALID_ARG;
+}
+
+static inline LieselStatus alloc_cstr(LieselBookHandle* b, const std::string& s, char** out) {
+	if (!out) return fail_invalid_arg(b, "Output string pointer cannot be null");
+	const size_t len = s.size();
+	char* cstr = static_cast<char*>(std::malloc(len + 1));
+	if (!cstr) throw std::bad_alloc();
+	std::memcpy(cstr, s.c_str(), len);
+	cstr[len] = '\0';
+	*out = cstr;
+	return LIESEL_OK;
 }
 
 extern "C" {
@@ -123,6 +136,30 @@ void liesel_book_destroy(LieselBookHandle* b) {
 const char* liesel_book_last_error(LieselBookHandle* b) {
 	if (!b) return "";
 	return b->last_error.c_str();
+}
+
+LieselStatus liesel_book_export_settings_as_commandstring(LieselBookHandle* b, char** out_string_utf8) {
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	if (!out_string_utf8) return fail_invalid_arg(b, "Output string pointer cannot be null");
+	try {
+		std::string options = GetCLIOptionStringFromBook(b->book.get());
+		return alloc_cstr(b, options, out_string_utf8);
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_import_settings_from_commandstring(LieselBookHandle* b, const char* options_str_utf8) {
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	if (is_null_or_empty(options_str_utf8)) return fail_invalid_arg(b, "Options string cannot be null or empty");
+	try {
+		ConfigureBookFromCLIOptionsString(b->book.get(), std::string(options_str_utf8));
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
 }
 
 LieselStatus liesel_book_set_input_pdf_path(LieselBookHandle* b, const char* path_utf8) {
@@ -307,6 +344,215 @@ LieselStatus liesel_book_set_crop_percentages_lrbt(LieselBookHandle* b, uint8_t 
 		crop.set_bottom(bt);
 		b->book->set_crop_percentages(crop);
 		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_verbose(LieselBookHandle* b, int* out_enabled) {
+	if (!out_enabled) return LIESEL_E_INVALID_ARG;
+	*out_enabled = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		*out_enabled = b->book->verbose() ? 1 : 0;
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_greyscale(LieselBookHandle* b, int* out_enabled) {
+	if (!out_enabled) return LIESEL_E_INVALID_ARG;
+	*out_enabled = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		*out_enabled = b->book->greyscale() ? 1 : 0;
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_divide(LieselBookHandle* b, int* out_enabled) {
+	if (!out_enabled) return LIESEL_E_INVALID_ARG;
+	*out_enabled = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		*out_enabled = b->book->divide() ? 1 : 0;
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_booklet(LieselBookHandle* b, int* out_enabled) {
+	if (!out_enabled) return LIESEL_E_INVALID_ARG;
+	*out_enabled = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		*out_enabled = b->book->booklet() ? 1 : 0;
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_landscape(LieselBookHandle* b, int* out_enabled) {
+	if (!out_enabled) return LIESEL_E_INVALID_ARG;
+	*out_enabled = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		*out_enabled = b->book->landscape() ? 1 : 0;
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_dpi_density(LieselBookHandle* b, uint32_t* out_dpi) {
+	if (!out_dpi) return LIESEL_E_INVALID_ARG;
+	*out_dpi = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		*out_dpi = b->book->dpi_density();
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_threshold_level(LieselBookHandle* b, int* out_is_set, uint8_t* out_level_0_100) {
+	if (!out_is_set || !out_level_0_100) return LIESEL_E_INVALID_ARG;
+	*out_is_set = 0;
+	*out_level_0_100 = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		auto opt = b->book->threshold_level();
+		if (!opt.has_value()) return LIESEL_OK;
+		*out_is_set = 1;
+		*out_level_0_100 = opt.value();
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_segment_size(LieselBookHandle* b, int* out_is_set, uint32_t* out_pages_per_segment) {
+	if (!out_is_set || !out_pages_per_segment) return LIESEL_E_INVALID_ARG;
+	*out_is_set = 0;
+	*out_pages_per_segment = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		const uint32_t seg = b->book->segment_size();
+		if (seg == UINT32_MAX) return LIESEL_OK;
+		*out_is_set = 1;
+		*out_pages_per_segment = seg;
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_widen_margins_amount(LieselBookHandle* b, uint32_t* out_amount) {
+	if (!out_amount) return LIESEL_E_INVALID_ARG;
+	*out_amount = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		*out_amount = b->book->widen_margins_amount();
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_rescale_size(LieselBookHandle* b, int* out_is_set, char** out_size_utf8) {
+	if (!out_is_set || !out_size_utf8) return LIESEL_E_INVALID_ARG;
+	*out_is_set = 0;
+	*out_size_utf8 = nullptr;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		auto opt = b->book->rescale_size();
+		if (!opt.has_value()) return LIESEL_OK;
+		*out_is_set = 1;
+		return alloc_cstr(b, opt->to_string(), out_size_utf8);
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_page_ranges(LieselBookHandle* b, int* out_is_set, char** out_ranges_utf8) {
+	if (!out_is_set || !out_ranges_utf8) return LIESEL_E_INVALID_ARG;
+	*out_is_set = 0;
+	*out_ranges_utf8 = nullptr;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		auto opt = b->book->page_ranges();
+		if (!opt.has_value()) return LIESEL_OK;
+		*out_is_set = 1;
+		return alloc_cstr(b, opt->to_string(), out_ranges_utf8);
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_crop_percentages_lrbt(LieselBookHandle* b, int* out_enabled, uint8_t* out_l, uint8_t* out_r, uint8_t* out_t, uint8_t* out_bt) {
+	if (!out_enabled || !out_l || !out_r || !out_t || !out_bt) return LIESEL_E_INVALID_ARG;
+	*out_enabled = 0;
+	*out_l = 0;
+	*out_r = 0;
+	*out_t = 0;
+	*out_bt = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		const auto crop = b->book->crop_percentages();
+		*out_l = crop.left();
+		*out_r = crop.right();
+		*out_t = crop.top();
+		*out_bt = crop.bottom();
+		*out_enabled = crop.is_empty() ? 0 : 1;
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_input_pdf_path(LieselBookHandle* b, int* out_is_set, char** out_path_utf8) {
+	if (!out_is_set || !out_path_utf8) return LIESEL_E_INVALID_ARG;
+	*out_is_set = 0;
+	*out_path_utf8 = nullptr;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		if (!b->book->has_input_pdf_path()) return LIESEL_OK;
+		*out_is_set = 1;
+		return alloc_cstr(b, b->book->get_input_pdf_path(), out_path_utf8);
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_output_pdf_path(LieselBookHandle* b, int* out_is_set, char** out_path_utf8) {
+	if (!out_is_set || !out_path_utf8) return LIESEL_E_INVALID_ARG;
+	*out_is_set = 0;
+	*out_path_utf8 = nullptr;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		if (!b->book->has_output_pdf_path()) return LIESEL_OK;
+		*out_is_set = 1;
+		return alloc_cstr(b, b->book->get_output_pdf_path(), out_path_utf8);
 	} catch (const std::exception& e) {
 		set_error(b, e.what());
 		return map_exception_to_status(e);

@@ -63,6 +63,9 @@ type
 		liesel_book_destroy: procedure(b: PLieselBookHandle); cdecl;
 		liesel_book_last_error: function(b: PLieselBookHandle): PChar; cdecl;
 
+		liesel_book_export_settings_as_commandstring: function(b: PLieselBookHandle; out_string_utf8: PPointer): TLieselStatus; cdecl;
+		liesel_book_import_settings_from_commandstring: function(b: PLieselBookHandle; options_str_utf8: PChar): TLieselStatus; cdecl;
+
 		liesel_book_set_input_pdf_path: function(b: PLieselBookHandle; path_utf8: PChar): TLieselStatus; cdecl;
 		liesel_book_set_output_pdf_path: function(b: PLieselBookHandle; path_utf8: PChar): TLieselStatus; cdecl;
 
@@ -88,6 +91,24 @@ type
 
 		liesel_book_set_crop_percentages: function(b: PLieselBookHandle; crop_utf8: PChar): TLieselStatus; cdecl;
 		liesel_book_set_crop_percentages_lrbt: function(b: PLieselBookHandle; l, r, t, bt: cuint8): TLieselStatus; cdecl;
+
+		// Configuration getters (GUI support)
+		liesel_book_get_verbose: function(b: PLieselBookHandle; out_enabled: pcint): TLieselStatus; cdecl;
+		liesel_book_get_greyscale: function(b: PLieselBookHandle; out_enabled: pcint): TLieselStatus; cdecl;
+		liesel_book_get_divide: function(b: PLieselBookHandle; out_enabled: pcint): TLieselStatus; cdecl;
+		liesel_book_get_booklet: function(b: PLieselBookHandle; out_enabled: pcint): TLieselStatus; cdecl;
+		liesel_book_get_landscape: function(b: PLieselBookHandle; out_enabled: pcint): TLieselStatus; cdecl;
+
+		liesel_book_get_dpi_density: function(b: PLieselBookHandle; out_dpi: pcuint32): TLieselStatus; cdecl;
+
+		liesel_book_get_threshold_level: function(b: PLieselBookHandle; out_is_set: pcint; out_level_0_100: pcuint8): TLieselStatus; cdecl;
+		liesel_book_get_segment_size: function(b: PLieselBookHandle; out_is_set: pcint; out_pages_per_segment: pcuint32): TLieselStatus; cdecl;
+		liesel_book_get_widen_margins_amount: function(b: PLieselBookHandle; out_amount: pcuint32): TLieselStatus; cdecl;
+		liesel_book_get_rescale_size: function(b: PLieselBookHandle; out_is_set: pcint; out_size_utf8: PPointer): TLieselStatus; cdecl;
+		liesel_book_get_page_ranges: function(b: PLieselBookHandle; out_is_set: pcint; out_ranges_utf8: PPointer): TLieselStatus; cdecl;
+		liesel_book_get_crop_percentages_lrbt: function(b: PLieselBookHandle; out_enabled: pcint; out_l, out_r, out_t, out_bt: pcuint8): TLieselStatus; cdecl;
+		liesel_book_get_input_pdf_path: function(b: PLieselBookHandle; out_is_set: pcint; out_path_utf8: PPointer): TLieselStatus; cdecl;
+		liesel_book_get_output_pdf_path: function(b: PLieselBookHandle; out_is_set: pcint; out_path_utf8: PPointer): TLieselStatus; cdecl;
 
 		liesel_book_load_pdf: function(b: PLieselBookHandle): TLieselStatus; cdecl;
 		liesel_book_get_pdf_page_count: function(b: PLieselBookHandle; out_page_count: pcuint32): TLieselStatus; cdecl;
@@ -192,6 +213,9 @@ var
 		Pointer(liesel_book_destroy) := TryGetProc('liesel_book_destroy');
 		Pointer(liesel_book_last_error) := TryGetProc('liesel_book_last_error');
 
+		Pointer(liesel_book_export_settings_as_commandstring) := TryGetProc('liesel_book_export_settings_as_commandstring');
+		Pointer(liesel_book_import_settings_from_commandstring) := TryGetProc('liesel_book_import_settings_from_commandstring');
+
 		Pointer(liesel_book_set_input_pdf_path) := TryGetProc('liesel_book_set_input_pdf_path');
 		Pointer(liesel_book_set_output_pdf_path) := TryGetProc('liesel_book_set_output_pdf_path');
 
@@ -217,6 +241,21 @@ var
 
 		Pointer(liesel_book_set_crop_percentages) := TryGetProc('liesel_book_set_crop_percentages');
 		Pointer(liesel_book_set_crop_percentages_lrbt) := TryGetProc('liesel_book_set_crop_percentages_lrbt');
+
+		Pointer(liesel_book_get_verbose) := TryGetProc('liesel_book_get_verbose');
+		Pointer(liesel_book_get_greyscale) := TryGetProc('liesel_book_get_greyscale');
+		Pointer(liesel_book_get_divide) := TryGetProc('liesel_book_get_divide');
+		Pointer(liesel_book_get_booklet) := TryGetProc('liesel_book_get_booklet');
+		Pointer(liesel_book_get_landscape) := TryGetProc('liesel_book_get_landscape');
+		Pointer(liesel_book_get_dpi_density) := TryGetProc('liesel_book_get_dpi_density');
+		Pointer(liesel_book_get_threshold_level) := TryGetProc('liesel_book_get_threshold_level');
+		Pointer(liesel_book_get_segment_size) := TryGetProc('liesel_book_get_segment_size');
+		Pointer(liesel_book_get_widen_margins_amount) := TryGetProc('liesel_book_get_widen_margins_amount');
+		Pointer(liesel_book_get_rescale_size) := TryGetProc('liesel_book_get_rescale_size');
+		Pointer(liesel_book_get_page_ranges) := TryGetProc('liesel_book_get_page_ranges');
+		Pointer(liesel_book_get_crop_percentages_lrbt) := TryGetProc('liesel_book_get_crop_percentages_lrbt');
+			Pointer(liesel_book_get_input_pdf_path) := TryGetProc('liesel_book_get_input_pdf_path');
+			Pointer(liesel_book_get_output_pdf_path) := TryGetProc('liesel_book_get_output_pdf_path');
 
 		Pointer(liesel_book_load_pdf) := TryGetProc('liesel_book_load_pdf');
 		Pointer(liesel_book_get_pdf_page_count) := TryGetProc('liesel_book_get_pdf_page_count');
@@ -261,6 +300,21 @@ var
 
 		RequireProc(Pointer(liesel_book_set_crop_percentages), 'liesel_book_set_crop_percentages');
 		RequireProc(Pointer(liesel_book_set_crop_percentages_lrbt), 'liesel_book_set_crop_percentages_lrbt');
+
+		RequireProc(Pointer(liesel_book_get_verbose), 'liesel_book_get_verbose');
+		RequireProc(Pointer(liesel_book_get_greyscale), 'liesel_book_get_greyscale');
+		RequireProc(Pointer(liesel_book_get_divide), 'liesel_book_get_divide');
+		RequireProc(Pointer(liesel_book_get_booklet), 'liesel_book_get_booklet');
+		RequireProc(Pointer(liesel_book_get_landscape), 'liesel_book_get_landscape');
+		RequireProc(Pointer(liesel_book_get_dpi_density), 'liesel_book_get_dpi_density');
+		RequireProc(Pointer(liesel_book_get_threshold_level), 'liesel_book_get_threshold_level');
+		RequireProc(Pointer(liesel_book_get_segment_size), 'liesel_book_get_segment_size');
+		RequireProc(Pointer(liesel_book_get_widen_margins_amount), 'liesel_book_get_widen_margins_amount');
+		RequireProc(Pointer(liesel_book_get_rescale_size), 'liesel_book_get_rescale_size');
+		RequireProc(Pointer(liesel_book_get_page_ranges), 'liesel_book_get_page_ranges');
+		RequireProc(Pointer(liesel_book_get_crop_percentages_lrbt), 'liesel_book_get_crop_percentages_lrbt');
+			RequireProc(Pointer(liesel_book_get_input_pdf_path), 'liesel_book_get_input_pdf_path');
+			RequireProc(Pointer(liesel_book_get_output_pdf_path), 'liesel_book_get_output_pdf_path');
 
 		RequireProc(Pointer(liesel_book_load_pdf), 'liesel_book_load_pdf');
 			RequireProc(Pointer(liesel_book_get_pdf_page_count), 'liesel_book_get_pdf_page_count');

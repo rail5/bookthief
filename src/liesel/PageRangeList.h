@@ -39,6 +39,8 @@ class PageRange {
 		std::optional<uint32_t> end_page() const {
 			return m_end_page;
 		}
+
+		std::string to_string() const;
 };
 
 /**
@@ -62,6 +64,8 @@ class PageRangeList {
 		const std::vector<PageRange>& ranges() const {
 			return m_ranges;
 		}
+
+		std::string to_string() const;
 };
 
 } // namespace Liesel
