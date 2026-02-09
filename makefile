@@ -60,7 +60,7 @@ FPCINCLUDES   := -Fi$(BINDIR)/lib/x86_64-linux \
 BOOKTHIEF    := $(BINDIR)/bookthief
 
 # --- Targets ---
-all: $(LIESEL) $(LIESEL_SO) $(BOOKTHIEF)
+all: $(LIESEL) $(LIESEL_SO) $(BOOKTHIEF) debian/liesel.1 debian/bookthief.1
 
 # --- Liesel CLI Build ---
 $(LIESEL): $(OBJS_LIESEL)
@@ -121,11 +121,29 @@ $(BOOKTHIEF): $(SRCDIR)/bookthief/bookthief.lpr $(SRCDIR)/bookthief/*.pas $(SRCD
 	$(FPC) $(FPCFLAGS) $(FPCINCLUDES) -o$@ $<
 	@echo "Built BookThief version $(VERSION)"
 
+# --- Manuals ---
+manuals: debian/liesel.1 debian/bookthief.1
+	@echo "Built manual pages"
+
+debian/liesel.1: src/manuals/liesel.md
+	@cp $< debian/liesel.md
+	@sed -i '1s/^/% liesel(1) Version $(VERSION) | Manual for Liesel\n/' debian/liesel.md
+	@pandoc --standalone --to man debian/liesel.md -o $@
+	@rm -f debian/liesel.md
+
+debian/bookthief.1: src/manuals/bookthief.md
+	@cp $< debian/bookthief.md
+	@sed -i '1s/^/% bookthief(1) Version $(VERSION) | Manual for BookThief\n/' debian/bookthief.md
+	@pandoc --standalone --to man debian/bookthief.md -o $@
+	@rm -f debian/bookthief.md
+
 # --- Clean ---
 clean:
 	$(RM) -r "$(BINDIR)/"*
 	$(RM) $(SRCDIR)/liesel/version.h
 	$(RM) $(SRCDIR)/bookthief/VersionInfoUnit.pas
+	$(RM) debian/liesel.1 debian/bookthief.1
+	$(RM) debian/liesel.md debian/bookthief.md
 
 # --- Dependencies ---
 -include $(BINDIR)/*.d
@@ -133,4 +151,4 @@ clean:
 -include $(BINDIR)/liesel-lib-objs/*.d
 -include $(BINDIR)/liesel-lib-objs/abi/*.d
 
-.PHONY: all clean version-headers
+.PHONY: all clean version-headers manuals
