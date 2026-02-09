@@ -5,7 +5,7 @@ unit LieselABIUnit;
 interface
 
 uses
-	Classes, SysUtils, dynlibs, ctypes;
+	Classes, SysUtils, dynlibs, ctypes, VersionInfoUnit;
 
 type
 	PLieselHandle = Pointer;
@@ -53,6 +53,9 @@ type
 		liesel_create: function: PLieselHandle; cdecl;
 		liesel_destroy: procedure(h: PLieselHandle); cdecl;
 		liesel_version: function: PChar; cdecl;
+		liesel_major_version: function: cint; cdecl;
+		liesel_minor_version: function: cint; cdecl;
+		liesel_patch_version: function: cint; cdecl;
 		liesel_last_error: function(h: PLieselHandle): PChar; cdecl;
 		liesel_free: procedure(p: Pointer); cdecl;
 
@@ -165,9 +168,22 @@ var
 
 	procedure BindAll;
 	begin
+		Pointer(liesel_version) := TryGetProc('liesel_version');
+		Pointer(liesel_major_version) := TryGetProc('liesel_major_version');
+		Pointer(liesel_minor_version) := TryGetProc('liesel_minor_version');
+		Pointer(liesel_patch_version) := TryGetProc('liesel_patch_version');
+
+		// Verify that the major version matches
+		if liesel_major_version() <> VersionInfoUnit.MAJOR_VERSION then
+		begin
+			raise Exception.CreateFmt(
+				'libliesel major version mismatch: expected %d, got %d',
+				[VersionInfoUnit.MAJOR_VERSION, liesel_major_version()]
+			);
+		end;
+
 		Pointer(liesel_create) := TryGetProc('liesel_create');
 		Pointer(liesel_destroy) := TryGetProc('liesel_destroy');
-		Pointer(liesel_version) := TryGetProc('liesel_version');
 		Pointer(liesel_last_error) := TryGetProc('liesel_last_error');
 		Pointer(liesel_free) := TryGetProc('liesel_free');
 

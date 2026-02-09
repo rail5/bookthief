@@ -84,6 +84,18 @@ const char* liesel_version(void) {
 	return VERSION;
 }
 
+int liesel_major_version(void) {
+	return MAJOR_VERSION;
+}
+
+int liesel_minor_version(void) {
+	return MINOR_VERSION;
+}
+
+int liesel_patch_version(void) {
+	return PATCH_VERSION;
+}
+
 const char* liesel_last_error(LieselHandle* h) {
 	if (!h) return "";
 	return h->last_error.c_str();

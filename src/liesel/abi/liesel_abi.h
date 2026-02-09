@@ -69,6 +69,9 @@ LIESEL_ABI_API void liesel_destroy(LieselHandle* h);
 
 // Returns VERSION from src/liesel/version.h
 LIESEL_ABI_API const char* liesel_version(void);
+LIESEL_ABI_API int liesel_major_version(void);
+LIESEL_ABI_API int liesel_minor_version(void);
+LIESEL_ABI_API int liesel_patch_version(void);
 
 // Returns a pointer to an internal string buffer (valid until next error on the same handle).
 LIESEL_ABI_API const char* liesel_last_error(LieselHandle* h);
