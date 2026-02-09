@@ -100,6 +100,7 @@ type
 	private
 		FInputPath: string;
 		FOutputPath: string;
+		FDpiDensity: Cardinal;
 		FUsePageRanges: Boolean;
 		FPageRanges: string;
 		FGreyscale: Boolean;
@@ -128,6 +129,7 @@ type
 		procedure Execute; override;
 	public
 		constructor Create(const AInputPath, AOutputPath: string;
+			ADpiDensity: Cardinal;
 			AUsePageRanges: Boolean; const APageRanges: string;
 			AGreyscale: Boolean;
 			AUseSegments: Boolean; ASegmentSize: Cardinal;
@@ -136,6 +138,7 @@ type
 	end;
 
 constructor TPrintJobThread.Create(const AInputPath, AOutputPath: string;
+	ADpiDensity: Cardinal;
 	AUsePageRanges: Boolean; const APageRanges: string;
 	AGreyscale: Boolean;
 	AUseSegments: Boolean; ASegmentSize: Cardinal;
@@ -145,6 +148,7 @@ begin
 	FreeOnTerminate := True;
 	FInputPath := AInputPath;
 	FOutputPath := AOutputPath;
+	FDpiDensity := ADpiDensity;
 	FUsePageRanges := AUsePageRanges;
 	FPageRanges := APageRanges;
 	FGreyscale := AGreyscale;
@@ -226,6 +230,7 @@ begin
 
 		FBook.SetInputPdfPath(FInputPath);
 		FBook.SetOutputPdfPath(FOutputPath);
+		FBook.SetDpiDensity(FDpiDensity);
 		FBook.SetGreyscale(FGreyscale);
 
 		if FUseSegments then
@@ -465,6 +470,7 @@ end;
 
 procedure TMainWindow.SaveButtonClick(Sender: TObject);
 var
+	dpiDensity: Cardinal;
 	useRanges: Boolean;
 	ranges: string;
 	greyscale: Boolean;
@@ -483,13 +489,16 @@ begin
 	begin
 		FOutputPdfPath := SaveDialog.FileName;
 
+		// Quality slider maps directly to Liesel DPI density.
+		dpiDensity := Cardinal(QualitySlider.Position);
+
 		useRanges := RangeCheckbox.Checked;
 		ranges := RangeInputTextbox.Text;
 
 		greyscale := GreyscaleCheckbox.Checked;
 
 		useSegments := SegmentCheckbox.Checked;
-	segmentSize := Cardinal(SegmentInputBox.Value);
+		segmentSize := Cardinal(SegmentInputBox.Value);
 
 		useRescale := RescaleCheckbox.Checked;
 		rescaleSize := RescaleDropdownBox.Text;
@@ -504,6 +513,7 @@ begin
 		// Run in background so the UI stays responsive.
 		TPrintJobThread.Create(
 			FInputPdfPath, FOutputPdfPath,
+			dpiDensity,
 			useRanges, ranges,
 			greyscale,
 			useSegments, segmentSize,
