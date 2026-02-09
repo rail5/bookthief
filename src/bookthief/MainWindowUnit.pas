@@ -919,8 +919,130 @@ begin
 end;
 
 procedure TMainWindow.LoadSettingsButtonClick(Sender: TObject);
+var
+	cfgPath: string;
+	sl: TStringList;
+	cmd: string;
+	lib: TLieselLib;
+	ctx: TLieselContext;
+	book: TLieselBook;
+	segSize: Cardinal;
+	rescaleSize: string;
+	ranges: string;
+	thresholdLevel: Byte;
+	widenAmt: Cardinal;
+	cropL, cropR, cropT, cropB: Byte;
+	importedInput: string;
 begin
+	// Load settings from ~/.bookthiefrc (fail silently on any error)
+	cfgPath := IncludeTrailingPathDelimiter(GetUserDir) + '.bookthiefrc';
+	if not FileExists(cfgPath) then Exit;
 
+	sl := nil;
+	lib := nil;
+	ctx := nil;
+	book := nil;
+	try
+		sl := TStringList.Create;
+		sl.LoadFromFile(cfgPath);
+		cmd := Trim(sl.Text);
+		if cmd = '' then Exit;
+
+		lib := TLieselLib.Create;
+		lib.Load;
+		ctx := TLieselContext.Create(lib);
+		book := ctx.CreateBook;
+
+		book.ImportSettingsFromCommandString(cmd);
+
+		// If the saved command included an input path and it was accepted, update the GUI.
+		if book.TryGetInputPdfPath(importedInput) and (Trim(importedInput) <> '') then
+		begin
+			FInputPdfPath := importedInput;
+			FileInputButton.Caption := ExtractFileName(importedInput);
+			SaveDialog.FileName := ChangeFileExt(ExtractFileName(FInputPdfPath), '') + '-out.pdf';
+		end;
+
+		FApplyingSettings := True;
+		try
+			// MainWindow settings
+			QualitySlider.Position := EnsureRange(Integer(book.GetDpiDensity), QualitySlider.Min, QualitySlider.Max);
+			GreyscaleCheckbox.Checked := book.GetGreyscale;
+
+			if book.TryGetSegmentSize(segSize) then
+			begin
+				SegmentCheckbox.Checked := True;
+				SegmentInputBox.Value := Integer(segSize);
+			end
+			else
+				SegmentCheckbox.Checked := False;
+
+			if book.TryGetRescaleSize(rescaleSize) and (Trim(rescaleSize) <> '') then
+			begin
+				RescaleCheckbox.Checked := True;
+				RescaleDropdownBox.Text := rescaleSize;
+			end
+			else
+				RescaleCheckbox.Checked := False;
+
+			if book.TryGetPageRanges(ranges) and (Trim(ranges) <> '') then
+			begin
+				RangeCheckbox.Checked := True;
+				RangeInputTextbox.Text := ranges;
+			end
+			else
+			begin
+				RangeCheckbox.Checked := False;
+				RangeInputTextbox.Text := '';
+			end;
+
+			// Apply panel visibility/layout updates without triggering previews mid-batch.
+			RangeCheckboxChange(Self);
+			SegmentCheckboxChange(Self);
+			RescaleCheckboxChange(Self);
+
+			// AdvancedWindow settings
+			if Assigned(AdvancedWindow) then
+			begin
+				AdvancedWindow.SplitPagesCheckbox.Checked := book.GetDivide;
+				AdvancedWindow.NoBookletCheckbox.Checked := not book.GetBooklet;
+
+				if book.TryGetThresholdLevel(thresholdLevel) then
+				begin
+					AdvancedWindow.ColorThresholdCheckbox.Checked := True;
+					AdvancedWindow.ColorThresholdSlider.Position := Integer(thresholdLevel);
+				end
+				else
+					AdvancedWindow.ColorThresholdCheckbox.Checked := False;
+
+				widenAmt := book.GetWidenMarginsAmount;
+				AdvancedWindow.CenterMarginCheckbox.Checked := widenAmt > 0;
+				AdvancedWindow.CenterMarginSlider.Position := Integer(widenAmt);
+
+				if book.TryGetCropPercentagesLRBT(cropL, cropR, cropT, cropB) then
+				begin
+					AdvancedWindow.CropCheckbox.Checked := True;
+					AdvancedWindow.LeftCropSlider.Position := Integer(cropL);
+					AdvancedWindow.RightCropSlider.Position := Integer(cropR);
+					AdvancedWindow.TopCropSlider.Position := Integer(cropT);
+					AdvancedWindow.BottomCropSlider.Position := Integer(cropB);
+				end
+				else
+					AdvancedWindow.CropCheckbox.Checked := False;
+			end;
+		finally
+			FApplyingSettings := False;
+		end;
+
+		RequestPreviewUpdateDebounced;
+	except
+		// Fail silently
+	end;
+
+	FreeAndNil(book);
+	FreeAndNil(ctx);
+	FreeAndNil(lib);
+	FreeAndNil(sl);
 end;
 
 procedure TMainWindow.QuitButtonClick(Sender: TObject);
@@ -1003,8 +1125,102 @@ begin
 end;
 
 procedure TMainWindow.SaveSettingsButtonClick(Sender: TObject);
+var
+	cfgPath: string;
+	lib: TLieselLib;
+	ctx: TLieselContext;
+	book: TLieselBook;
+	sl: TStringList;
+	cmd: string;
+	inputEscaped: string;
+	inputPart: string;
 begin
+	// Export current settings to ~/.bookthiefrc (show an error dialog on save failure)
+	cfgPath := IncludeTrailingPathDelimiter(GetUserDir) + '.bookthiefrc';
+	lib := nil;
+	ctx := nil;
+	book := nil;
+	sl := nil;
+	try
+		lib := TLieselLib.Create;
+		lib.Load;
+		ctx := TLieselContext.Create(lib);
+		book := ctx.CreateBook;
 
+		// MainWindow settings (intentionally do not bind to a specific input/output path)
+		book.SetDpiDensity(Cardinal(QualitySlider.Position));
+		book.SetGreyscale(GreyscaleCheckbox.Checked);
+
+		if SegmentCheckbox.Checked then
+			book.SetSegmentSize(Cardinal(SegmentInputBox.Value))
+		else
+			book.ClearSegmentSize;
+
+		if RescaleCheckbox.Checked and (Trim(RescaleDropdownBox.Text) <> '') then
+			book.SetRescaleSize(RescaleDropdownBox.Text)
+		else
+			book.ClearRescaleSize;
+
+		if RangeCheckbox.Checked and (Trim(RangeInputTextbox.Text) <> '') then
+			book.SetPageRanges(RangeInputTextbox.Text)
+		else
+			book.ClearPageRanges;
+
+		// AdvancedWindow settings
+		if Assigned(AdvancedWindow) then
+		begin
+			book.SetDivide(AdvancedWindow.SplitPagesCheckbox.Checked);
+			book.SetBooklet(not AdvancedWindow.NoBookletCheckbox.Checked);
+
+			if AdvancedWindow.ColorThresholdCheckbox.Checked then
+				book.SetThresholdLevel(Byte(AdvancedWindow.ColorThresholdSlider.Position))
+			else
+				book.ClearThresholdLevel;
+
+			if AdvancedWindow.CenterMarginCheckbox.Checked then
+				book.SetWidenMarginsAmount(Cardinal(AdvancedWindow.CenterMarginSlider.Position))
+			else
+				book.SetWidenMarginsAmount(0);
+
+			if AdvancedWindow.CropCheckbox.Checked then
+				book.SetCropPercentagesLRBT(
+					Byte(AdvancedWindow.LeftCropSlider.Position),
+					Byte(AdvancedWindow.RightCropSlider.Position),
+					Byte(AdvancedWindow.TopCropSlider.Position),
+					Byte(AdvancedWindow.BottomCropSlider.Position)
+				)
+			else
+				book.SetCropPercentagesLRBT(0, 0, 0, 0);
+		end;
+
+		cmd := Trim(book.ExportSettingsAsCommandString);
+
+		// Also persist the currently-selected input path. Do not call book.SetInputPdfPath
+		// here, because Book may validate file existence; for a config file we just want
+		// to remember the path string.
+		if Trim(FInputPdfPath) <> '' then
+		begin
+			inputEscaped := StringReplace(FInputPdfPath, '\\', '\\\\', [rfReplaceAll]);
+			inputEscaped := StringReplace(inputEscaped, '"', '\\"', [rfReplaceAll]);
+			inputPart := ' "' + inputEscaped + '"';
+			if (Length(cmd) >= 5) and (Copy(cmd, 1, 5) = 'liesel') then
+				cmd := 'liesel' + inputPart + Copy(cmd, 6, MaxInt)
+			else
+				cmd := 'liesel' + inputPart + ' ' + cmd;
+		end;
+
+		sl := TStringList.Create;
+		sl.Text := cmd + LineEnding;
+		sl.SaveToFile(cfgPath);
+	except
+		on E: Exception do
+			MessageDlg('Save settings failed', E.Message, mtError, [mbOK], 0);
+	end;
+
+	FreeAndNil(sl);
+	FreeAndNil(book);
+	FreeAndNil(ctx);
+	FreeAndNil(lib);
 end;
 
 procedure TMainWindow.SegmentCheckboxChange(Sender: TObject);
