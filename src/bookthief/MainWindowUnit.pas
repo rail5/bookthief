@@ -87,6 +87,8 @@ type
 		FPreviewLatestSeq: Cardinal;
 		FPreviewInFlight: Boolean;
 		FApplyingSettings: Boolean;
+		procedure SetInputPdfPathFromUi(const APath: string);
+		function TryGetCliInputPdfPath(out APath: string): Boolean;
 		procedure AdvancedWindowClose(Sender: TObject; var CloseAction: TCloseAction);
 		procedure AdvancedSettingsChanged(Sender: TObject);
 		procedure RequestPreviewUpdateDebounced;
@@ -571,8 +573,53 @@ begin
 		AdvancedWindow.Hide;
 	end;
 
+	// Optional: if a PDF path was passed on the command line, auto-select it.
+	// We do this on FormShow so controls exist and sizing can account for the
+	// updated button caption.
+	if Trim(FInputPdfPath) = '' then
+	begin
+		if TryGetCliInputPdfPath(FInputPdfPath) then
+			SetInputPdfPathFromUi(FInputPdfPath);
+	end;
+
 	// On first show, set the window size to exactly the minimum required size.
 	SnapToMinimumSize(2);
+end;
+
+procedure TMainWindow.SetInputPdfPathFromUi(const APath: string);
+begin
+	FInputPdfPath := APath;
+	if Trim(FInputPdfPath) <> '' then
+	begin
+		// Set the button caption to the file BASENAME (not full path)
+		FileInputButton.Caption := ExtractFileName(FInputPdfPath);
+		// Provide a helpful default output name.
+		SaveDialog.FileName := ChangeFileExt(ExtractFileName(FInputPdfPath), '') + '-out.pdf';
+		// Also seed the open dialog so re-opening starts in the right place.
+		OpenDialog.FileName := FInputPdfPath;
+	end;
+	RequestPreviewUpdateDebounced;
+end;
+
+function TMainWindow.TryGetCliInputPdfPath(out APath: string): Boolean;
+var
+	i: Integer;
+	cand: string;
+begin
+	Result := False;
+	APath := '';
+	// Scan args and pick the first existing file. This avoids accidentally
+	// treating flags like "--help" as a path.
+	for i := 1 to ParamCount do
+	begin
+		cand := Trim(ParamStr(i));
+		if cand = '' then Continue;
+		if FileExists(cand) then
+		begin
+			APath := cand;
+			Exit(True);
+		end;
+	end;
 end;
 
 procedure TMainWindow.AdvancedWindowClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -591,12 +638,7 @@ procedure TMainWindow.FileInputButtonClick(Sender: TObject);
 begin
 	if OpenDialog.Execute then
 	begin
-		{ Set the button caption to the file BASENAME (not full path) }
-		FileInputButton.Caption := ExtractFileName(OpenDialog.FileName);
-		FInputPdfPath := OpenDialog.FileName;
-		// Provide a helpful default output name.
-		SaveDialog.FileName := ChangeFileExt(ExtractFileName(FInputPdfPath), '') + '-out.pdf';
-		RequestPreviewUpdateDebounced;
+		SetInputPdfPathFromUi(OpenDialog.FileName);
 	end;
 end;
 
