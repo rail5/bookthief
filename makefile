@@ -63,7 +63,7 @@ $(LIESEL): $(OBJS_LIESEL)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 	@echo "Built Liesel (CLI) version $(VERSION)"
 
-$(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp version-headers
+$(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/liesel/version.h
 	@mkdir -p "$(BINDIR)/liesel-objs"
 	$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) -c $< -o $@
 
@@ -73,11 +73,11 @@ $(LIESEL_SO): $(OBJS_LIESEL_CORE) $(OBJS_LIESEL_ABI)
 	$(CXX) -shared -Wl,-soname,libliesel.so -o $@ $^ $(LDFLAGS)
 	@echo "Built libliesel.so version $(VERSION)"
 
-$(BINDIR)/liesel-lib-objs/%.o: $(SRCDIR)/liesel/%.cpp version-headers
+$(BINDIR)/liesel-lib-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/liesel/version.h
 	@mkdir -p "$(BINDIR)/liesel-lib-objs"
 	$(CXX) $(CXXFLAGS_PIC) $(INCLUDEFLAGS) -c $< -o $@
 
-$(BINDIR)/liesel-lib-objs/abi/%.o: $(SRCDIR)/liesel/abi/%.cpp version-headers
+$(BINDIR)/liesel-lib-objs/abi/%.o: $(SRCDIR)/liesel/abi/%.cpp $(SRCDIR)/liesel/version.h
 	@mkdir -p "$(BINDIR)/liesel-lib-objs/abi"
 	$(CXX) $(CXXFLAGS_PIC) $(INCLUDEFLAGS) -c $< -o $@
 
@@ -108,7 +108,7 @@ $(SRCDIR)/bookthief/VersionInfoUnit.pas: debian/changelog
 	@echo "end." >> $@
 
 # --- BookThief Build ---
-$(BOOKTHIEF): $(SRCDIR)/bookthief/bookthief.lpr $(SRCDIR)/bookthief/*.pas $(SRCDIR)/bookthief/*.lfm $(LIESEL_SO) version-headers
+$(BOOKTHIEF): $(SRCDIR)/bookthief/bookthief.lpr $(SRCDIR)/bookthief/*.pas $(SRCDIR)/bookthief/*.lfm $(LIESEL_SO) $(SRCDIR)/bookthief/VersionInfoUnit.pas
 	@mkdir -p "$(BINDIR)/lib/x86_64-linux"
 	$(FPC) $(FPCFLAGS) $(FPCINCLUDES) -o$@ $<
 	@echo "Built BookThief version $(VERSION)"
