@@ -42,7 +42,14 @@ void Liesel::Page::set_greyscale() {
 }
 
 void Liesel::Page::set_threshold(uint8_t level) {
-	if (this->image) this->image->threshold(static_cast<double>(level));
+	// Note: MaxRGB/MaxRGBDouble is different on different systems
+	// IIRC from when BookThief/Liesel had cross-platform support, it was 255 on Windows
+	// (for some god-forsaken reason Windows's GraphicsMagick is using 8-bit color depth)
+	// And I think it had still a different value on OpenBSD?
+	// At any rate on a typical GNU/Linux system it's 65535
+
+	double value = (static_cast<double>(level) * MaxRGBDouble) / 100.0;
+	if (this->image) this->image->threshold(value);
 }
 
 /**
