@@ -1,6 +1,6 @@
 object MainWindow: TMainWindow
-	Left = 1520
-	Height = 533
+	Left = 0
+	Height = 0
 	Top = 31
 	Width = 408
 	Caption = 'BookThief'
