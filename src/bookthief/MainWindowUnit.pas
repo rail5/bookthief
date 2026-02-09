@@ -170,6 +170,7 @@ type
 	private
 		FSeq: Cardinal;
 		FSnap: TPreviewSnapshot;
+		FPageCount: Cardinal;
 		FJpeg: TBytes;
 		FError: string;
 		procedure UiApply;
@@ -185,6 +186,7 @@ begin
 	FreeOnTerminate := True;
 	FSeq := ASeq;
 	FSnap := ASnap;
+	FPageCount := 0;
 	SetLength(FJpeg, 0);
 	FError := '';
 	Start;
@@ -195,62 +197,91 @@ var
 	lib: TLieselLib;
 	ctx: TLieselContext;
 	book: TLieselBook;
-	doRender: Boolean;
+	doLoadPdf: Boolean;
+	doPreview: Boolean;
 begin
 	lib := nil;
 	ctx := nil;
 	book := nil;
-	doRender := True;
+	doLoadPdf := True;
+	doPreview := True;
 	try
-		if Trim(FSnap.InputPath) = '' then doRender := False;
-		if not FSnap.PreviewEnabled then doRender := False;
+		if Trim(FSnap.InputPath) = '' then doLoadPdf := False;
+		doPreview := doLoadPdf and FSnap.PreviewEnabled;
 
-		if doRender then
+		if doLoadPdf then
 		begin
 			lib := TLieselLib.Create;
 			lib.Load;
 			ctx := TLieselContext.Create(lib);
 			book := ctx.CreateBook;
 
-			// Batch all settings without generating previews, then enable previewing and
-			// trigger a single render.
-			book.SetPreviewing(False);
 			book.SetInputPdfPath(FSnap.InputPath);
 			book.LoadPdf;
-			book.SetDpiDensity(FSnap.DpiDensity);
+			FPageCount := book.GetPdfPageCount;
 
-			// Settings from both MainWindow and AdvancedWindow
-			book.SetGreyscale(FSnap.Greyscale);
-			book.SetDivide(FSnap.DividePages);
-			book.SetBooklet(FSnap.Booklet);
+			if doPreview then
+			begin
+				// Batch all settings without generating previews, then enable previewing and
+				// trigger a single render.
+				book.SetPreviewing(False);
+				book.SetDpiDensity(FSnap.DpiDensity);
 
-			if FSnap.UseRescale and (Trim(FSnap.RescaleSize) <> '') then
-				book.SetRescaleSize(FSnap.RescaleSize)
+				// Settings from both MainWindow and AdvancedWindow
+				book.SetGreyscale(FSnap.Greyscale);
+				book.SetDivide(FSnap.DividePages);
+				book.SetBooklet(FSnap.Booklet);
+
+				if FSnap.UseRescale and (Trim(FSnap.RescaleSize) <> '') then
+					book.SetRescaleSize(FSnap.RescaleSize)
+				else
+					book.ClearRescaleSize;
+
+				if FSnap.ThresholdEnabled then
+					book.SetThresholdLevel(FSnap.ThresholdLevel)
+				else
+					book.ClearThresholdLevel;
+
+				if FSnap.WidenCenterMargin then
+					book.SetWidenMarginsAmount(FSnap.WidenCenterMarginAmount)
+				else
+					book.SetWidenMarginsAmount(0);
+
+				if FSnap.CropEnabled then
+					book.SetCropPercentagesLRBT(FSnap.CropL, FSnap.CropR, FSnap.CropT, FSnap.CropB)
+				else
+					book.SetCropPercentagesLRBT(0, 0, 0, 0);
+
+				// Clamp preview page index to a valid range.
+				if FPageCount > 0 then
+				begin
+					// Booklet mode cannot preview the last page (it needs page+1).
+					if FSnap.Booklet and (FPageCount >= 2) then
+					begin
+						if FSnap.PreviewPageIndex0 > (FPageCount - 2) then
+							FSnap.PreviewPageIndex0 := FPageCount - 2;
+					end
+					else
+					begin
+						if FSnap.PreviewPageIndex0 > (FPageCount - 1) then
+							FSnap.PreviewPageIndex0 := FPageCount - 1;
+					end;
+				end
+				else
+					FSnap.PreviewPageIndex0 := 0;
+
+				book.SetPreviewPage(FSnap.PreviewPageIndex0);
+				book.SetPreviewing(True);
+				FJpeg := book.GetPreviewJpegBytes;
+			end
 			else
-				book.ClearRescaleSize;
-
-			if FSnap.ThresholdEnabled then
-				book.SetThresholdLevel(FSnap.ThresholdLevel)
-			else
-				book.ClearThresholdLevel;
-
-			if FSnap.WidenCenterMargin then
-				book.SetWidenMarginsAmount(FSnap.WidenCenterMarginAmount)
-			else
-				book.SetWidenMarginsAmount(0);
-
-			if FSnap.CropEnabled then
-				book.SetCropPercentagesLRBT(FSnap.CropL, FSnap.CropR, FSnap.CropT, FSnap.CropB)
-			else
-				book.SetCropPercentagesLRBT(0, 0, 0, 0);
-
-			book.SetPreviewPage(FSnap.PreviewPageIndex0);
-			book.SetPreviewing(True);
-			// Trigger exactly one preview render.
-			FJpeg := book.GetPreviewJpegBytes;
+			begin
+				SetLength(FJpeg, 0);
+			end;
 		end
 		else
 		begin
+			FPageCount := 0;
 			SetLength(FJpeg, 0);
 		end;
 	except
@@ -286,6 +317,9 @@ begin
 	end;
 
 	if (AdvancedWindow = nil) or (not AdvancedWindow.Visible) then Exit;
+
+	// Update UI with the current PDF page count (used by LastPageButton).
+	AdvancedWindow.SetPdfPageCount(FPageCount);
 
 	if (FError <> '') then
 		AdvancedWindow.SetPreviewJpegBytes(nil)
@@ -601,14 +635,12 @@ begin
 	begin
 		// No input -> clear preview.
 		AdvancedWindow.SetPreviewJpegBytes(nil);
+		AdvancedWindow.SetPdfPageCount(0);
 		Exit;
 	end;
-	// Preview explicitly disabled -> clear preview.
+	// Preview explicitly disabled -> clear preview, but still update page count.
 	if not AdvancedWindow.EnableDisablePreviewCheckbox.Checked then
-	begin
 		AdvancedWindow.SetPreviewJpegBytes(nil);
-		Exit;
-	end;
 
 	Inc(FPreviewLatestSeq);
 	FPreviewDebounceTimer.Enabled := False;

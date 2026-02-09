@@ -139,6 +139,8 @@ class Book {
 		void load_pdf();
 		void print();
 
+		uint32_t pdf_page_count() const;
+
 		// Only used by the GUI.
 		void set_previewing(bool previewing) { f_previewing = previewing; _generate_settings_preview(); }
 		void set_preview_page(uint32_t page_index);

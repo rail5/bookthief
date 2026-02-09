@@ -323,6 +323,18 @@ LieselStatus liesel_book_load_pdf(LieselBookHandle* b) {
 		return map_exception_to_status(e);
 	}
 }
+LieselStatus liesel_book_get_pdf_page_count(LieselBookHandle* b, uint32_t* out_page_count) {
+	if (!out_page_count) return LIESEL_E_INVALID_ARG;
+	*out_page_count = 0;
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		*out_page_count = b->book->pdf_page_count();
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
 
 LieselStatus liesel_book_set_previewing(LieselBookHandle* b, int enabled) {
 	if (!b || !b->book) return LIESEL_E_INVALID_ARG;

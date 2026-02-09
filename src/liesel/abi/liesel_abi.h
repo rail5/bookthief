@@ -115,6 +115,10 @@ LIESEL_ABI_API LieselStatus liesel_book_set_crop_percentages_lrbt(LieselBookHand
 // Execution
 LIESEL_ABI_API LieselStatus liesel_book_load_pdf(LieselBookHandle* b);
 
+// Returns the number of pages in the currently loaded PDF.
+// Requires that liesel_book_load_pdf() has succeeded.
+LIESEL_ABI_API LieselStatus liesel_book_get_pdf_page_count(LieselBookHandle* b, uint32_t* out_page_count);
+
 // --- Preview (GUI support) ---
 // Preview generation is entirely optional and does not affect printing output.
 // If previewing is enabled, certain setters will regenerate an in-memory preview image.

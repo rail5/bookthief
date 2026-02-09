@@ -74,6 +74,7 @@ type
 		procedure TopCropSliderChange(Sender: TObject);
 	private
 		FOnSettingsChanged: TNotifyEvent;
+		FPageCount: Cardinal;
 
 		// Fixed-width containers for right-aligned sliders (prevents “width 30” collapse)
 		FColorThresholdHost: TPanel;
@@ -92,6 +93,7 @@ type
 		procedure UpdatePreviewBoxBounds;
 		procedure UpdatePreviewVisibility;
 		function HasPreviewImage: Boolean;
+		function LastAllowedPreviewIndex0: Integer;
 		procedure NotifySettingsChanged;
 
 		procedure LayoutChanged; // call after any show/hide or size-affecting change
@@ -101,6 +103,7 @@ type
 	public
 		// Fired whenever any advanced setting that affects output/preview changes.
 		property OnSettingsChanged: TNotifyEvent read FOnSettingsChanged write FOnSettingsChanged;
+		procedure SetPdfPageCount(PageCount: Cardinal);
 		procedure SetPreviewJpegBytes(const Jpeg: TBytes);
 	end;
 
@@ -293,6 +296,58 @@ begin
 		FOnSettingsChanged(Self);
 end;
 
+function TAdvancedWindow.LastAllowedPreviewIndex0: Integer;
+begin
+	if FPageCount = 0 then Exit(0);
+
+	// When booklet mode is enabled (NoBookletCheckbox unchecked), the preview
+	// cannot target the last page because it pairs with the next page.
+	if (NoBookletCheckbox <> nil) and (not NoBookletCheckbox.Checked) then
+	begin
+		if FPageCount >= 2 then
+			Result := Integer(FPageCount) - 2
+		else
+			Result := 0;
+	end
+	else
+		Result := Integer(FPageCount) - 1;
+end;
+
+procedure TAdvancedWindow.SetPdfPageCount(PageCount: Cardinal);
+var
+	maxIdx: Integer;
+	posChanged: Boolean;
+begin
+	FPageCount := PageCount;
+
+	if LastPageButton <> nil then
+	begin
+		if FPageCount = 0 then
+			LastPageButton.Caption := '0'
+		else
+			LastPageButton.Caption := IntToStr(FPageCount);
+	end;
+
+	maxIdx := LastAllowedPreviewIndex0;
+	if (LeftRightNavigation <> nil) then
+	begin
+		LeftRightNavigation.Max := maxIdx;
+		// Clamp current position to valid range.
+		posChanged := False;
+		if LeftRightNavigation.Position > maxIdx then
+		begin
+			LeftRightNavigation.Position := maxIdx;
+			posChanged := True;
+		end;
+
+		if PreviewingPageLabel <> nil then
+			PreviewingPageLabel.Caption := Format('Previewing page: %d', [LeftRightNavigation.Position + 1]);
+
+		if posChanged then
+			NotifySettingsChanged;
+	end;
+end;
+
 procedure TAdvancedWindow.SetPreviewJpegBytes(const Jpeg: TBytes);
 var
 	ms: TMemoryStream;
@@ -338,6 +393,7 @@ end;
 
 procedure TAdvancedWindow.FormCreate(Sender: TObject);
 begin
+	FPageCount := 0;
 	// Make sure the preview area doesn't disappear when empty.
 	ImagePreviewPanel.AutoSize := False;
 	ImagePreviewPanel.Constraints.MinHeight := PREVIEW_MIN_H + ImagePreviewControlsPanel.Height;
@@ -370,6 +426,7 @@ begin
 
 	UpdatePreviewBoxBounds;
 	UpdatePreviewVisibility;
+	SetPdfPageCount(0);
 
 	{ BorderSpacing for checkboxes }
 	ColorThresholdCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
@@ -534,8 +591,14 @@ begin
 end;
 
 procedure TAdvancedWindow.LastPageButtonClick(Sender: TObject);
+var
+	idx: Integer;
 begin
-	// We don't currently know the PDF page count here; caller can clamp.
+	idx := LastAllowedPreviewIndex0;
+	if LeftRightNavigation <> nil then
+		LeftRightNavigation.Position := idx;
+	if PreviewingPageLabel <> nil then
+		PreviewingPageLabel.Caption := Format('Previewing page: %d', [idx + 1]);
 	NotifySettingsChanged;
 	UpdatePreviewVisibility;
 end;
@@ -554,6 +617,8 @@ end;
 
 procedure TAdvancedWindow.NoBookletCheckboxChange(Sender: TObject);
 begin
+	// Changing booklet mode affects which preview pages are valid.
+	SetPdfPageCount(FPageCount);
 	NotifySettingsChanged;
 end;
 

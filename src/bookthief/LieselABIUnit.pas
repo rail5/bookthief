@@ -90,6 +90,7 @@ type
 		liesel_book_set_crop_percentages_lrbt: function(b: PLieselBookHandle; l, r, t, bt: cuint8): TLieselStatus; cdecl;
 
 		liesel_book_load_pdf: function(b: PLieselBookHandle): TLieselStatus; cdecl;
+		liesel_book_get_pdf_page_count: function(b: PLieselBookHandle; out_page_count: pcuint32): TLieselStatus; cdecl;
 
 		// Preview (GUI support)
 		liesel_book_set_previewing: function(b: PLieselBookHandle; enabled: cint): TLieselStatus; cdecl;
@@ -218,6 +219,7 @@ var
 		Pointer(liesel_book_set_crop_percentages_lrbt) := TryGetProc('liesel_book_set_crop_percentages_lrbt');
 
 		Pointer(liesel_book_load_pdf) := TryGetProc('liesel_book_load_pdf');
+		Pointer(liesel_book_get_pdf_page_count) := TryGetProc('liesel_book_get_pdf_page_count');
 		Pointer(liesel_book_print) := TryGetProc('liesel_book_print');
 
 		Pointer(liesel_book_set_previewing) := TryGetProc('liesel_book_set_previewing');
@@ -261,6 +263,7 @@ var
 		RequireProc(Pointer(liesel_book_set_crop_percentages_lrbt), 'liesel_book_set_crop_percentages_lrbt');
 
 		RequireProc(Pointer(liesel_book_load_pdf), 'liesel_book_load_pdf');
+			RequireProc(Pointer(liesel_book_get_pdf_page_count), 'liesel_book_get_pdf_page_count');
 		RequireProc(Pointer(liesel_book_print), 'liesel_book_print');
 
 		RequireProc(Pointer(liesel_book_set_previewing), 'liesel_book_set_previewing');
