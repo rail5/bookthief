@@ -6,6 +6,20 @@ FPC ?= fpc
 SRCDIR := src
 BINDIR := bin
 
+# --- Version Info ---
+PARSECHANGELOG := $(shell command -v dpkg-parsechangelog 2> /dev/null)
+ifdef PARSECHANGELOG
+  VERSION := $(shell dpkg-parsechangelog -l debian/changelog --show-field version)
+  YEAR    := $(shell date +%Y -d@$(shell dpkg-parsechangelog -l debian/changelog --show-field timestamp))
+else
+  VERSION := 12.0.0
+  YEAR    := 2026
+endif
+
+MAJORVERSION := $(shell echo $(VERSION) | cut -d. -f1)
+MINORVERSION := $(shell echo $(VERSION) | cut -d. -f2)
+PATCHVERSION := $(shell echo $(VERSION) | cut -d. -f3)
+
 # --- C++ (Liesel) ---
 CXXFLAGS     := -Wall -Wextra -std=c++23 -O2 -s -MMD -MP
 INCLUDEFLAGS := $(shell pkg-config --cflags poppler-cpp GraphicsMagick++)
@@ -25,7 +39,11 @@ LIESEL       := $(BINDIR)/liesel
 # Shared library (core + ABI, no main.cpp)
 OBJS_LIESEL_CORE := $(patsubst $(SRCDIR)/liesel/%.cpp,$(BINDIR)/liesel-lib-objs/%.o,$(SRCS_LIESEL_CORE))
 OBJS_LIESEL_ABI  := $(patsubst $(SRCDIR)/liesel/abi/%.cpp,$(BINDIR)/liesel-lib-objs/abi/%.o,$(SRCS_LIESEL_ABI))
-LIESEL_SO        := $(BINDIR)/libliesel.so
+LIESEL_SOVERSION := 0
+LIESEL_REALNAME  := $(BINDIR)/libliesel.so.$(LIESEL_SOVERSION).$(VERSION)
+LIESEL_SO        := $(BINDIR)/libliesel.so.$(LIESEL_SOVERSION)
+
+LIESEL_SO_BASENAME := $(shell basename $(LIESEL_REALNAME))
 
 # --- Pascal (BookThief) ---
 FPC_LINKFLAGS ?= -k--as-needed -k-pie -k-z -krelro -k-z -know
@@ -41,20 +59,6 @@ FPCINCLUDES   := -Fi$(BINDIR)/lib/x86_64-linux \
 
 BOOKTHIEF    := $(BINDIR)/bookthief
 
-# --- Version Info ---
-PARSECHANGELOG := $(shell command -v dpkg-parsechangelog 2> /dev/null)
-ifdef PARSECHANGELOG
-  VERSION := $(shell dpkg-parsechangelog -l debian/changelog --show-field version)
-  YEAR    := $(shell date +%Y -d@$(shell dpkg-parsechangelog -l debian/changelog --show-field timestamp))
-else
-  VERSION := 12.0.0
-  YEAR    := 2026
-endif
-
-MAJORVERSION := $(shell echo $(VERSION) | cut -d. -f1)
-MINORVERSION := $(shell echo $(VERSION) | cut -d. -f2)
-PATCHVERSION := $(shell echo $(VERSION) | cut -d. -f3)
-
 # --- Targets ---
 all: $(LIESEL) $(LIESEL_SO) $(BOOKTHIEF)
 
@@ -69,10 +73,13 @@ $(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/liesel/version.h
 	$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) -c $< -o $@
 
 # --- Liesel Shared Library Build ---
-$(LIESEL_SO): $(OBJS_LIESEL_CORE) $(OBJS_LIESEL_ABI)
+$(LIESEL_SO): $(LIESEL_REALNAME)
+	ln -sf $(LIESEL_SO_BASENAME) $@
+
+$(LIESEL_REALNAME): $(OBJS_LIESEL_CORE) $(OBJS_LIESEL_ABI)
 	@mkdir -p "$(BINDIR)"
-	$(CXX) -shared -Wl,-soname,libliesel.so -o $@ $^ $(LDFLAGS)
-	@echo "Built libliesel.so version $(VERSION)"
+	$(CXX) -shared -Wl,-soname,$(LIESEL_SO_BASENAME) -o $@ $^ $(LDFLAGS)
+	@echo "Built $(LIESEL_SO_BASENAME)"
 
 $(BINDIR)/liesel-lib-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/liesel/version.h
 	@mkdir -p "$(BINDIR)/liesel-lib-objs"
