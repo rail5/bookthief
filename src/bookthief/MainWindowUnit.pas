@@ -86,6 +86,7 @@ type
 		FPreviewDebounceTimer: TTimer;
 		FPreviewLatestSeq: Cardinal;
 		FPreviewInFlight: Boolean;
+		FApplyingSettings: Boolean;
 		procedure AdvancedWindowClose(Sender: TObject; var CloseAction: TCloseAction);
 		procedure AdvancedSettingsChanged(Sender: TObject);
 		procedure RequestPreviewUpdateDebounced;
@@ -541,6 +542,7 @@ begin
 	FOutputPdfPath := '';
 	FPreviewLatestSeq := 0;
 	FPreviewInFlight := False;
+	FApplyingSettings := False;
 
 	RangeCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
 	SegmentCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
@@ -630,6 +632,7 @@ end;
 
 procedure TMainWindow.RequestPreviewUpdateDebounced;
 begin
+	if FApplyingSettings then Exit;
 	if (AdvancedWindow = nil) or (not AdvancedWindow.Visible) then Exit;
 	if Trim(FInputPdfPath) = '' then
 	begin
@@ -694,28 +697,219 @@ begin
 end;
 
 procedure TMainWindow.ImportCommandButtonClick(Sender: TObject);
+var
+	cmd: string;
+	lib: TLieselLib;
+	ctx: TLieselContext;
+	book: TLieselBook;
+	segSize: Cardinal;
+	rescaleSize: string;
+	ranges: string;
+	thresholdLevel: Byte;
+	cropL, cropR, cropT, cropB: Byte;
+	widenAmt: Cardinal;
+	bookletEnabled: Boolean;
+	divideEnabled: Boolean;
+	importedInput: string;
 begin
 	ImportExportCommandModal := TImportExportCommandModal.Create(Self);
 	ImportExportCommandModal.SetMode(ieImport);
 	try
-		ImportExportCommandModal.ShowModal;
+		if ImportExportCommandModal.ShowModal <> mrOk then Exit;
+		cmd := Trim(ImportExportCommandModal.CommandText);
 	finally
 		ImportExportCommandModal.Free;
 	end;
-	{ After modal is closed, retrieve the command string from the textbox and apply settings }
+
+	if cmd = '' then Exit;
+
+	lib := nil;
+	ctx := nil;
+	book := nil;
+	try
+		lib := TLieselLib.Create;
+		lib.Load;
+		ctx := TLieselContext.Create(lib);
+		book := ctx.CreateBook;
+
+		book.ImportSettingsFromCommandString(cmd);
+
+		// Update the selected input file too, so preview/printing reflect the imported command.
+		// (This also makes Import visibly "do something" even if only paths differ.)
+		if book.TryGetInputPdfPath(importedInput) and (Trim(importedInput) <> '') then
+		begin
+			FInputPdfPath := importedInput;
+			FileInputButton.Caption := ExtractFileName(importedInput);
+			SaveDialog.FileName := ChangeFileExt(ExtractFileName(FInputPdfPath), '') + '-out.pdf';
+		end;
+
+		FApplyingSettings := True;
+		try
+			// MainWindow settings
+			QualitySlider.Position := EnsureRange(Integer(book.GetDpiDensity), QualitySlider.Min, QualitySlider.Max);
+			GreyscaleCheckbox.Checked := book.GetGreyscale;
+
+			if book.TryGetSegmentSize(segSize) then
+			begin
+				SegmentCheckbox.Checked := True;
+				SegmentInputBox.Value := Integer(segSize);
+			end
+			else
+				SegmentCheckbox.Checked := False;
+
+			if book.TryGetRescaleSize(rescaleSize) and (Trim(rescaleSize) <> '') then
+			begin
+				RescaleCheckbox.Checked := True;
+				RescaleDropdownBox.Text := rescaleSize;
+			end
+			else
+				RescaleCheckbox.Checked := False;
+
+			if book.TryGetPageRanges(ranges) and (Trim(ranges) <> '') then
+			begin
+				RangeCheckbox.Checked := True;
+				RangeInputTextbox.Text := ranges;
+			end
+			else
+			begin
+				RangeCheckbox.Checked := False;
+				RangeInputTextbox.Text := '';
+			end;
+
+			// Apply panel visibility/layout updates without triggering previews mid-batch.
+			RangeCheckboxChange(Self);
+			SegmentCheckboxChange(Self);
+			RescaleCheckboxChange(Self);
+
+			// AdvancedWindow settings
+			if Assigned(AdvancedWindow) then
+			begin
+				divideEnabled := book.GetDivide;
+				bookletEnabled := book.GetBooklet;
+				AdvancedWindow.SplitPagesCheckbox.Checked := divideEnabled;
+				AdvancedWindow.NoBookletCheckbox.Checked := not bookletEnabled;
+
+				if book.TryGetThresholdLevel(thresholdLevel) then
+				begin
+					AdvancedWindow.ColorThresholdCheckbox.Checked := True;
+					AdvancedWindow.ColorThresholdSlider.Position := Integer(thresholdLevel);
+				end
+				else
+					AdvancedWindow.ColorThresholdCheckbox.Checked := False;
+
+				widenAmt := book.GetWidenMarginsAmount;
+				AdvancedWindow.CenterMarginCheckbox.Checked := widenAmt > 0;
+				AdvancedWindow.CenterMarginSlider.Position := Integer(widenAmt);
+
+				if book.TryGetCropPercentagesLRBT(cropL, cropR, cropT, cropB) then
+				begin
+					AdvancedWindow.CropCheckbox.Checked := True;
+					AdvancedWindow.LeftCropSlider.Position := Integer(cropL);
+					AdvancedWindow.RightCropSlider.Position := Integer(cropR);
+					AdvancedWindow.TopCropSlider.Position := Integer(cropT);
+					AdvancedWindow.BottomCropSlider.Position := Integer(cropB);
+				end
+				else
+					AdvancedWindow.CropCheckbox.Checked := False;
+			end;
+		finally
+			FApplyingSettings := False;
+		end;
+
+		RequestPreviewUpdateDebounced;
+	except
+		on E: Exception do
+			MessageDlg('Import failed', E.Message, mtError, [mbOK], 0);
+	end;
+
+	FreeAndNil(book);
+	FreeAndNil(ctx);
+	FreeAndNil(lib);
 end;
 
 procedure TMainWindow.ExportCommandButtonClick(Sender: TObject);
+var
+	lib: TLieselLib;
+	ctx: TLieselContext;
+	book: TLieselBook;
+	cmd: string;
 begin
-	ImportExportCommandModal := TImportExportCommandModal.Create(Self);
-	ImportExportCommandModal.SetMode(ieExport);
+	lib := nil;
+	ctx := nil;
+	book := nil;
+	cmd := '';
 	try
-		{ Generate export command string from current settings and set it to the textbox }
-		// ImportExportCommandModal.LieselCommandInputTextbox.Text := GenerateExportCommandString();
-		ImportExportCommandModal.ShowModal;
-	finally
-		ImportExportCommandModal.Free;
+		lib := TLieselLib.Create;
+		lib.Load;
+		ctx := TLieselContext.Create(lib);
+		book := ctx.CreateBook;
+
+		// MainWindow settings
+		if Trim(FInputPdfPath) <> '' then
+			book.SetInputPdfPath(FInputPdfPath);
+		book.SetDpiDensity(Cardinal(QualitySlider.Position));
+		book.SetGreyscale(GreyscaleCheckbox.Checked);
+
+		if SegmentCheckbox.Checked then
+			book.SetSegmentSize(Cardinal(SegmentInputBox.Value))
+		else
+			book.ClearSegmentSize;
+
+		if RescaleCheckbox.Checked and (Trim(RescaleDropdownBox.Text) <> '') then
+			book.SetRescaleSize(RescaleDropdownBox.Text)
+		else
+			book.ClearRescaleSize;
+
+		if RangeCheckbox.Checked and (Trim(RangeInputTextbox.Text) <> '') then
+			book.SetPageRanges(RangeInputTextbox.Text)
+		else
+			book.ClearPageRanges;
+
+		// AdvancedWindow settings
+		if Assigned(AdvancedWindow) then
+		begin
+			book.SetDivide(AdvancedWindow.SplitPagesCheckbox.Checked);
+			book.SetBooklet(not AdvancedWindow.NoBookletCheckbox.Checked);
+
+			if AdvancedWindow.ColorThresholdCheckbox.Checked then
+				book.SetThresholdLevel(Byte(AdvancedWindow.ColorThresholdSlider.Position))
+			else
+				book.ClearThresholdLevel;
+
+			if AdvancedWindow.CenterMarginCheckbox.Checked then
+				book.SetWidenMarginsAmount(Cardinal(AdvancedWindow.CenterMarginSlider.Position))
+			else
+				book.SetWidenMarginsAmount(0);
+
+			if AdvancedWindow.CropCheckbox.Checked then
+				book.SetCropPercentagesLRBT(
+					Byte(AdvancedWindow.LeftCropSlider.Position),
+					Byte(AdvancedWindow.RightCropSlider.Position),
+					Byte(AdvancedWindow.TopCropSlider.Position),
+					Byte(AdvancedWindow.BottomCropSlider.Position)
+				)
+			else
+				book.SetCropPercentagesLRBT(0, 0, 0, 0);
+		end;
+
+		cmd := book.ExportSettingsAsCommandString;
+
+		ImportExportCommandModal := TImportExportCommandModal.Create(Self);
+		ImportExportCommandModal.SetMode(ieExport);
+		ImportExportCommandModal.CommandText := cmd;
+		try
+			ImportExportCommandModal.ShowModal;
+		finally
+			ImportExportCommandModal.Free;
+		end;
+	except
+		on E: Exception do
+			MessageDlg('Export failed', E.Message, mtError, [mbOK], 0);
 	end;
+
+	FreeAndNil(book);
+	FreeAndNil(ctx);
+	FreeAndNil(lib);
 end;
 
 procedure TMainWindow.LibgenButtonClick(Sender: TObject);

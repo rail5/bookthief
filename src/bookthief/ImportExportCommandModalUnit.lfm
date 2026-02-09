@@ -10,6 +10,7 @@ object ImportExportCommandModal: TImportExportCommandModal
 	ClientWidth = 409
 	OnResize = FormResize
 	OnShow = FormShow
+	OnClose = FormClose
 	OnKeyDown = FormKeyDown
 	object ImportExportLabel: TLabel
 		Left = 20

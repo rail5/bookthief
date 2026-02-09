@@ -107,6 +107,11 @@ class Book {
 		void set_input_pdf_path(const std::string_view& path);
 		void set_output_pdf_path(const std::string_view& path);
 
+		std::string get_input_pdf_path() const { return input_pdf_path.string(); }
+		bool has_input_pdf_path() const { return !input_pdf_path.empty(); }
+		std::string get_output_pdf_path() const { return output_pdf_path.string(); }
+		bool has_output_pdf_path() const { return !output_pdf_path.empty(); }
+
 		void set_verbose(bool verbose) { f_verbose = verbose; }
 		void set_greyscale(bool greyscale) { f_greyscale = greyscale; _generate_settings_preview(); }
 		void set_divide(bool divide) { f_divide = divide; _generate_settings_preview(); }

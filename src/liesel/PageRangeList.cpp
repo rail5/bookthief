@@ -39,6 +39,26 @@ Liesel::PageRange::PageRange(const std::string_view& range_str) {
 	m_end_page = static_cast<uint32_t>(std::stoi(std::string(range_str.substr(hyphen_pos + 1))));
 }
 
+std::string Liesel::PageRange::to_string() const {
+	std::string result;
+	if (m_start_page.has_value()
+		&& m_end_page.has_value()
+		&& m_start_page.value() == m_end_page.value()
+	) {
+		// Single page "range"
+		// Return a string like "5"
+		result = std::to_string(m_start_page.value());
+		return result;
+	}
+
+	// Return a string like:
+	// "5-10", "5-", or "-10"
+	if (m_start_page.has_value()) result += std::to_string(m_start_page.value());
+	result += "-";
+	if (m_end_page.has_value()) result += std::to_string(m_end_page.value());
+	return result;
+}
+
 Liesel::PageRangeList::PageRangeList(const std::string_view& range_str) {
 	// First, split by commas
 	std::vector<std::string_view> parts;
@@ -55,4 +75,13 @@ Liesel::PageRangeList::PageRangeList(const std::string_view& range_str) {
 	for (const auto& part : parts) {
 		m_ranges.emplace_back(part);
 	}
+}
+
+std::string Liesel::PageRangeList::to_string() const {
+	std::string result;
+	for (const auto& range : m_ranges) {
+		if (!result.empty()) result += ",";
+		result += range.to_string();
+	}
+	return result;
 }

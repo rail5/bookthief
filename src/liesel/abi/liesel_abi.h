@@ -82,6 +82,9 @@ LIESEL_ABI_API void liesel_book_destroy(LieselBookHandle* b);
 LIESEL_ABI_API const char* liesel_book_last_error(LieselBookHandle* b);
 
 // Configuration (based on setters in src/liesel/Book.h)
+LIESEL_ABI_API LieselStatus liesel_book_export_settings_as_commandstring(LieselBookHandle* b, char** out_string_utf8);
+LIESEL_ABI_API LieselStatus liesel_book_import_settings_from_commandstring(LieselBookHandle* b, const char* options_str_utf8);
+
 LIESEL_ABI_API LieselStatus liesel_book_set_input_pdf_path(LieselBookHandle* b, const char* path_utf8);
 LIESEL_ABI_API LieselStatus liesel_book_set_output_pdf_path(LieselBookHandle* b, const char* path_utf8);
 
@@ -111,6 +114,66 @@ LIESEL_ABI_API LieselStatus liesel_book_clear_page_ranges(LieselBookHandle* b);
 
 LIESEL_ABI_API LieselStatus liesel_book_set_crop_percentages(LieselBookHandle* b, const char* crop_utf8);
 LIESEL_ABI_API LieselStatus liesel_book_set_crop_percentages_lrbt(LieselBookHandle* b, uint8_t l, uint8_t r, uint8_t t, uint8_t bt);
+
+// --- Configuration getters (GUI support) ---
+// Conventions:
+// - Boolean outputs use int (0/1)
+// - Optional values use an out_is_set int (0/1)
+// - String outputs are allocated by the ABI (malloc) and must be freed via liesel_free()
+LIESEL_ABI_API LieselStatus liesel_book_get_verbose(LieselBookHandle* b, int* out_enabled);
+LIESEL_ABI_API LieselStatus liesel_book_get_greyscale(LieselBookHandle* b, int* out_enabled);
+LIESEL_ABI_API LieselStatus liesel_book_get_divide(LieselBookHandle* b, int* out_enabled);
+LIESEL_ABI_API LieselStatus liesel_book_get_booklet(LieselBookHandle* b, int* out_enabled);
+LIESEL_ABI_API LieselStatus liesel_book_get_landscape(LieselBookHandle* b, int* out_enabled);
+
+LIESEL_ABI_API LieselStatus liesel_book_get_dpi_density(LieselBookHandle* b, uint32_t* out_dpi);
+
+LIESEL_ABI_API LieselStatus liesel_book_get_threshold_level(
+	LieselBookHandle* b,
+	int* out_is_set,
+	uint8_t* out_level_0_100
+);
+
+LIESEL_ABI_API LieselStatus liesel_book_get_segment_size(
+	LieselBookHandle* b,
+	int* out_is_set,
+	uint32_t* out_pages_per_segment
+);
+
+LIESEL_ABI_API LieselStatus liesel_book_get_widen_margins_amount(LieselBookHandle* b, uint32_t* out_amount);
+
+LIESEL_ABI_API LieselStatus liesel_book_get_rescale_size(
+	LieselBookHandle* b,
+	int* out_is_set,
+	char** out_size_utf8
+);
+
+LIESEL_ABI_API LieselStatus liesel_book_get_page_ranges(
+	LieselBookHandle* b,
+	int* out_is_set,
+	char** out_ranges_utf8
+);
+
+LIESEL_ABI_API LieselStatus liesel_book_get_crop_percentages_lrbt(
+	LieselBookHandle* b,
+	int* out_enabled,
+	uint8_t* out_l,
+	uint8_t* out_r,
+	uint8_t* out_t,
+	uint8_t* out_bt
+);
+
+LIESEL_ABI_API LieselStatus liesel_book_get_input_pdf_path(
+	LieselBookHandle* b,
+	int* out_is_set,
+	char** out_path_utf8
+);
+
+LIESEL_ABI_API LieselStatus liesel_book_get_output_pdf_path(
+	LieselBookHandle* b,
+	int* out_is_set,
+	char** out_path_utf8
+);
 
 // Execution
 LIESEL_ABI_API LieselStatus liesel_book_load_pdf(LieselBookHandle* b);
