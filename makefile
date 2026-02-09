@@ -7,7 +7,7 @@ SRCDIR   := src
 BINDIR   := bin
 
 # --- C++ (Liesel) ---
-CXXFLAGS     ?= -Wall -Wextra -std=c++23 -O2 -s -MMD -MP
+CXXFLAGS     := -Wall -Wextra -std=c++23 -O2 -s -MMD -MP
 INCLUDEFLAGS := $(shell pkg-config --cflags poppler-cpp GraphicsMagick++)
 LDFLAGS      := $(shell pkg-config --libs poppler-cpp GraphicsMagick++) -lhpdf
 
