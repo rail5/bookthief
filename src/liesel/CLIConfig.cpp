@@ -106,7 +106,8 @@ void Liesel::ConfigureBookFromCLIOptions(Liesel::Book* book, const XGetOpt::Opti
 	try {
 		book->set_input_pdf_path(non_option_args[0]);
 	} catch (const std::exception& e) {
-		throw std::runtime_error(e.what());
+		if (strict) throw std::runtime_error(e.what());
+		// If not in strict mode, allow missing/invalid input path
 	}
 
 	if (non_option_args.size() == 1) {
@@ -118,7 +119,8 @@ void Liesel::ConfigureBookFromCLIOptions(Liesel::Book* book, const XGetOpt::Opti
 	try {
 		book->set_output_pdf_path(non_option_args[1]);
 	} catch (const std::exception& e) {
-		throw std::runtime_error(e.what());
+		if (strict) throw std::runtime_error(e.what());
+		// If not in strict mode, allow missing/invalid output path
 	}
 }
 
