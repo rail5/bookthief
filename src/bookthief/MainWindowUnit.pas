@@ -8,7 +8,7 @@ uses
 	Classes, SysUtils, Types, Math, Forms, Controls, Graphics, Dialogs, Menus, StdCtrls,
 	ComCtrls, ExtCtrls, LCLType, Spin, LCLIntf,
 	ImportExportCommandModalUnit, AdvancedWindowUnit, ProgressWindowUnit,
-	MinSizeFormUnit;
+	MinSizeFormUnit, LieselUnit, LieselABIUnit;
 
 const
 	BORDER_SPACING_BOTTOM = 40;
@@ -79,6 +79,8 @@ type
 		procedure FormConstrainedResize(Sender: TObject; var MinWidth, MinHeight,
 			MaxWidth, MaxHeight: TConstraintSize);
 	private
+		FInputPdfPath: string;
+		FOutputPdfPath: string;
 		procedure AdvancedWindowClose(Sender: TObject; var CloseAction: TCloseAction);
 		procedure LayoutChanged; // call after any show/hide or size-affecting change
 	protected
@@ -92,6 +94,139 @@ var
 implementation
 
 {$R *.lfm}
+
+type
+	TPrintJobThread = class(TThread)
+	private
+		FInputPath: string;
+		FOutputPath: string;
+		FLib: TLieselLib;
+		FCtx: TLieselContext;
+		FBook: TLieselBook;
+
+		FUiPercent: Cardinal;
+		FUiMessage: string;
+		FUiDone: Boolean;
+		FUiError: string;
+		FUiCancelledMsg: string;
+
+		procedure UiProgress;
+		procedure UiDone;
+		procedure UiCancelled;
+		procedure UiError;
+		procedure HandleProgress(Sender: TObject; Event: TLieselBookProgressEvent;
+			SegmentIndex, PageIndex, Percent: Cardinal; const MessageUtf8: string);
+		function HandleCancel(Sender: TObject): Boolean;
+	protected
+		procedure Execute; override;
+	public
+		constructor Create(const AInputPath, AOutputPath: string);
+		destructor Destroy; override;
+	end;
+
+constructor TPrintJobThread.Create(const AInputPath, AOutputPath: string);
+begin
+	inherited Create(True);
+	FreeOnTerminate := True;
+	FInputPath := AInputPath;
+	FOutputPath := AOutputPath;
+	FLib := nil;
+	FCtx := nil;
+	FBook := nil;
+	FUiPercent := 0;
+	FUiMessage := '';
+	FUiDone := False;
+	FUiError := '';
+	Start;
+end;
+
+destructor TPrintJobThread.Destroy;
+begin
+	FreeAndNil(FBook);
+	FreeAndNil(FCtx);
+	FreeAndNil(FLib);
+	inherited Destroy;
+end;
+
+procedure TPrintJobThread.UiProgress;
+begin
+	if Assigned(ProgressWindow) then
+		ProgressWindow.SetProgress(FUiPercent, FUiMessage);
+end;
+
+procedure TPrintJobThread.UiDone;
+begin
+	if Assigned(ProgressWindow) then
+		ProgressWindow.MarkDone('Done.');
+end;
+
+procedure TPrintJobThread.UiCancelled;
+begin
+	if Assigned(ProgressWindow) then
+		ProgressWindow.MarkCancelled(FUiCancelledMsg);
+end;
+
+procedure TPrintJobThread.UiError;
+begin
+	if Assigned(ProgressWindow) then
+		ProgressWindow.MarkError(FUiError);
+end;
+
+procedure TPrintJobThread.HandleProgress(Sender: TObject; Event: TLieselBookProgressEvent;
+	SegmentIndex, PageIndex, Percent: Cardinal; const MessageUtf8: string);
+begin
+	FUiPercent := Percent;
+	FUiMessage := MessageUtf8;
+	Queue(@UiProgress);
+end;
+
+function TPrintJobThread.HandleCancel(Sender: TObject): Boolean;
+begin
+	if Assigned(ProgressWindow) then
+		Result := ProgressWindow.CancelRequested
+	else
+		Result := False;
+end;
+
+procedure TPrintJobThread.Execute;
+begin
+	try
+		FLib := TLieselLib.Create;
+		FLib.Load;
+		FCtx := TLieselContext.Create(FLib);
+		FBook := FCtx.CreateBook;
+
+		FBook.OnProgress := @HandleProgress;
+		FBook.OnCancel := @HandleCancel;
+
+		FBook.SetInputPdfPath(FInputPath);
+		FBook.SetOutputPdfPath(FOutputPath);
+		FBook.LoadPdf;
+		FBook.Print;
+
+		FUiDone := True;
+		Synchronize(@UiDone);
+	except
+		on E: ELieselError do
+		begin
+			if E.Status = LIESEL_E_CANCELLED then
+			begin
+				FUiCancelledMsg := 'Cancelled.';
+				Synchronize(@UiCancelled);
+			end
+			else
+			begin
+				FUiError := E.Message;
+				Synchronize(@UiError);
+			end;
+		end;
+		on E: Exception do
+		begin
+			FUiError := E.Message;
+			Synchronize(@UiError);
+		end;
+	end;
+end;
 
 { TMainWindow }
 
@@ -155,6 +290,9 @@ end;
 
 procedure TMainWindow.FormCreate(Sender: TObject);
 begin
+	FInputPdfPath := '';
+	FOutputPdfPath := '';
+
 	RangeCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
 	SegmentCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
 	RescaleCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
@@ -194,7 +332,9 @@ begin
 	begin
 		{ Set the button caption to the file BASENAME (not full path) }
 		FileInputButton.Caption := ExtractFileName(OpenDialog.FileName);
-		{ OpenDialog.FileName (the full path) should be stored to pass to Liesel later }
+		FInputPdfPath := OpenDialog.FileName;
+		// Provide a helpful default output name.
+		SaveDialog.FileName := ChangeFileExt(ExtractFileName(FInputPdfPath), '') + '-out.pdf';
 	end;
 end;
 
@@ -273,13 +413,25 @@ end;
 
 procedure TMainWindow.SaveButtonClick(Sender: TObject);
 begin
+	if FInputPdfPath = '' then
+	begin
+		MessageDlg('No input selected', 'Please choose an input PDF first.', mtWarning, [mbOK], 0);
+		Exit;
+	end;
+
 	if SaveDialog.Execute then
 	begin
-		// Implement saving functionality here using SaveDialog.FileName
-		// DEMO: Display ProgressWindow
-		if not Assigned(ProgressWindow) then
-			ProgressWindow := TProgressWindow.Create(Self);
-		ProgressWindow.Show;
+		FOutputPdfPath := SaveDialog.FileName;
+
+		if Assigned(ProgressWindow) then
+		begin
+			ProgressWindow.ResetForJob;
+			ProgressWindow.Show;
+			ProgressWindow.BringToFront;
+		end;
+
+		// Run in background so the UI stays responsive.
+		TPrintJobThread.Create(FInputPdfPath, FOutputPdfPath);
 	end;
 end;
 
