@@ -66,6 +66,8 @@ type
 		procedure ExportCommandButtonClick(Sender: TObject);
 		procedure FileInputButtonClick(Sender: TObject);
 		procedure GreyscaleCheckboxChange(Sender: TObject);
+		procedure QualitySliderChange(Sender: TObject);
+		procedure RescaleDropdownBoxChange(Sender: TObject);
 		procedure ImportCommandButtonClick(Sender: TObject);
 		procedure LibgenButtonClick(Sender: TObject);
 		procedure LoadSettingsButtonClick(Sender: TObject);
@@ -81,7 +83,13 @@ type
 	private
 		FInputPdfPath: string;
 		FOutputPdfPath: string;
+		FPreviewDebounceTimer: TTimer;
+		FPreviewLatestSeq: Cardinal;
+		FPreviewInFlight: Boolean;
 		procedure AdvancedWindowClose(Sender: TObject; var CloseAction: TCloseAction);
+		procedure AdvancedSettingsChanged(Sender: TObject);
+		procedure RequestPreviewUpdateDebounced;
+		procedure PreviewDebounceTimerTick(Sender: TObject);
 		procedure LayoutChanged; // call after any show/hide or size-affecting change
 	protected
 		procedure GetRequiredClientSize(out ReqClientW, ReqClientH: Integer); override;
@@ -136,6 +144,154 @@ type
 			AUseRescale: Boolean; const ARescaleSize: string);
 		destructor Destroy; override;
 	end;
+
+	TPreviewSnapshot = record
+		InputPath: string;
+		PreviewEnabled: Boolean;
+		PreviewPageIndex0: Cardinal;
+		DpiDensity: Cardinal;
+		Greyscale: Boolean;
+		UseRescale: Boolean;
+		RescaleSize: string;
+		DividePages: Boolean;
+		Booklet: Boolean;
+		ThresholdEnabled: Boolean;
+		ThresholdLevel: Byte;
+		WidenCenterMargin: Boolean;
+		WidenCenterMarginAmount: Cardinal;
+		CropEnabled: Boolean;
+		CropL: Byte;
+		CropR: Byte;
+		CropT: Byte;
+		CropB: Byte;
+	end;
+
+	TPreviewRenderThread = class(TThread)
+	private
+		FSeq: Cardinal;
+		FSnap: TPreviewSnapshot;
+		FJpeg: TBytes;
+		FError: string;
+		procedure UiApply;
+	protected
+		procedure Execute; override;
+	public
+		constructor Create(ASeq: Cardinal; const ASnap: TPreviewSnapshot);
+	end;
+
+constructor TPreviewRenderThread.Create(ASeq: Cardinal; const ASnap: TPreviewSnapshot);
+begin
+	inherited Create(True);
+	FreeOnTerminate := True;
+	FSeq := ASeq;
+	FSnap := ASnap;
+	SetLength(FJpeg, 0);
+	FError := '';
+	Start;
+end;
+
+procedure TPreviewRenderThread.Execute;
+var
+	lib: TLieselLib;
+	ctx: TLieselContext;
+	book: TLieselBook;
+	doRender: Boolean;
+begin
+	lib := nil;
+	ctx := nil;
+	book := nil;
+	doRender := True;
+	try
+		if Trim(FSnap.InputPath) = '' then doRender := False;
+		if not FSnap.PreviewEnabled then doRender := False;
+
+		if doRender then
+		begin
+			lib := TLieselLib.Create;
+			lib.Load;
+			ctx := TLieselContext.Create(lib);
+			book := ctx.CreateBook;
+
+			// Batch all settings without generating previews, then enable previewing and
+			// trigger a single render.
+			book.SetPreviewing(False);
+			book.SetInputPdfPath(FSnap.InputPath);
+			book.LoadPdf;
+			book.SetDpiDensity(FSnap.DpiDensity);
+
+			// Settings from both MainWindow and AdvancedWindow
+			book.SetGreyscale(FSnap.Greyscale);
+			book.SetDivide(FSnap.DividePages);
+			book.SetBooklet(FSnap.Booklet);
+
+			if FSnap.UseRescale and (Trim(FSnap.RescaleSize) <> '') then
+				book.SetRescaleSize(FSnap.RescaleSize)
+			else
+				book.ClearRescaleSize;
+
+			if FSnap.ThresholdEnabled then
+				book.SetThresholdLevel(FSnap.ThresholdLevel)
+			else
+				book.ClearThresholdLevel;
+
+			if FSnap.WidenCenterMargin then
+				book.SetWidenMarginsAmount(FSnap.WidenCenterMarginAmount)
+			else
+				book.SetWidenMarginsAmount(0);
+
+			if FSnap.CropEnabled then
+				book.SetCropPercentagesLRBT(FSnap.CropL, FSnap.CropR, FSnap.CropT, FSnap.CropB)
+			else
+				book.SetCropPercentagesLRBT(0, 0, 0, 0);
+
+			book.SetPreviewPage(FSnap.PreviewPageIndex0);
+			book.SetPreviewing(True);
+			// Trigger exactly one preview render.
+			FJpeg := book.GetPreviewJpegBytes;
+		end
+		else
+		begin
+			SetLength(FJpeg, 0);
+		end;
+	except
+		on E: Exception do
+			FError := E.Message;
+	end;
+	try
+		Synchronize(@UiApply);
+	finally
+		FreeAndNil(book);
+		FreeAndNil(ctx);
+		FreeAndNil(lib);
+	end;
+end;
+
+procedure TPreviewRenderThread.UiApply;
+begin
+	// Always clear the in-flight flag; otherwise a stale render can permanently
+	// block future preview updates (common when dragging sliders).
+	if MainWindow <> nil then
+		MainWindow.FPreviewInFlight := False;
+
+	// Drop stale renders, but still trigger a follow-up if newer changes exist.
+	if (MainWindow = nil) then Exit;
+	if (MainWindow.FPreviewLatestSeq <> FSeq) then
+	begin
+		if (MainWindow.FPreviewDebounceTimer <> nil) and (AdvancedWindow <> nil) and AdvancedWindow.Visible then
+		begin
+			MainWindow.FPreviewDebounceTimer.Enabled := False;
+			MainWindow.FPreviewDebounceTimer.Enabled := True;
+		end;
+		Exit;
+	end;
+
+	if (AdvancedWindow = nil) or (not AdvancedWindow.Visible) then Exit;
+
+	if (FError <> '') then
+		AdvancedWindow.SetPreviewJpegBytes(nil)
+	else
+		AdvancedWindow.SetPreviewJpegBytes(FJpeg);
+end;
 
 constructor TPrintJobThread.Create(const AInputPath, AOutputPath: string;
 	ADpiDensity: Cardinal;
@@ -349,11 +505,22 @@ procedure TMainWindow.FormCreate(Sender: TObject);
 begin
 	FInputPdfPath := '';
 	FOutputPdfPath := '';
+	FPreviewLatestSeq := 0;
+	FPreviewInFlight := False;
 
 	RangeCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
 	SegmentCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
 	RescaleCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
 	GreyscaleCheckbox.BorderSpacing.Bottom := BORDER_SPACING_BOTTOM;
+
+	// Debounced async preview updates
+	FPreviewDebounceTimer := TTimer.Create(Self);
+	FPreviewDebounceTimer.Enabled := False;
+	FPreviewDebounceTimer.Interval := 150;
+	FPreviewDebounceTimer.OnTimer := @PreviewDebounceTimerTick;
+
+	QualitySlider.OnChange := @QualitySliderChange;
+	RescaleDropdownBox.OnChange := @RescaleDropdownBoxChange;
 
 	EnsureSizeAtLeastMinimum;
 end;
@@ -364,6 +531,7 @@ begin
 	if Assigned(AdvancedWindow) then
 	begin
 		AdvancedWindow.OnClose := @AdvancedWindowClose;
+		AdvancedWindow.OnSettingsChanged := @AdvancedSettingsChanged;
 		AdvancedWindow.Hide;
 	end;
 
@@ -380,7 +548,7 @@ end;
 
 procedure TMainWindow.GreyscaleCheckboxChange(Sender: TObject);
 begin
-
+	RequestPreviewUpdateDebounced;
 end;
 
 procedure TMainWindow.FileInputButtonClick(Sender: TObject);
@@ -392,6 +560,7 @@ begin
 		FInputPdfPath := OpenDialog.FileName;
 		// Provide a helpful default output name.
 		SaveDialog.FileName := ChangeFileExt(ExtractFileName(FInputPdfPath), '') + '-out.pdf';
+		RequestPreviewUpdateDebounced;
 	end;
 end;
 
@@ -407,6 +576,89 @@ begin
 		AdvancedWindow.Show
 	else
 		AdvancedWindow.Hide;
+	RequestPreviewUpdateDebounced;
+end;
+
+procedure TMainWindow.QualitySliderChange(Sender: TObject);
+begin
+	RequestPreviewUpdateDebounced;
+end;
+
+procedure TMainWindow.RescaleDropdownBoxChange(Sender: TObject);
+begin
+	RequestPreviewUpdateDebounced;
+end;
+
+procedure TMainWindow.AdvancedSettingsChanged(Sender: TObject);
+begin
+	RequestPreviewUpdateDebounced;
+end;
+
+procedure TMainWindow.RequestPreviewUpdateDebounced;
+begin
+	if (AdvancedWindow = nil) or (not AdvancedWindow.Visible) then Exit;
+	if Trim(FInputPdfPath) = '' then
+	begin
+		// No input -> clear preview.
+		AdvancedWindow.SetPreviewJpegBytes(nil);
+		Exit;
+	end;
+	// Preview explicitly disabled -> clear preview.
+	if not AdvancedWindow.EnableDisablePreviewCheckbox.Checked then
+	begin
+		AdvancedWindow.SetPreviewJpegBytes(nil);
+		Exit;
+	end;
+
+	Inc(FPreviewLatestSeq);
+	FPreviewDebounceTimer.Enabled := False;
+	FPreviewDebounceTimer.Enabled := True;
+end;
+
+procedure TMainWindow.PreviewDebounceTimerTick(Sender: TObject);
+var
+	seq: Cardinal;
+	snap: TPreviewSnapshot;
+begin
+	FPreviewDebounceTimer.Enabled := False;
+	if (AdvancedWindow = nil) or (not AdvancedWindow.Visible) then Exit;
+	if FPreviewInFlight then
+	begin
+		// A render is currently running; try again shortly.
+		FPreviewDebounceTimer.Enabled := True;
+		Exit;
+	end;
+
+	seq := FPreviewLatestSeq;
+
+	// Snapshot all state on the UI thread.
+	snap := Default(TPreviewSnapshot);
+	snap.InputPath := FInputPdfPath;
+	snap.DpiDensity := Cardinal(QualitySlider.Position);
+	snap.Greyscale := GreyscaleCheckbox.Checked;
+	snap.UseRescale := RescaleCheckbox.Checked;
+	snap.RescaleSize := RescaleDropdownBox.Text;
+
+	snap.PreviewEnabled := AdvancedWindow.EnableDisablePreviewCheckbox.Checked;
+	snap.PreviewPageIndex0 := Cardinal(AdvancedWindow.LeftRightNavigation.Position);
+
+	snap.DividePages := AdvancedWindow.SplitPagesCheckbox.Checked;
+	snap.Booklet := not AdvancedWindow.NoBookletCheckbox.Checked;
+
+	snap.ThresholdEnabled := AdvancedWindow.ColorThresholdCheckbox.Checked;
+	snap.ThresholdLevel := Byte(AdvancedWindow.ColorThresholdSlider.Position);
+
+	snap.WidenCenterMargin := AdvancedWindow.CenterMarginCheckbox.Checked;
+	snap.WidenCenterMarginAmount := Cardinal(AdvancedWindow.CenterMarginSlider.Position);
+
+	snap.CropEnabled := AdvancedWindow.CropCheckbox.Checked;
+	snap.CropL := Byte(AdvancedWindow.LeftCropSlider.Position);
+	snap.CropR := Byte(AdvancedWindow.RightCropSlider.Position);
+	snap.CropT := Byte(AdvancedWindow.TopCropSlider.Position);
+	snap.CropB := Byte(AdvancedWindow.BottomCropSlider.Position);
+
+	TPreviewRenderThread.Create(seq, snap);
+	FPreviewInFlight := True;
 end;
 
 procedure TMainWindow.ImportCommandButtonClick(Sender: TObject);
@@ -454,6 +706,7 @@ procedure TMainWindow.RangeCheckboxChange(Sender: TObject);
 begin
 	RangeInputPanel.Visible := RangeCheckbox.Checked;
 	LayoutChanged;
+	RequestPreviewUpdateDebounced;
 end;
 
 procedure TMainWindow.RangesTextboxKeyPress(Sender: TObject; var Key: char);
@@ -466,6 +719,7 @@ procedure TMainWindow.RescaleCheckboxChange(Sender: TObject);
 begin
 	RescaleInputPanel.Visible := RescaleCheckbox.Checked;
 	LayoutChanged;
+	RequestPreviewUpdateDebounced;
 end;
 
 procedure TMainWindow.SaveButtonClick(Sender: TObject);
@@ -531,6 +785,7 @@ procedure TMainWindow.SegmentCheckboxChange(Sender: TObject);
 begin
 	SegmentInputPanel.Visible := SegmentCheckbox.Checked;
 	LayoutChanged;
+	RequestPreviewUpdateDebounced;
 end;
 
 end.

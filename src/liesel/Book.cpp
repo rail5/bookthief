@@ -125,6 +125,97 @@ void Liesel::Book::calculate_effective_page_indices() {
 	}
 }
 
+void Liesel::Book::set_preview_page(uint32_t page_index) {
+	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
+	auto poppler_pages = pdf_document->pages();
+	if (poppler_pages <= 0) throw std::runtime_error("PDF document has no pages.");
+	uint32_t number_of_pages = static_cast<uint32_t>(poppler_pages);
+	if (page_index >= number_of_pages) {
+		throw std::out_of_range("Preview page " + std::to_string(page_index + 1)
+			+ " is out of range. Document has " + std::to_string(number_of_pages) + " pages.");
+	}
+
+	if (page_index == number_of_pages - 1 && f_booklet) {
+		throw std::out_of_range("Preview page " + std::to_string(page_index + 1)
+			+ " cannot be the last page when booklet mode is enabled.");
+	}
+
+	if (m_preview_page == page_index) return; // No change
+	m_preview_page = page_index;
+	if (f_previewing) _generate_settings_preview(); // Refresh the preview image
+}
+
+void Liesel::Book::_generate_settings_preview() {
+	if (!f_previewing) return;
+	if (!pdf_document) return;
+	verbose_output("Generating settings preview...");
+
+	// Previews should stay responsive even when the user cranks the quality slider.
+	// Cap the DPI used for preview rendering/resizing.
+	const uint32_t preview_dpi = std::min<uint32_t>(m_dpi_density, 200);
+
+	std::unique_ptr<Liesel::Page> page = std::make_unique<Liesel::Page>();
+
+	std::unique_ptr<Liesel::Page> right_half = nullptr;
+	page->load(pdf_document.get(), m_preview_page, preview_dpi);
+
+	if (f_greyscale) page->set_greyscale();
+	if (m_threshold_level.has_value()) page->set_threshold(m_threshold_level.value());
+
+	if (f_divide) {
+		right_half = std::move(page);
+		page = right_half->divide(); // divide(): Returns the left-half, *this becomes the right-half
+	}
+
+	page->crop(m_crop_percentages);
+	if (f_divide) right_half->crop(m_crop_percentages);
+
+	if (f_booklet) {
+		if (f_divide) {
+			// Pair with right_half
+			page->pair_with(std::move(right_half), m_widen_margins_amount);
+		} else {
+			// Load the next page as right_half, and apply the same processing
+			right_half = std::make_unique<Liesel::Page>();
+			right_half->load(pdf_document.get(), m_preview_page + 1, preview_dpi);
+			if (f_greyscale) right_half->set_greyscale();
+			if (m_threshold_level.has_value()) right_half->set_threshold(m_threshold_level.value());
+			right_half->crop(m_crop_percentages);
+
+			page->pair_with(std::move(right_half), m_widen_margins_amount);
+		}
+	}
+
+	auto raw_image = page->_get_image_raw(); // Ownership transfer
+
+	// Finally, we have to use GraphicsMagick to do the rescale if applicable
+	// In actual output we just tell Haru to set some display flags
+	// but since we're not outputting to a PDF, we need to actually rescale the image here
+	if (m_rescale_size.has_value()) {
+		auto rescale = m_rescale_size.value();
+		// PageDimension is a fixed-point representation; convert to inches first.
+		const float target_w_in = rescale.width.to_float();
+		const float target_h_in = rescale.height.to_float();
+		uint32_t target_width = static_cast<uint32_t>(std::lround(target_w_in * static_cast<float>(preview_dpi)));
+		uint32_t target_height = static_cast<uint32_t>(std::lround(target_h_in * static_cast<float>(preview_dpi)));
+
+		// Safety caps: avoid enormous allocations/hangs in preview resizing.
+		constexpr uint32_t PREVIEW_MAX_DIM = 6000;
+		target_width = std::max<uint32_t>(1, std::min<uint32_t>(target_width, PREVIEW_MAX_DIM));
+		target_height = std::max<uint32_t>(1, std::min<uint32_t>(target_height, PREVIEW_MAX_DIM));
+
+		if (f_booklet) std::swap(target_width, target_height); // Because of rotation in booklet mode
+
+		Magick::Geometry geom(target_width, target_height);
+		geom.aspect(true);
+		raw_image->resize(geom);
+	}
+
+	// No rotation for previews
+	settings_preview = std::move(raw_image);
+	verbose_output("Settings preview generated.");
+}
+
 void Liesel::Book::_render_segment(uint32_t segment_number) {
 	// Use Poppler to render each page to an image and store in 'pages'
 	uint32_t start_index = segment_number * m_segment_size;
@@ -357,6 +448,8 @@ void Liesel::Book::set_input_pdf_path(const std::string_view& path) {
 	}
 
 	input_pdf_path = p;
+
+	 _generate_settings_preview();
 }
 
 void Liesel::Book::set_output_pdf_path(const std::string_view& path) {
