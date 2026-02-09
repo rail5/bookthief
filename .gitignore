@@ -1,2 +1,3 @@
 bin/**
 src/liesel/version.h
+src/bookthief/VersionInfoUnit.pas
