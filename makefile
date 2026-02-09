@@ -28,8 +28,9 @@ OBJS_LIESEL_ABI  := $(patsubst $(SRCDIR)/liesel/abi/%.cpp,$(BINDIR)/liesel-lib-o
 LIESEL_SO        := $(BINDIR)/libliesel.so
 
 # --- Pascal (BookThief) ---
-FPCFLAGS     ?= -MObjFPC -Scghi -CX -Cg -O3 -Xs -XX -l -vewnhibq -dLCL -dLCLgtk2
-FPCINCLUDES  := -Fi$(BINDIR)/lib/x86_64-linux \
+FPC_LINKFLAGS ?= -k--as-needed -k-pie -k-z -krelro -k-z -know
+FPCFLAGS      ?= -MObjFPC -Scghi -CX -Cg -O3 -Xs -XX -l -vewnhibq -dLCL -dLCLgtk2 $(FPC_LINKFLAGS)
+FPCINCLUDES   := -Fi$(BINDIR)/lib/x86_64-linux \
 	-Fu$(SRCDIR)/bookthief \
 	-Fu/usr/lib/lazarus/4.0/lcl/units/x86_64-linux/gtk2 \
 	-Fu/usr/lib/lazarus/4.0/lcl/units/x86_64-linux \
