@@ -147,7 +147,7 @@ var
 begin
 	// Prefer the library in the same directory as the running executable.
 	exeDir := ExtractFilePath(ParamStr(0));
-	candidate := IncludeTrailingPathDelimiter(exeDir) + 'libliesel.so';
+	candidate := IncludeTrailingPathDelimiter(exeDir) + 'libliesel.so.0';
 	Result := candidate;
 end;
 
@@ -358,14 +358,14 @@ begin
 	end;
 
 	// Fall back to the dynamic loader search path
-	FLib := SafeLoadLibrary('libliesel.so');
+	FLib := SafeLoadLibrary('libliesel.so.0');
 	if FLib <> 0 then
 	begin
 		BindAll;
 		Exit;
 	end;
 
-	raise Exception.Create('Failed to load libliesel.so. Set LIESEL_LIB or place libliesel.so next to the executable.');
+	raise Exception.Create('Failed to load libliesel.so.0. Set LIESEL_LIB or place libliesel.so.0 next to the executable.');
 end;
 
 procedure TLieselLib.Unload;
