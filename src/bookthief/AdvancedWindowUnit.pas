@@ -73,6 +73,8 @@ type
 		procedure SplitPagesCheckboxChange(Sender: TObject);
 		procedure TopCropSliderChange(Sender: TObject);
 	private
+		FOnSettingsChanged: TNotifyEvent;
+
 		// Fixed-width containers for right-aligned sliders (prevents “width 30” collapse)
 		FColorThresholdHost: TPanel;
 		FCenterMarginHost: TPanel;
@@ -90,12 +92,16 @@ type
 		procedure UpdatePreviewBoxBounds;
 		procedure UpdatePreviewVisibility;
 		function HasPreviewImage: Boolean;
+		procedure NotifySettingsChanged;
 
 		procedure LayoutChanged; // call after any show/hide or size-affecting change
 	protected
 		procedure GetRequiredClientSize(out ReqClientW, ReqClientH: Integer); override;
 		procedure AfterEnsureSizePass; override;
 	public
+		// Fired whenever any advanced setting that affects output/preview changes.
+		property OnSettingsChanged: TNotifyEvent read FOnSettingsChanged write FOnSettingsChanged;
+		procedure SetPreviewJpegBytes(const Jpeg: TBytes);
 	end;
 
 var
@@ -105,12 +111,15 @@ implementation
 
 {$R *.lfm}
 
+uses
+	FPImage, FPReadJPEG;
+
 const
 	// To be tuned later (displayed bounds, not original image size)
-	PREVIEW_MIN_W = 240;
-	PREVIEW_MIN_H = 160;
-	PREVIEW_MAX_W = 900;
-	PREVIEW_MAX_H = 600;
+	PREVIEW_MIN_W = 640;
+	PREVIEW_MIN_H = 480;
+	PREVIEW_MAX_W = 1200;
+	PREVIEW_MAX_H = 900;
 
 	BORDER_SPACING_BOTTOM = 20;
 
@@ -278,19 +287,53 @@ begin
 	ApplyMinConstraintsToResize(MinWidth, MinHeight);
 end;
 
+procedure TAdvancedWindow.NotifySettingsChanged;
+begin
+	if Assigned(FOnSettingsChanged) then
+		FOnSettingsChanged(Self);
+end;
+
+procedure TAdvancedWindow.SetPreviewJpegBytes(const Jpeg: TBytes);
+var
+	ms: TMemoryStream;
+begin
+	try
+		if Length(Jpeg) = 0 then
+		begin
+			ImagePreview.Picture.Clear;
+			UpdatePreviewVisibility;
+			Exit;
+		end;
+
+		ms := TMemoryStream.Create;
+		try
+			ms.WriteBuffer(Jpeg[0], Length(Jpeg));
+			ms.Position := 0;
+			ImagePreview.Picture.LoadFromStream(ms);
+		finally
+			ms.Free;
+		end;
+		UpdatePreviewVisibility;
+	except
+		// If decoding fails, fall back to placeholder.
+		ImagePreview.Picture.Clear;
+		UpdatePreviewVisibility;
+	end;
+end;
+
 procedure TAdvancedWindow.RightCropSliderChange(Sender: TObject);
 begin
-
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.SplitPagesCheckboxChange(Sender: TObject);
 begin
-
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.TopCropSliderChange(Sender: TObject);
 begin
-
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.FormCreate(Sender: TObject);
@@ -434,13 +477,17 @@ end;
 
 procedure TAdvancedWindow.FirstPageButtonClick(Sender: TObject);
 begin
-	// ...load image...
+	LeftRightNavigation.Position := 0;
+	PreviewingPageLabel.Caption := 'Previewing page: 1';
+	NotifySettingsChanged;
 	UpdatePreviewVisibility;
 end;
 
 procedure TAdvancedWindow.EnableDisablePreviewCheckboxChange(Sender: TObject);
 begin
-
+	if not EnableDisablePreviewCheckbox.Checked then
+		SetPreviewJpegBytes(nil);
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.ColorThresholdCheckboxChange(Sender: TObject);
@@ -448,16 +495,17 @@ begin
 	if FColorThresholdHost <> nil then
 		FColorThresholdHost.Visible := ColorThresholdCheckbox.Checked;
 	LayoutChanged;
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.BottomCropSliderChange(Sender: TObject);
 begin
-
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.CenterMarginSliderChange(Sender: TObject);
 begin
-
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.CenterMarginCheckboxChange(Sender: TObject);
@@ -465,17 +513,19 @@ begin
 	if FCenterMarginHost <> nil then
 		FCenterMarginHost.Visible := CenterMarginCheckbox.Checked;
 	LayoutChanged;
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.ColorThresholdSliderChange(Sender: TObject);
 begin
-
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.CropCheckboxChange(Sender: TObject);
 begin
 	CropSlidersPanel.Visible := CropCheckbox.Checked;
 	LayoutChanged;
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.CropPanelClick(Sender: TObject);
@@ -485,24 +535,26 @@ end;
 
 procedure TAdvancedWindow.LastPageButtonClick(Sender: TObject);
 begin
-	// ...load image...
+	// We don't currently know the PDF page count here; caller can clamp.
+	NotifySettingsChanged;
 	UpdatePreviewVisibility;
 end;
 
 procedure TAdvancedWindow.LeftCropSliderChange(Sender: TObject);
 begin
-
+	NotifySettingsChanged;
 end;
 
 procedure TAdvancedWindow.LeftRightNavigationClick(Sender: TObject; Button: TUDBtnType);
 begin
-	// ...load image...
+	PreviewingPageLabel.Caption := Format('Previewing page: %d', [LeftRightNavigation.Position + 1]);
+	NotifySettingsChanged;
 	UpdatePreviewVisibility;
 end;
 
 procedure TAdvancedWindow.NoBookletCheckboxChange(Sender: TObject);
 begin
-
+	NotifySettingsChanged;
 end;
 
 end.

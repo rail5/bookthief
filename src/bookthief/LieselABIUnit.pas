@@ -54,6 +54,7 @@ type
 		liesel_destroy: procedure(h: PLieselHandle); cdecl;
 		liesel_version: function: PChar; cdecl;
 		liesel_last_error: function(h: PLieselHandle): PChar; cdecl;
+		liesel_free: procedure(p: Pointer); cdecl;
 
 		liesel_book_create: function(h: PLieselHandle): PLieselBookHandle; cdecl;
 		liesel_book_destroy: procedure(b: PLieselBookHandle); cdecl;
@@ -86,6 +87,11 @@ type
 		liesel_book_set_crop_percentages_lrbt: function(b: PLieselBookHandle; l, r, t, bt: cuint8): TLieselStatus; cdecl;
 
 		liesel_book_load_pdf: function(b: PLieselBookHandle): TLieselStatus; cdecl;
+
+		// Preview (GUI support)
+		liesel_book_set_previewing: function(b: PLieselBookHandle; enabled: cint): TLieselStatus; cdecl;
+		liesel_book_set_preview_page: function(b: PLieselBookHandle; page_index: cuint32): TLieselStatus; cdecl;
+		liesel_book_get_preview_jpeg: function(b: PLieselBookHandle; out_bytes: PPointer; out_len: Pcsize_t): TLieselStatus; cdecl;
 
 		liesel_book_print: function(
 			b: PLieselBookHandle;
@@ -163,6 +169,7 @@ var
 		Pointer(liesel_destroy) := TryGetProc('liesel_destroy');
 		Pointer(liesel_version) := TryGetProc('liesel_version');
 		Pointer(liesel_last_error) := TryGetProc('liesel_last_error');
+		Pointer(liesel_free) := TryGetProc('liesel_free');
 
 		Pointer(liesel_book_create) := TryGetProc('liesel_book_create');
 		Pointer(liesel_book_destroy) := TryGetProc('liesel_book_destroy');
@@ -197,10 +204,15 @@ var
 		Pointer(liesel_book_load_pdf) := TryGetProc('liesel_book_load_pdf');
 		Pointer(liesel_book_print) := TryGetProc('liesel_book_print');
 
+		Pointer(liesel_book_set_previewing) := TryGetProc('liesel_book_set_previewing');
+		Pointer(liesel_book_set_preview_page) := TryGetProc('liesel_book_set_preview_page');
+		Pointer(liesel_book_get_preview_jpeg) := TryGetProc('liesel_book_get_preview_jpeg');
+
 		RequireProc(Pointer(liesel_create), 'liesel_create');
 		RequireProc(Pointer(liesel_destroy), 'liesel_destroy');
 		RequireProc(Pointer(liesel_version), 'liesel_version');
 		RequireProc(Pointer(liesel_last_error), 'liesel_last_error');
+		RequireProc(Pointer(liesel_free), 'liesel_free');
 
 		RequireProc(Pointer(liesel_book_create), 'liesel_book_create');
 		RequireProc(Pointer(liesel_book_destroy), 'liesel_book_destroy');
@@ -234,6 +246,10 @@ var
 
 		RequireProc(Pointer(liesel_book_load_pdf), 'liesel_book_load_pdf');
 		RequireProc(Pointer(liesel_book_print), 'liesel_book_print');
+
+		RequireProc(Pointer(liesel_book_set_previewing), 'liesel_book_set_previewing');
+		RequireProc(Pointer(liesel_book_set_preview_page), 'liesel_book_set_preview_page');
+		RequireProc(Pointer(liesel_book_get_preview_jpeg), 'liesel_book_get_preview_jpeg');
 	end;
 
 begin

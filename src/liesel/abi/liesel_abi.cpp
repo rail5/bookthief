@@ -6,6 +6,8 @@
 #include "liesel_abi.h"
 
 #include <exception>
+#include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <string>
 
@@ -61,6 +63,10 @@ static inline LieselStatus fail_invalid_arg(LieselBookHandle* b, const char* mes
 }
 
 extern "C" {
+
+void liesel_free(void* p) {
+	std::free(p);
+}
 
 LieselHandle* liesel_create(void) {
 	try {
@@ -299,6 +305,61 @@ LieselStatus liesel_book_load_pdf(LieselBookHandle* b) {
 	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
 	try {
 		b->book->load_pdf();
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_set_previewing(LieselBookHandle* b, int enabled) {
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		b->book->set_previewing(enabled != 0);
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_set_preview_page(LieselBookHandle* b, uint32_t page_index) {
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	try {
+		b->book->set_preview_page(page_index);
+		return LIESEL_OK;
+	} catch (const std::exception& e) {
+		set_error(b, e.what());
+		return map_exception_to_status(e);
+	}
+}
+
+LieselStatus liesel_book_get_preview_jpeg(LieselBookHandle* b, uint8_t** out_bytes, size_t* out_len) {
+	if (!b || !b->book) return LIESEL_E_INVALID_ARG;
+	if (!out_bytes || !out_len) return fail_invalid_arg(b, "Output pointers cannot be NULL");
+
+	*out_bytes = nullptr;
+	*out_len = 0;
+
+	try {
+		Magick::Image* img = b->book->get_preview_image();
+		if (!img) return LIESEL_OK; // No preview available yet
+
+		// Encode to JPEG. Use a copy to avoid mutating the internal preview object.
+		Magick::Image tmp(*img);
+		Magick::Blob blob;
+		tmp.magick("JPEG");
+		tmp.write(&blob);
+
+		const size_t len = static_cast<size_t>(blob.length());
+		if (len == 0 || blob.data() == nullptr) return LIESEL_OK;
+
+		auto* mem = static_cast<uint8_t*>(std::malloc(len));
+		if (!mem) throw std::bad_alloc();
+		std::memcpy(mem, blob.data(), len);
+
+		*out_bytes = mem;
+		*out_len = len;
 		return LIESEL_OK;
 	} catch (const std::exception& e) {
 		set_error(b, e.what());

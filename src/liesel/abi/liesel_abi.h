@@ -59,6 +59,10 @@ typedef void (*LieselProgressCallback)(
 // Return nonzero to request cancellation.
 typedef int (*LieselCancelCallback)(void* userdata);
 
+// Frees memory returned by ABI functions that allocate buffers (e.g. preview JPEG bytes).
+// Safe to call with NULL.
+LIESEL_ABI_API void liesel_free(void* p);
+
 // Library / context
 LIESEL_ABI_API LieselHandle* liesel_create(void);
 LIESEL_ABI_API void liesel_destroy(LieselHandle* h);
@@ -107,6 +111,28 @@ LIESEL_ABI_API LieselStatus liesel_book_set_crop_percentages_lrbt(LieselBookHand
 
 // Execution
 LIESEL_ABI_API LieselStatus liesel_book_load_pdf(LieselBookHandle* b);
+
+// --- Preview (GUI support) ---
+// Preview generation is entirely optional and does not affect printing output.
+// If previewing is enabled, certain setters will regenerate an in-memory preview image.
+// The GUI can fetch the current preview as a JPEG buffer.
+
+// Enable/disable automatic preview generation.
+LIESEL_ABI_API LieselStatus liesel_book_set_previewing(LieselBookHandle* b, int enabled);
+
+// Select which PDF page index (0-based) to use for preview generation.
+LIESEL_ABI_API LieselStatus liesel_book_set_preview_page(LieselBookHandle* b, uint32_t page_index);
+
+// Encodes the current preview to JPEG and returns it as an allocated buffer.
+//
+// Output:
+// - If no preview is available yet, returns LIESEL_OK and sets *out_bytes=NULL, *out_len=0.
+// - On success with data, caller owns the returned buffer and must free it via liesel_free().
+LIESEL_ABI_API LieselStatus liesel_book_get_preview_jpeg(
+	LieselBookHandle* b,
+	uint8_t** out_bytes,
+	size_t* out_len
+);
 
 // Note: callbacks are currently best-effort; implementation may emit only coarse events at first.
 LIESEL_ABI_API LieselStatus liesel_book_print(

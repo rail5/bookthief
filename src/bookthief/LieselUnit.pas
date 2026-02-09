@@ -83,6 +83,11 @@ type
 		procedure LoadPdf;
 		procedure Print;
 
+		// Preview (GUI support)
+		procedure SetPreviewing(Enabled: Boolean);
+		procedure SetPreviewPage(PageIndex0Based: Cardinal);
+		function GetPreviewJpegBytes: TBytes;
+
 		property OnProgress: TLieselProgressEventHandler read FOnProgress write FOnProgress;
 		property OnCancel: TLieselCancelHandler read FOnCancel write FOnCancel;
 	end;
@@ -360,6 +365,42 @@ var
 begin
 	s := UTF8String(SizeUtf8);
 	RaiseOnStatus(FContext.Lib.liesel_book_set_rescale_size(FHandle, PChar(s)), 'set_rescale_size');
+end;
+
+procedure TLieselBook.SetPreviewing(Enabled: Boolean);
+begin
+	RaiseOnStatus(FContext.Lib.liesel_book_set_previewing(FHandle, Ord(Enabled)), 'set_previewing');
+end;
+
+procedure TLieselBook.SetPreviewPage(PageIndex0Based: Cardinal);
+begin
+	RaiseOnStatus(FContext.Lib.liesel_book_set_preview_page(FHandle, PageIndex0Based), 'set_preview_page');
+end;
+
+function TLieselBook.GetPreviewJpegBytes: TBytes;
+var
+	p: Pointer;
+	len: csize_t;
+	st: TLieselStatus;
+begin
+	SetLength(Result, 0);
+	p := nil;
+	len := 0;
+
+	st := FContext.Lib.liesel_book_get_preview_jpeg(FHandle, @p, @len);
+	RaiseOnStatus(st, 'get_preview_jpeg');
+
+	if (p <> nil) and (len > 0) then
+	begin
+		SetLength(Result, len);
+		Move(p^, Result[0], len);
+		FContext.Lib.liesel_free(p);
+	end
+	else if (p <> nil) then
+	begin
+		// Defensive: free even if len==0
+		FContext.Lib.liesel_free(p);
+	end;
 end;
 
 procedure TLieselBook.ClearRescaleSize;
