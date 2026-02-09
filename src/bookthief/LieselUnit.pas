@@ -81,6 +81,7 @@ type
 		procedure SetCropPercentagesLRBT(L, R, T, B: Byte);
 
 		procedure LoadPdf;
+		function GetPdfPageCount: Cardinal;
 		procedure Print;
 
 		// Preview (GUI support)
@@ -437,6 +438,15 @@ end;
 procedure TLieselBook.LoadPdf;
 begin
 	RaiseOnStatus(FContext.Lib.liesel_book_load_pdf(FHandle), 'load_pdf');
+end;
+
+function TLieselBook.GetPdfPageCount: Cardinal;
+var
+	count: cuint32;
+begin
+	count := 0;
+	RaiseOnStatus(FContext.Lib.liesel_book_get_pdf_page_count(FHandle, @count), 'get_pdf_page_count');
+	Result := Cardinal(count);
 end;
 
 procedure TLieselBook.Print;

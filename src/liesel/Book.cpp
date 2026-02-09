@@ -145,6 +145,13 @@ void Liesel::Book::set_preview_page(uint32_t page_index) {
 	if (f_previewing) _generate_settings_preview(); // Refresh the preview image
 }
 
+uint32_t Liesel::Book::pdf_page_count() const {
+	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
+	int poppler_pages = pdf_document->pages();
+	if (poppler_pages <= 0) return 0;
+	return static_cast<uint32_t>(poppler_pages);
+}
+
 void Liesel::Book::_generate_settings_preview() {
 	if (!f_previewing) return;
 	if (!pdf_document) return;
