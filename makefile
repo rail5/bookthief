@@ -50,6 +50,10 @@ else
   YEAR    := 2026
 endif
 
+MAJORVERSION := $(shell echo $(VERSION) | cut -d. -f1)
+MINORVERSION := $(shell echo $(VERSION) | cut -d. -f2)
+PATCHVERSION := $(shell echo $(VERSION) | cut -d. -f3)
+
 # --- Targets ---
 all: $(LIESEL) $(LIESEL_SO) $(BOOKTHIEF)
 
@@ -59,7 +63,7 @@ $(LIESEL): $(OBJS_LIESEL)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 	@echo "Built Liesel (CLI) version $(VERSION)"
 
-$(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/liesel/version.h
+$(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp version-headers
 	@mkdir -p "$(BINDIR)/liesel-objs"
 	$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) -c $< -o $@
 
@@ -69,22 +73,42 @@ $(LIESEL_SO): $(OBJS_LIESEL_CORE) $(OBJS_LIESEL_ABI)
 	$(CXX) -shared -Wl,-soname,libliesel.so -o $@ $^ $(LDFLAGS)
 	@echo "Built libliesel.so version $(VERSION)"
 
-$(BINDIR)/liesel-lib-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/liesel/version.h
+$(BINDIR)/liesel-lib-objs/%.o: $(SRCDIR)/liesel/%.cpp version-headers
 	@mkdir -p "$(BINDIR)/liesel-lib-objs"
 	$(CXX) $(CXXFLAGS_PIC) $(INCLUDEFLAGS) -c $< -o $@
 
-$(BINDIR)/liesel-lib-objs/abi/%.o: $(SRCDIR)/liesel/abi/%.cpp $(SRCDIR)/liesel/version.h
+$(BINDIR)/liesel-lib-objs/abi/%.o: $(SRCDIR)/liesel/abi/%.cpp version-headers
 	@mkdir -p "$(BINDIR)/liesel-lib-objs/abi"
 	$(CXX) $(CXXFLAGS_PIC) $(INCLUDEFLAGS) -c $< -o $@
 
-# --- Version Header ---
+# --- Version Headers ---
+version-headers: $(SRCDIR)/liesel/version.h $(SRCDIR)/bookthief/VersionInfoUnit.pas
+	@echo "Version: $(VERSION) ($(YEAR))"
+
 $(SRCDIR)/liesel/version.h: debian/changelog
 	@echo "#define VERSION \"$(VERSION)\"" > $@
+	@echo "#define MAJOR_VERSION $(MAJORVERSION)" >> $@
+	@echo "#define MINOR_VERSION $(MINORVERSION)" >> $@
+	@echo "#define PATCH_VERSION $(PATCHVERSION)" >> $@
 	@echo "#define COPYRIGHT_YEAR \"$(YEAR)\"" >> $@
-	@echo "Updated version information to $(VERSION) ($(YEAR))"
+
+$(SRCDIR)/bookthief/VersionInfoUnit.pas: debian/changelog
+	@echo "unit VersionInfoUnit;" > $@
+	@echo "" >> $@
+	@echo "interface" >> $@
+	@echo "" >> $@
+	@echo "const" >> $@
+	@echo "	VERSION = '$(VERSION)';" >> $@
+	@echo "	MAJOR_VERSION = $(MAJORVERSION);" >> $@
+	@echo "	MINOR_VERSION = $(MINORVERSION);" >> $@
+	@echo "	PATCH_VERSION = $(PATCHVERSION);" >> $@
+	@echo "	COPYRIGHT_YEAR = '$(YEAR)';" >> $@
+	@echo "" >> $@
+	@echo "implementation" >> $@
+	@echo "end." >> $@
 
 # --- BookThief Build ---
-$(BOOKTHIEF): $(SRCDIR)/bookthief/bookthief.lpr $(SRCDIR)/bookthief/*.pas $(SRCDIR)/bookthief/*.lfm
+$(BOOKTHIEF): $(SRCDIR)/bookthief/bookthief.lpr $(SRCDIR)/bookthief/*.pas $(SRCDIR)/bookthief/*.lfm $(LIESEL_SO) version-headers
 	@mkdir -p "$(BINDIR)/lib/x86_64-linux"
 	$(FPC) $(FPCFLAGS) $(FPCINCLUDES) -o$@ $<
 	@echo "Built BookThief version $(VERSION)"
@@ -93,6 +117,7 @@ $(BOOKTHIEF): $(SRCDIR)/bookthief/bookthief.lpr $(SRCDIR)/bookthief/*.pas $(SRCD
 clean:
 	$(RM) -r "$(BINDIR)/"*
 	$(RM) $(SRCDIR)/liesel/version.h
+	$(RM) $(SRCDIR)/bookthief/VersionInfoUnit.pas
 
 # --- Dependencies ---
 -include $(BINDIR)/*.d
@@ -100,4 +125,4 @@ clean:
 -include $(BINDIR)/liesel-lib-objs/*.d
 -include $(BINDIR)/liesel-lib-objs/abi/*.d
 
-.PHONY: all clean
+.PHONY: all clean version-headers
