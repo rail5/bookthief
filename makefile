@@ -1,10 +1,10 @@
 # --- Compiler and Tools ---
-CXX      ?= g++
-FPC      ?= fpc
+CXX ?= g++
+FPC ?= fpc
 
 # --- Directories ---
-SRCDIR   := src
-BINDIR   := bin
+SRCDIR := src
+BINDIR := bin
 
 # --- C++ (Liesel) ---
 CXXFLAGS     := -Wall -Wextra -std=c++23 -O2 -s -MMD -MP
