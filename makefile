@@ -47,9 +47,15 @@ $(LIESEL): $(OBJS_LIESEL)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 	@echo "Built Liesel version $(VERSION)"
 
-$(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/common/version.h
+$(BINDIR)/liesel-objs/%.o: $(SRCDIR)/liesel/%.cpp $(SRCDIR)/liesel/version.h
 	@mkdir -p "$(BINDIR)/liesel-objs"
 	$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) -c $< -o $@
+
+# --- Version Header ---
+$(SRCDIR)/liesel/version.h: debian/changelog
+	@echo "#define VERSION \"$(VERSION)\"" > $@
+	@echo "#define COPYRIGHT_YEAR \"$(YEAR)\"" >> $@
+	@echo "Updated version information to $(VERSION) ($(YEAR))"
 
 # --- BookThief Build ---
 $(BOOKTHIEF): $(SRCDIR)/bookthief/bookthief.lpr $(SRCDIR)/bookthief/*.pas $(SRCDIR)/bookthief/*.lfm
@@ -57,15 +63,10 @@ $(BOOKTHIEF): $(SRCDIR)/bookthief/bookthief.lpr $(SRCDIR)/bookthief/*.pas $(SRCD
 	$(FPC) $(FPCFLAGS) $(FPCINCLUDES) -o$@ $<
 	@echo "Built BookThief version $(VERSION)"
 
-# --- Version Header ---
-$(SRCDIR)/common/version.h: debian/changelog
-	@echo "#define VERSION \"$(VERSION)\"" > $@
-	@echo "#define COPYRIGHT_YEAR \"$(YEAR)\"" >> $@
-	@echo "Updated version information to $(VERSION) ($(YEAR))"
-
 # --- Clean ---
 clean:
 	$(RM) -r "$(BINDIR)/"*
+	$(RM) $(SRCDIR)/liesel/version.h
 
 # --- Dependencies ---
 -include $(BINDIR)/*.d
