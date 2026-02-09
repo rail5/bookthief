@@ -8,7 +8,7 @@
 
 #include <xgetopt.h>
 
-#include "../common/version.h"
+#include "version.h"
 
 #include "Book.h"
 #include "CLIConfig.h"
