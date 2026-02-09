@@ -100,6 +100,13 @@ type
 	private
 		FInputPath: string;
 		FOutputPath: string;
+		FUsePageRanges: Boolean;
+		FPageRanges: string;
+		FGreyscale: Boolean;
+		FUseSegments: Boolean;
+		FSegmentSize: Cardinal;
+		FUseRescale: Boolean;
+		FRescaleSize: string;
 		FLib: TLieselLib;
 		FCtx: TLieselContext;
 		FBook: TLieselBook;
@@ -120,16 +127,31 @@ type
 	protected
 		procedure Execute; override;
 	public
-		constructor Create(const AInputPath, AOutputPath: string);
+		constructor Create(const AInputPath, AOutputPath: string;
+			AUsePageRanges: Boolean; const APageRanges: string;
+			AGreyscale: Boolean;
+			AUseSegments: Boolean; ASegmentSize: Cardinal;
+			AUseRescale: Boolean; const ARescaleSize: string);
 		destructor Destroy; override;
 	end;
 
-constructor TPrintJobThread.Create(const AInputPath, AOutputPath: string);
+constructor TPrintJobThread.Create(const AInputPath, AOutputPath: string;
+	AUsePageRanges: Boolean; const APageRanges: string;
+	AGreyscale: Boolean;
+	AUseSegments: Boolean; ASegmentSize: Cardinal;
+	AUseRescale: Boolean; const ARescaleSize: string);
 begin
 	inherited Create(True);
 	FreeOnTerminate := True;
 	FInputPath := AInputPath;
 	FOutputPath := AOutputPath;
+	FUsePageRanges := AUsePageRanges;
+	FPageRanges := APageRanges;
+	FGreyscale := AGreyscale;
+	FUseSegments := AUseSegments;
+	FSegmentSize := ASegmentSize;
+	FUseRescale := AUseRescale;
+	FRescaleSize := ARescaleSize;
 	FLib := nil;
 	FCtx := nil;
 	FBook := nil;
@@ -177,7 +199,10 @@ procedure TPrintJobThread.HandleProgress(Sender: TObject; Event: TLieselBookProg
 begin
 	FUiPercent := Percent;
 	FUiMessage := MessageUtf8;
-	Queue(@UiProgress);
+	// NOTE: This thread is FreeOnTerminate. Using Queue here can schedule UiProgress
+	// after the thread object has been freed, causing heap corruption.
+	// Synchronize avoids that use-after-free.
+	Synchronize(@UiProgress);
 end;
 
 function TPrintJobThread.HandleCancel(Sender: TObject): Boolean;
@@ -201,6 +226,33 @@ begin
 
 		FBook.SetInputPdfPath(FInputPath);
 		FBook.SetOutputPdfPath(FOutputPath);
+		FBook.SetGreyscale(FGreyscale);
+
+		if FUseSegments then
+			FBook.SetSegmentSize(FSegmentSize)
+		else
+			FBook.ClearSegmentSize;
+
+		if FUseRescale then
+		begin
+			if Trim(FRescaleSize) <> '' then
+				FBook.SetRescaleSize(FRescaleSize)
+			else
+				FBook.ClearRescaleSize;
+		end
+		else
+			FBook.ClearRescaleSize;
+
+		if FUsePageRanges then
+		begin
+			if Trim(FPageRanges) <> '' then
+				FBook.SetPageRanges(FPageRanges)
+			else
+				FBook.ClearPageRanges;
+		end
+		else
+			FBook.ClearPageRanges;
+
 		FBook.LoadPdf;
 		FBook.Print;
 
@@ -412,6 +464,14 @@ begin
 end;
 
 procedure TMainWindow.SaveButtonClick(Sender: TObject);
+var
+	useRanges: Boolean;
+	ranges: string;
+	greyscale: Boolean;
+	useSegments: Boolean;
+	segmentSize: Cardinal;
+	useRescale: Boolean;
+	rescaleSize: string;
 begin
 	if FInputPdfPath = '' then
 	begin
@@ -423,6 +483,17 @@ begin
 	begin
 		FOutputPdfPath := SaveDialog.FileName;
 
+		useRanges := RangeCheckbox.Checked;
+		ranges := RangeInputTextbox.Text;
+
+		greyscale := GreyscaleCheckbox.Checked;
+
+		useSegments := SegmentCheckbox.Checked;
+	segmentSize := Cardinal(SegmentInputBox.Value);
+
+		useRescale := RescaleCheckbox.Checked;
+		rescaleSize := RescaleDropdownBox.Text;
+
 		if Assigned(ProgressWindow) then
 		begin
 			ProgressWindow.ResetForJob;
@@ -431,7 +502,13 @@ begin
 		end;
 
 		// Run in background so the UI stays responsive.
-		TPrintJobThread.Create(FInputPdfPath, FOutputPdfPath);
+		TPrintJobThread.Create(
+			FInputPdfPath, FOutputPdfPath,
+			useRanges, ranges,
+			greyscale,
+			useSegments, segmentSize,
+			useRescale, rescaleSize
+		);
 	end;
 end;
 
