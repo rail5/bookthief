@@ -6,8 +6,6 @@
 #include <iostream>
 #include <string_view>
 
-#include <xgetopt.h>
-
 #include "version.h"
 
 #include "Book.h"
