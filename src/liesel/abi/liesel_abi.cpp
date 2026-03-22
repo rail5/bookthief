@@ -22,11 +22,11 @@
 
 namespace {
 
-static inline bool is_null_or_empty(const char* s) {
+inline bool is_null_or_empty(const char* s) {
 	return (s == nullptr) || (s[0] == '\0');
 }
 
-static inline LieselStatus map_exception_to_status(const std::exception& e) {
+inline LieselStatus map_exception_to_status(const std::exception& e) {
 	// Keep mapping coarse; callers can fetch text via *_last_error().
 	if (dynamic_cast<const Liesel::Cancelled*>(&e) != nullptr) return LIESEL_E_CANCELLED;
 	if (dynamic_cast<const std::invalid_argument*>(&e) != nullptr) return LIESEL_E_INVALID_ARG;
@@ -621,7 +621,7 @@ LieselStatus liesel_book_get_preview_jpeg(LieselBookHandle* b, uint8_t** out_byt
 		tmp.magick("JPEG");
 		tmp.write(&blob);
 
-		const size_t len = static_cast<size_t>(blob.length());
+		const auto len = static_cast<size_t>(blob.length());
 		if (len == 0 || blob.data() == nullptr) return LIESEL_OK;
 
 		auto* mem = static_cast<uint8_t*>(std::malloc(len));

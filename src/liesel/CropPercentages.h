@@ -17,7 +17,7 @@ class CropPercentages {
 		uint8_t m_top = 0;
 		uint8_t m_bottom = 0;
 		
-		bool validate_percentage(uint8_t value) const {
+		static bool validate_percentage(uint8_t value) {
 			return value <= 100;
 		}
 	public:

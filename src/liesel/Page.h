@@ -24,11 +24,29 @@ class Page {
 
 	public:
 		Page() = default;
+		~Page() = default;
 
 		// Copy constructor
 		Page(const Page& other) {
 			if (other.image) this->image = std::make_unique<Magick::Image>(*other.image);
 		}
+
+		// Move constructor
+		Page(Page&& other) noexcept = default;
+
+		// Copy assignment operator
+		Page& operator=(const Page& other) {
+			if (this == &other) return *this; // Self-assignment check
+			if (other.image) {
+				this->image = std::make_unique<Magick::Image>(*other.image);
+			} else {
+				this->image.reset();
+			}
+			return *this;
+		}
+		
+		// Move assignment operator
+		Page& operator=(Page&& other) noexcept = default;
 
 		void load(poppler::document* document, uint32_t page_index, uint32_t dpi_density);
 		void set_greyscale();

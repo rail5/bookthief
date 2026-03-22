@@ -13,7 +13,7 @@ void Liesel::Page::load(poppler::document* document, uint32_t page_index, uint32
 	{
 		poppler::page_renderer renderer;
 
-		std::unique_ptr<poppler::page> page(document->create_page(page_index));
+		std::unique_ptr<poppler::page> page(document->create_page(static_cast<int>(page_index)));
 		if (!page) throw std::runtime_error("Failed to create page " + std::to_string(page_index + 1) + ".");
 
 		poppler::image page_image = renderer.render_page(page.get(), dpi_density, dpi_density);
@@ -170,8 +170,8 @@ void Liesel::Page::pair_with(std::unique_ptr<Page> other, uint32_t margin_size) 
 	uint32_t x_offset = this->image->columns() + margin_size;
 	// The left half just starts from 0
 
-	combined_image->composite(std::move(*this->image), 0, 0);
-	combined_image->composite(std::move(*other->image), x_offset, 0);
+	combined_image->composite(*this->image, 0, 0);
+	combined_image->composite(*other->image, static_cast<int>(x_offset), 0);
 
 	this->image = std::move(combined_image);
 }

@@ -11,7 +11,7 @@
 #include "Book.h"
 #include "CLIConfig.h"
 
-inline void show_error(const std::string_view& message) {
+static inline void show_error(const std::string_view& message) {
 	std::cerr << "Liesel: " << message << std::endl
 		<< "Use -h or --help for usage information." << std::endl;
 }
