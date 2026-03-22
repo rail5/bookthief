@@ -75,7 +75,7 @@ class Book {
 	public:
 		Book();
 
-		enum class ProgressEvent : uint32_t {
+		enum class ProgressEvent : uint8_t {
 			Info = 0,
 			RenderPage = 1,
 			SegmentDone = 2,

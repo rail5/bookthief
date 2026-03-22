@@ -14,45 +14,63 @@
 #include <hpdf.h>
 
 namespace {
-	struct HaruErrorState {
-		HPDF_STATUS error = HPDF_OK;
-		HPDF_STATUS detail = HPDF_OK;
-	};
+struct HaruErrorState {
+	HPDF_STATUS error = HPDF_OK;
+	HPDF_STATUS detail = HPDF_OK;
+};
 
-	extern "C" void haru_error_handler(HPDF_STATUS error_no, HPDF_STATUS detail_no, void* user_data) noexcept {
-		auto* st = static_cast<HaruErrorState*>(user_data);
-		if (!st) return;
-		st->error = error_no;
-		st->detail = detail_no;
-	}
+extern "C" void haru_error_handler(HPDF_STATUS error_no, HPDF_STATUS detail_no, void* user_data) noexcept {
+	auto* st = static_cast<HaruErrorState*>(user_data);
+	if (!st) return;
+	st->error = error_no;
+	st->detail = detail_no;
+}
 
-	static std::string haru_error_string(HPDF_STATUS err, HPDF_STATUS detail) {
-		std::ostringstream os;
-		os << "libharu error=0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<unsigned>(err)
-		   << " detail=0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<unsigned>(detail);
-		return os.str();
-	}
+std::string haru_error_string(HPDF_STATUS err, HPDF_STATUS detail) {
+	std::ostringstream os;
+	os << "libharu error=0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<unsigned>(err)
+		<< " detail=0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<unsigned>(detail);
+	return os.str();
+}
 
-	static void haru_check(HPDF_Doc doc, HaruErrorState& st, HPDF_STATUS rc, const char* what) {
-		if (rc == HPDF_OK) return;
+void haru_check(HPDF_Doc doc, HaruErrorState* st, HPDF_STATUS rc, const char* what) {
+	if (rc == HPDF_OK) return;
 
-		const HPDF_STATUS err = (st.error != HPDF_OK) ? st.error : (doc ? HPDF_GetError(doc) : rc);
-		const HPDF_STATUS det = (st.detail != HPDF_OK) ? st.detail : (doc ? HPDF_GetErrorDetail(doc) : 0);
+	const HPDF_STATUS err = [st, doc, rc]() {
+		if (st && st->error != HPDF_OK) return st->error;
+		if (doc) return HPDF_GetError(doc);
+		return rc;
+	}();
 
-		if (doc) HPDF_ResetError(doc);
-		throw std::runtime_error(std::string(what) + " failed: " + haru_error_string(err, det));
-	}
+	const HPDF_STATUS det = [st, doc]() {
+		if (st && st->detail != HPDF_OK) return st->detail;
+		if (doc) return HPDF_GetErrorDetail(doc);
+		return static_cast<HPDF_STATUS>(0);
+	}();
 
-	template <class T>
-	static T haru_require_ptr(HPDF_Doc doc, HaruErrorState& st, T ptr, const char* what) {
-		if (ptr) return ptr;
+	if (doc) HPDF_ResetError(doc);
+	throw std::runtime_error(std::string(what) + " failed: " + haru_error_string(err, det));
+}
 
-		const HPDF_STATUS err = (st.error != HPDF_OK) ? st.error : (doc ? HPDF_GetError(doc) : HPDF_INVALID_OBJECT);
-		const HPDF_STATUS det = (st.detail != HPDF_OK) ? st.detail : (doc ? HPDF_GetErrorDetail(doc) : 0);
+template <class T>
+T haru_require_ptr(HPDF_Doc doc, HaruErrorState* st, T ptr, const char* what) {
+	if (ptr) return ptr;
 
-		if (doc) HPDF_ResetError(doc);
-		throw std::runtime_error(std::string(what) + " failed: " + haru_error_string(err, det));
-	}
+	const HPDF_STATUS err = [st, doc]() {
+		if (st && st->error != HPDF_OK) return st->error;
+		if (doc) return HPDF_GetError(doc);
+		return static_cast<HPDF_STATUS>(HPDF_INVALID_OBJECT);
+	}();
+
+	const HPDF_STATUS det = [st, doc]() {
+		if (st && st->detail != HPDF_OK) return st->detail;
+		if (doc) return HPDF_GetErrorDetail(doc);
+		return static_cast<HPDF_STATUS>(0);
+	}();
+
+	if (doc) HPDF_ResetError(doc);
+	throw std::runtime_error(std::string(what) + " failed: " + haru_error_string(err, det));
+}
 } // namespace
 
 Liesel::Book::Book() {
@@ -61,7 +79,7 @@ Liesel::Book::Book() {
 
 uint32_t Liesel::Book::_progress_percent() const {
 	if (m_progress_total_units == 0) return 0;
-	uint32_t percent =
+	auto percent =
 		static_cast<uint32_t>(
 			(static_cast<uint64_t>(m_progress_completed_units) * 100ULL)
 			/ static_cast<uint64_t>(m_progress_total_units)
@@ -96,7 +114,7 @@ void Liesel::Book::calculate_effective_page_indices() {
 
 	int poppler_pages = pdf_document->pages();
 	if (poppler_pages <= 0) throw std::runtime_error("PDF document has no pages.");
-	uint32_t number_of_pages = static_cast<uint32_t>(poppler_pages);
+	auto number_of_pages = static_cast<uint32_t>(poppler_pages);
 
 	m_effective_page_indices.clear();
 	if (!m_page_ranges.has_value()) {
@@ -129,7 +147,7 @@ void Liesel::Book::set_preview_page(uint32_t page_index) {
 	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
 	auto poppler_pages = pdf_document->pages();
 	if (poppler_pages <= 0) throw std::runtime_error("PDF document has no pages.");
-	uint32_t number_of_pages = static_cast<uint32_t>(poppler_pages);
+	auto number_of_pages = static_cast<uint32_t>(poppler_pages);
 	if (page_index >= number_of_pages) {
 		throw std::out_of_range("Preview page " + std::to_string(page_index + 1)
 			+ " is out of range. Document has " + std::to_string(number_of_pages) + " pages.");
@@ -203,8 +221,8 @@ void Liesel::Book::_generate_settings_preview() {
 		// PageDimension is a fixed-point representation; convert to inches first.
 		const float target_w_in = rescale.width.to_float();
 		const float target_h_in = rescale.height.to_float();
-		uint32_t target_width = static_cast<uint32_t>(std::lround(target_w_in * static_cast<float>(preview_dpi)));
-		uint32_t target_height = static_cast<uint32_t>(std::lround(target_h_in * static_cast<float>(preview_dpi)));
+		auto target_width = static_cast<uint32_t>(std::lround(target_w_in * static_cast<float>(preview_dpi)));
+		auto target_height = static_cast<uint32_t>(std::lround(target_h_in * static_cast<float>(preview_dpi)));
 
 		// Safety caps: avoid enormous allocations/hangs in preview resizing.
 		constexpr uint32_t PREVIEW_MAX_DIM = 6000;
@@ -333,8 +351,8 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 		// Replace the ".pdf" extension with ".NNN.pdf" where NNN is the segment number, zero-padded to 3 digits
 		auto ext = segment_output_path.extension();
 		std::string segment_suffix = std::to_string(segment_number + 1);
-		while (segment_suffix.length() < 3) {
-			segment_suffix = "0" + segment_suffix;
+		if (segment_suffix.length() < 3) {
+			segment_suffix.insert(0, 3 - segment_suffix.length(), '0');
 		}
 		segment_output_path.replace_extension(segment_suffix + ext.string());
 	}
@@ -359,7 +377,7 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 
 	HPDFDocUPtr doc(HPDF_New(nullptr, nullptr));
 	if (!doc) throw std::runtime_error("Failed to create new PDF document.");
-	haru_check(doc.get(), haru_error_state, HPDF_SetCompressionMode(doc.get(), HPDF_COMP_ALL), "HPDF_SetCompressionMode");
+	haru_check(doc.get(), &haru_error_state, HPDF_SetCompressionMode(doc.get(), HPDF_COMP_ALL), "HPDF_SetCompressionMode");
 
 	for (const auto& page : processed_pages) {
 		_check_cancelled(); // Throw if something requested cancellation
@@ -370,7 +388,7 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 		img->magick("JPEG");
 		img->write(&blob);
 
-		HPDF_Page pdf_page = haru_require_ptr(doc.get(), haru_error_state, HPDF_AddPage(doc.get()), "HPDF_AddPage");
+		HPDF_Page pdf_page = haru_require_ptr(doc.get(), &haru_error_state, HPDF_AddPage(doc.get()), "HPDF_AddPage");
 
 		HPDF_REAL effective_width = static_cast<HPDF_REAL>(m_dpi_density * width) / 72;
 		HPDF_REAL effective_height = static_cast<HPDF_REAL>(m_dpi_density * height) / 72;
@@ -385,8 +403,8 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 		if (effective_width < 10.0f) effective_width = 10.0f;
 		if (effective_height < 10.0f) effective_height = 10.0f;
 
-		haru_check(doc.get(), haru_error_state, HPDF_Page_SetWidth(pdf_page, effective_width), "HPDF_Page_SetWidth");
-		haru_check(doc.get(), haru_error_state, HPDF_Page_SetHeight(pdf_page, effective_height), "HPDF_Page_SetHeight");
+		haru_check(doc.get(), &haru_error_state, HPDF_Page_SetWidth(pdf_page, effective_width), "HPDF_Page_SetWidth");
+		haru_check(doc.get(), &haru_error_state, HPDF_Page_SetHeight(pdf_page, effective_height), "HPDF_Page_SetHeight");
 
 		if (blob.length() == 0 || blob.data() == nullptr) throw std::runtime_error("Image blob is empty.");
 		if (blob.length() > static_cast<size_t>(std::numeric_limits<HPDF_UINT>::max())) {
@@ -395,7 +413,7 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 
 		HPDF_Image pdf_image = haru_require_ptr(
 			doc.get(),
-			haru_error_state,
+			&haru_error_state,
 			HPDF_LoadJpegImageFromMem(
 				doc.get(),
 				static_cast<const HPDF_BYTE*>(blob.data()),
@@ -403,13 +421,13 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 			),
 			"HPDF_LoadJpegImageFromMem"
 		);
-		haru_check(doc.get(), haru_error_state,
+		haru_check(doc.get(), &haru_error_state,
 			HPDF_Page_DrawImage(pdf_page, pdf_image, 0, 0, effective_width, effective_height),
 			"HPDF_Page_DrawImage"
 		);
 	}
 
-	haru_check(doc.get(), haru_error_state, HPDF_SaveToFile(doc.get(), segment_output_path.string().c_str()), "HPDF_SaveToFile");
+	haru_check(doc.get(), &haru_error_state, HPDF_SaveToFile(doc.get(), segment_output_path.string().c_str()), "HPDF_SaveToFile");
 	verbose_output("Segment " + std::to_string(segment_number + 1) + " printed successfully.");
 	_emit_progress(ProgressEvent::SegmentDone, segment_number, 0,
 		"Segment " + std::to_string(segment_number + 1) + " printed successfully.");
@@ -427,7 +445,7 @@ void Liesel::Book::print() {
 
 	_emit_progress(ProgressEvent::Info, 0, 0, "Starting print job...");
 
-	size_t total_segments = static_cast<size_t>(std::ceil(static_cast<double>(m_effective_page_indices.size()) / m_segment_size));
+	auto total_segments = static_cast<size_t>(std::ceil(static_cast<double>(m_effective_page_indices.size()) / m_segment_size));
 	if (m_segment_size >= m_effective_page_indices.size()) total_segments = 1;
 
 	for (uint32_t i = 0; i < total_segments; i++) {
