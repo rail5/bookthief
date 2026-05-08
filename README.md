@@ -35,9 +35,9 @@ When BookThief spits out a new/converted PDF, you simply print it at home, doubl
 
 ![Like this](https://cdn.zmescience.com/wp-content/uploads/2014/07/folding_paper.jpg)
 
-![Screenshot](./bookthief-screenshot1.png)
+![Screenshot](https://rail5.org/bookthief/bookthief-screenshot1.png)
 
-![Screenshot](./bookthief-screenshot2.png)
+![Screenshot](https://rail5.org/bookthief/bookthief-screenshot2.png)
 
 ## Features
 
@@ -51,23 +51,23 @@ When BookThief spits out a new/converted PDF, you simply print it at home, doubl
 
 Suppose you're handling a PDF of a scanned book with yellow pages:
 
-![Example](./bookthief-screenshot3.png)
+![Example](https://rail5.org/bookthief/bookthief-screenshot3.png)
 
 You can apply the "color threshold" to save ink when printing:
 
-![Example](./bookthief-screenshot4.png)
+![Example](https://rail5.org/bookthief/bookthief-screenshot4.png)
 
 Suppose instead you're handling a PDF of another scanned book, but the scanner didn't separate the left/right pages
 
-![Example](./doubled-example.png)
+![Example](https://rail5.org/bookthief/doubled-example.png)
 
 Normally, this would mess things up pretty bad
 
-![Example](./bookthief-screenshot5.png)
+![Example](https://rail5.org/bookthief/bookthief-screenshot5.png)
 
 But we can apply the "Split pages" option to fix it for us
 
-![Example](./bookthief-screenshot6.png)
+![Example](https://rail5.org/bookthief/bookthief-screenshot6.png)
 
 
 ## Build Requirements
