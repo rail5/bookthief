@@ -72,8 +72,8 @@ But we can apply the "Split pages" option to fix it for us
 
 ## Build Requirements
 
-- **fpc-3.2.2**
-- **lcl-4.0**
+- **fpc**
+- **lcl**
 - **pkgconf**
 - **graphicsmagick-libmagick-dev-compat**
 - **libpoppler-cpp-dev**
