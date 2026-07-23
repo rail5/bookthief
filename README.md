@@ -31,7 +31,7 @@ Packages are also provided in the [Github Releases Page](https://github.com/rail
 
 ## What is "pamphlet"-style printing?
 
-When BookThief spits out a new/converted PDF, you simply print it at home, double-sided, and then fold the stack of papers in half. (And staple them, if you want)
+When BookThief spits out a new/converted PDF, you simply print it at home, double-sided, and then fold the stack of papers in half.
 
 ![Like this](https://cdn.zmescience.com/wp-content/uploads/2014/07/folding_paper.jpg)
 
