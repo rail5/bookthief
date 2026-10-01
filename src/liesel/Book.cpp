@@ -110,9 +110,9 @@ void Liesel::Book::verbose_output(const std::string_view& message) const {
 }
 
 void Liesel::Book::calculate_effective_page_indices() {
-	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
+	if (!input_pdf.parsed_document) throw std::runtime_error("PDF document not loaded.");
 
-	int poppler_pages = pdf_document->pages();
+	int poppler_pages = input_pdf.parsed_document->pages();
 	if (poppler_pages <= 0) throw std::runtime_error("PDF document has no pages.");
 	auto number_of_pages = static_cast<uint32_t>(poppler_pages);
 
@@ -144,8 +144,8 @@ void Liesel::Book::calculate_effective_page_indices() {
 }
 
 void Liesel::Book::set_preview_page(uint32_t page_index) {
-	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
-	auto poppler_pages = pdf_document->pages();
+	if (!input_pdf.parsed_document) throw std::runtime_error("PDF document not loaded.");
+	auto poppler_pages = input_pdf.parsed_document->pages();
 	if (poppler_pages <= 0) throw std::runtime_error("PDF document has no pages.");
 	auto number_of_pages = static_cast<uint32_t>(poppler_pages);
 	if (page_index >= number_of_pages) {
@@ -164,15 +164,15 @@ void Liesel::Book::set_preview_page(uint32_t page_index) {
 }
 
 uint32_t Liesel::Book::pdf_page_count() const {
-	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
-	int poppler_pages = pdf_document->pages();
+	if (!input_pdf.parsed_document) throw std::runtime_error("PDF document not loaded.");
+	int poppler_pages = input_pdf.parsed_document->pages();
 	if (poppler_pages <= 0) return 0;
 	return static_cast<uint32_t>(poppler_pages);
 }
 
 void Liesel::Book::_generate_settings_preview() {
 	if (!f_previewing) return;
-	if (!pdf_document) return;
+	if (!input_pdf.parsed_document) return;
 	verbose_output("Generating settings preview...");
 
 	// Previews should stay responsive even when the user cranks the quality slider.
@@ -182,7 +182,7 @@ void Liesel::Book::_generate_settings_preview() {
 	std::unique_ptr<Liesel::Page> page = std::make_unique<Liesel::Page>();
 
 	std::unique_ptr<Liesel::Page> right_half = nullptr;
-	page->load(pdf_document.get(), m_preview_page, preview_dpi);
+	page->load(input_pdf.parsed_document.get(), m_preview_page, preview_dpi);
 
 	if (f_greyscale) page->set_greyscale();
 	if (m_threshold_level.has_value()) page->set_threshold(m_threshold_level.value());
@@ -203,7 +203,7 @@ void Liesel::Book::_generate_settings_preview() {
 		} else {
 			// Load the next page as right_half, and apply the same processing
 			right_half = std::make_unique<Liesel::Page>();
-			right_half->load(pdf_document.get(), m_preview_page + 1, preview_dpi);
+			right_half->load(input_pdf.parsed_document.get(), m_preview_page + 1, preview_dpi);
 			if (f_greyscale) right_half->set_greyscale();
 			if (m_threshold_level.has_value()) right_half->set_threshold(m_threshold_level.value());
 			right_half->crop(m_crop_percentages);
@@ -261,7 +261,7 @@ void Liesel::Book::_render_segment(uint32_t segment_number) {
 			"Rendering page " + std::to_string(page_index + 1) + "...");
 
 		std::unique_ptr<Liesel::Page> page = std::make_unique<Liesel::Page>();
-		page->load(pdf_document.get(), page_index, m_dpi_density);
+		page->load(input_pdf.parsed_document.get(), page_index, m_dpi_density);
 
 		if (f_greyscale) page->set_greyscale();
 		if (m_threshold_level.has_value()) page->set_threshold(m_threshold_level.value());
@@ -342,7 +342,7 @@ void Liesel::Book::_maybe_reorder_pages() {
 }
 
 void Liesel::Book::print_segment(uint32_t segment_number) {
-	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
+	if (!input_pdf.parsed_document) throw std::runtime_error("PDF document not loaded.");
 	if (output_pdf_path.empty()) throw std::runtime_error("No output PDF path specified.");
 	if (m_effective_page_indices.empty()) throw std::runtime_error("No pages to print.");
 
@@ -436,7 +436,7 @@ void Liesel::Book::print_segment(uint32_t segment_number) {
 }
 
 void Liesel::Book::print() {
-	if (!pdf_document) throw std::runtime_error("PDF document not loaded.");
+	if (!input_pdf.parsed_document) throw std::runtime_error("PDF document not loaded.");
 	if (output_pdf_path.empty()) throw std::runtime_error("No output PDF path specified.");
 	if (m_effective_page_indices.empty()) throw std::runtime_error("No pages to print.");
 	if (m_segment_size == 0) throw std::invalid_argument("Segment size cannot be zero.");
@@ -474,7 +474,7 @@ void Liesel::Book::set_input_pdf_path(const std::string_view& path) {
 		throw std::invalid_argument("Input file is not a PDF: " + std::string(path));
 	}
 
-	input_pdf_path = p;
+	input_pdf.path = p;
 
 	 _generate_settings_preview();
 }
@@ -524,12 +524,12 @@ void Liesel::Book::set_output_pdf_path(const std::string_view& path) {
 }
 
 void Liesel::Book::load_pdf() {
-	verbose_output("Loading PDF document from: " + input_pdf_path.string());
-	pdf_document.reset(poppler::document::load_from_file(input_pdf_path.string()));
-	if (!pdf_document) {
-		throw std::runtime_error("Failed to load PDF document: " + input_pdf_path.string());
+	verbose_output("Loading PDF document from: " + input_pdf.path.string());
+	input_pdf.parsed_document.reset(poppler::document::load_from_file(input_pdf.path.string()));
+	if (!input_pdf.parsed_document) {
+		throw std::runtime_error("Failed to load PDF document: " + input_pdf.path.string());
 	}
-	verbose_output("PDF document loaded successfully. Number of pages: " + std::to_string(pdf_document->pages()));
+	verbose_output("PDF document loaded successfully. Number of pages: " + std::to_string(input_pdf.parsed_document->pages()));
 
 	calculate_effective_page_indices();
 }

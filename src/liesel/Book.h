@@ -34,44 +34,6 @@ class Cancelled final : public std::runtime_error {
 };
 
 class Book {
-	private:
-		std::filesystem::path input_pdf_path;
-		std::filesystem::path output_pdf_path;
-		std::unique_ptr<poppler::document> pdf_document;
-		std::vector<std::unique_ptr<Page>> pages;
-		std::vector<std::unique_ptr<Page>> processed_pages;
-		std::unique_ptr<Magick::Image> settings_preview;
-
-		bool f_verbose = false;
-		bool f_greyscale = false;
-		bool f_divide = false;
-		bool f_landscape = false; // Default to portrait for duplex printing
-
-		bool f_booklet = true; // Default to booklet printing unless -N is specified
-
-		bool f_previewing = false; // If true, generate a new preview image every time settings are changed
-		uint32_t m_preview_page = 0; // Page index to use for preview generation
-			// Unless f_booklet == false, the preview will also include m_preview_page + 1
-			// Therefore unless f_booklet == false, setting this to the last page is invalid
-		
-		uint32_t m_dpi_density = 100;
-		std::optional<uint8_t> m_threshold_level = std::nullopt;
-		uint32_t m_segment_size = UINT32_MAX; // Default to no segmentation
-
-		uint32_t m_widen_margins_amount = 0; // Default to no widening
-
-		std::optional<PageDimensionPair> m_rescale_size = std::nullopt;
-		std::optional<PageRangeList> m_page_ranges = std::nullopt;
-		std::vector<uint32_t> m_effective_page_indices;
-		CropPercentages m_crop_percentages;
-
-		void verbose_output(const std::string_view& message) const;
-		void calculate_effective_page_indices();
-		void _render_segment(uint32_t segment_number);
-		void _maybe_reorder_pages();
-		void print_segment(uint32_t segment_number);
-
-		void _generate_settings_preview();
 	public:
 		Book();
 
@@ -90,25 +52,19 @@ class Book {
 			std::string message;
 		};
 
+		struct InputPDF {
+			std::filesystem::path path;
+			std::unique_ptr<poppler::document> parsed_document;
+		};
+
 		using ProgressCallback = std::function<void(const ProgressInfo& info)>;
 		using CancelCallback = std::function<bool(void)>; // return true to cancel
-	private:
-		ProgressCallback m_progress_cb;
-		CancelCallback m_cancel_cb;
-
-		uint32_t m_progress_total_units = 0;
-		uint32_t m_progress_completed_units = 0;
-
-		uint32_t _progress_percent() const;
-		void _emit_progress(ProgressEvent event, uint32_t segment_index, uint32_t page_index, const std::string& message);
-		void _check_cancelled() const;
-	public:
 
 		void set_input_pdf_path(const std::string_view& path);
 		void set_output_pdf_path(const std::string_view& path);
 
-		std::string get_input_pdf_path() const { return input_pdf_path.string(); }
-		bool has_input_pdf_path() const { return !input_pdf_path.empty(); }
+		std::string get_input_pdf_path() const { return input_pdf.path.string(); }
+		bool has_input_pdf_path() const { return !input_pdf.path.empty(); }
 		std::string get_output_pdf_path() const { return output_pdf_path.string(); }
 		bool has_output_pdf_path() const { return !output_pdf_path.empty(); }
 
@@ -153,6 +109,53 @@ class Book {
 
 		void set_progress_callback(ProgressCallback cb) { m_progress_cb = std::move(cb); }
 		void set_cancel_callback(CancelCallback cb) { m_cancel_cb = std::move(cb); }
+	private:
+		ProgressCallback m_progress_cb;
+		CancelCallback m_cancel_cb;
+
+		uint32_t m_progress_total_units = 0;
+		uint32_t m_progress_completed_units = 0;
+
+		uint32_t _progress_percent() const;
+		void _emit_progress(ProgressEvent event, uint32_t segment_index, uint32_t page_index, const std::string& message);
+		void _check_cancelled() const;
+
+		InputPDF input_pdf;
+		std::filesystem::path output_pdf_path;
+		std::vector<std::unique_ptr<Page>> pages;
+		std::vector<std::unique_ptr<Page>> processed_pages;
+		std::unique_ptr<Magick::Image> settings_preview;
+
+		bool f_verbose = false;
+		bool f_greyscale = false;
+		bool f_divide = false;
+		bool f_landscape = false; // Default to portrait for duplex printing
+
+		bool f_booklet = true; // Default to booklet printing unless -N is specified
+
+		bool f_previewing = false; // If true, generate a new preview image every time settings are changed
+		uint32_t m_preview_page = 0; // Page index to use for preview generation
+			// Unless f_booklet == false, the preview will also include m_preview_page + 1
+			// Therefore unless f_booklet == false, setting this to the last page is invalid
+
+		uint32_t m_dpi_density = 100;
+		std::optional<uint8_t> m_threshold_level = std::nullopt;
+		uint32_t m_segment_size = UINT32_MAX; // Default to no segmentation
+
+		uint32_t m_widen_margins_amount = 0; // Default to no widening
+
+		std::optional<PageDimensionPair> m_rescale_size = std::nullopt;
+		std::optional<PageRangeList> m_page_ranges = std::nullopt;
+		std::vector<uint32_t> m_effective_page_indices;
+		CropPercentages m_crop_percentages;
+
+		void verbose_output(const std::string_view& message) const;
+		void calculate_effective_page_indices();
+		void _render_segment(uint32_t segment_number);
+		void _maybe_reorder_pages();
+		void print_segment(uint32_t segment_number);
+
+		void _generate_settings_preview();
 };
 
 } // namespace Liesel
