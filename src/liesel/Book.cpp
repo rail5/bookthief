@@ -188,8 +188,9 @@ void Liesel::Book::_generate_settings_preview() {
 	if (m_threshold_level.has_value()) page->set_threshold(m_threshold_level.value());
 
 	if (f_divide) {
-		right_half = std::move(page);
-		page = right_half->divide(); // divide(): Returns the left-half, *this becomes the right-half
+		auto divided_pages = Liesel::Page::divide(std::move(page));
+		page = std::move(divided_pages.first);
+		right_half = std::move(divided_pages.second);
 	}
 
 	page->crop(m_crop_percentages);
@@ -244,7 +245,7 @@ void Liesel::Book::_generate_settings_preview() {
 void Liesel::Book::_render_segment(uint32_t segment_number) {
 	// Use Poppler to render each page to an image and store in 'pages'
 	uint32_t start_index = segment_number * m_segment_size;
-	uint32_t end_index;
+	uint32_t end_index = 0;
 	if (m_segment_size == UINT32_MAX) {
 		end_index = static_cast<uint32_t>(m_effective_page_indices.size());
 	} else {
@@ -266,8 +267,9 @@ void Liesel::Book::_render_segment(uint32_t segment_number) {
 		if (m_threshold_level.has_value()) page->set_threshold(m_threshold_level.value());
 
 		if (f_divide) {
-			auto left_page = page->divide();
-			pages.push_back(std::move(left_page));
+			auto divided_pages = Liesel::Page::divide(std::move(page));
+			pages.push_back(std::move(divided_pages.first));
+			page = std::move(divided_pages.second);
 		}
 
 		pages.push_back(std::move(page));

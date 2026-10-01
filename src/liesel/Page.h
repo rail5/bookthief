@@ -6,6 +6,8 @@
 #pragma once
 
 #include <memory>
+#include <utility>
+#include <cstdint>
 
 #include <Magick++.h>
 #include <poppler/cpp/poppler-global.h>
@@ -51,7 +53,6 @@ class Page {
 		void load(poppler::document* document, uint32_t page_index, uint32_t dpi_density);
 		void set_greyscale();
 		void set_threshold(uint8_t level);
-		std::unique_ptr<Page> divide();
 		void crop(const CropPercentages& crop_percentages);
 		void rotate(double degrees);
 
@@ -70,6 +71,14 @@ class Page {
 
 		void _set_image_raw(std::unique_ptr<Magick::Image> img) { image = std::move(img); }
 		std::unique_ptr<Magick::Image> _get_image_raw() { return std::move(image); }
+
+		/**
+		 * @brief Divide a page into separate left and right halves
+		 * 
+		 * @param original The original page to divide
+		 * @return std::pair<std::unique_ptr<Page>, std::unique_ptr<Page>> A pair of the left and right halves, respectively
+		 */
+		static std::pair<std::unique_ptr<Page>, std::unique_ptr<Page>> divide(std::unique_ptr<Page> original);
 };
 
 } // namespace Liesel

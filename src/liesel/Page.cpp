@@ -52,28 +52,23 @@ void Liesel::Page::set_threshold(uint8_t level) {
 	if (this->image) this->image->threshold(value);
 }
 
-/**
- * @brief Divides the current page into two halves and returns the left half as a new Page object. This Page becomes the right half.
- * 
- * @return std::unique_ptr<Liesel::Page> The left half of the divided page.
- */
-std::unique_ptr<Liesel::Page> Liesel::Page::divide() {
-	if (!this->image) throw std::runtime_error("No image loaded to divide.");
+std::pair<std::unique_ptr<Liesel::Page>, std::unique_ptr<Liesel::Page>> Liesel::Page::divide(std::unique_ptr<Page> original) {
+	if (!original || !original->image) throw std::runtime_error("No image loaded to divide.");
 
-	uint32_t half_width = this->image->columns() / 2;
-	uint32_t height = this->image->rows();
+	uint32_t half_width = original->image->columns() / 2;
+	uint32_t height = original->image->rows();
 
 	Magick::Geometry left_half(half_width, height, 0, 0);
 	Magick::Geometry right_half(half_width, height, half_width, 0);
 
-	auto left_image = std::make_unique<Magick::Image>(*this->image);
+	auto left_image = std::make_unique<Magick::Image>(*original->image);
 	left_image->crop(left_half);
-	this->image->crop(right_half);
+	original->image->crop(right_half);
 
 	auto left_page = std::make_unique<Liesel::Page>();
 	left_page->_set_image_raw(std::move(left_image));
 
-	return left_page;
+	return {std::move(left_page), std::move(original)};
 }
 
 void Liesel::Page::crop(const CropPercentages& crop_percentages) {
